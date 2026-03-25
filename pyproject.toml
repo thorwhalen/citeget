@@ -1,22 +1,26 @@
 [build-system]
-requires = ["setuptools>=67.0"]
-build-backend = "setuptools.build_meta"
+requires = [
+    "hatchling",
+]
+build-backend = "hatchling.build"
 
 [project]
 name = "citeget"
 version = "0.1.0"
 description = "Find, acquire, and manage academic references — for AI agents and humans."
 readme = "README.md"
-license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
-keywords = ["references", "citations", "libgen", "papers", "pdf", "academic", "ai-agent"]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Science/Research",
-    "Intended Audience :: Developers",
-    "Topic :: Scientific/Engineering",
-    "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3",
+keywords = [
+    "references",
+    "citations",
+    "libgen",
+    "papers",
+    "pdf",
+    "academic",
+    "ai-agent",
+]
+authors = [
+    { name = "Thor Whalen" },
 ]
 dependencies = [
     "playwright",
@@ -25,14 +29,141 @@ dependencies = [
     "argh",
 ]
 
+[project.license]
+text = "apache-2.0"
+
 [project.scripts]
 citeget = "citeget.cli:main"
 
 [project.urls]
+Homepage = "https://github.com/thorwhalen/citeget"
 Repository = "https://github.com/thorwhalen/citeget"
 
-[tool.setuptools.packages.find]
-include = ["citeget*"]
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.1.0",
+]
+docs = [
+    "sphinx>=6.0",
+    "sphinx-rtd-theme>=1.0",
+]
 
-[tool.setuptools.package-data]
-citeget = ["data/*", "article_pub/data/*"]
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+exclude = [
+    "**/*.ipynb",
+    ".git",
+    ".venv",
+    "build",
+    "dist",
+    "tests",
+    "examples",
+    "scrap",
+]
+
+[tool.ruff.lint]
+select = [
+    "D100",
+]
+ignore = [
+    "D203",
+    "E501",
+    "B905",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/*" = [
+    "D",
+]
+"**/examples/*" = [
+    "D",
+]
+"**/scrap/*" = [
+    "D",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = [
+    "tests",
+]
+doctest_optionflags = [
+    "NORMALIZE_WHITESPACE",
+    "ELLIPSIS",
+]
+
+[tool.wads.ci]
+project_name = ""
+
+[tool.wads.ci.commands]
+pre_test = []
+test = []
+post_test = []
+lint = []
+format = []
+
+[tool.wads.ci.env]
+required_envvars = []
+test_envvars = []
+extra_envvars = []
+
+[tool.wads.ci.env.defaults]
+
+[tool.wads.ci.quality.ruff]
+enabled = true
+
+[tool.wads.ci.quality.black]
+enabled = false
+
+[tool.wads.ci.quality.mypy]
+enabled = false
+
+[tool.wads.ci.testing]
+python_versions = [
+    "3.10",
+    "3.12",
+]
+pytest_args = [
+    "-v",
+    "--tb=short",
+]
+coverage_enabled = true
+coverage_threshold = 0
+coverage_report_format = [
+    "term",
+    "xml",
+]
+exclude_paths = [
+    "examples",
+    "scrap",
+]
+test_on_windows = true
+
+[tool.wads.ci.metrics]
+enabled = true
+config_path = ".github/umpyre-config.yml"
+storage_branch = "code-metrics"
+python_version = "3.10"
+force_run = false
+
+[tool.wads.ci.build]
+sdist = true
+wheel = true
+
+[tool.wads.ci.publish]
+enabled = true
+
+[tool.wads.ci.docs]
+enabled = true
+builder = "epythet"
+ignore_paths = [
+    "tests/",
+    "scrap/",
+    "examples/",
+]
