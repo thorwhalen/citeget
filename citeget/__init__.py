@@ -54,14 +54,71 @@ from citeget.acquire_references import (
     AcquisitionResult,
 )
 
+from citeget.extract import (
+    extract_references,
+    regex_extractor,
+    chain as chain_extractors,
+    merge as merge_extractors,
+    register as register_extractor,
+    list_extractors,
+    ExtractionResult,
+    EXTRACTORS,
+)
+
+from citeget.resolve import (
+    resolve_reference,
+    url_rewriter,
+    resolve_and_download,
+    chain as chain_strategies,
+    chain_resolvers,
+    register_resolver,
+    register_downloader,
+    register_strategy,
+    list_resolvers,
+    list_downloaders,
+    list_strategies,
+    RESOLVERS,
+    DOWNLOADERS,
+    STRATEGIES,
+    BUILTIN_URL_RULES,
+)
+
 __all__ = [
+    # Core search/download
     "search",
     "download_results",
     "download_one",
     "search_and_download",
     "TOPIC_ALIASES",
+    # Reference parsing (low-level)
     "parse_reference",
     "parse_references_section",
+    # Reference extraction (composable)
+    "extract_references",
+    "regex_extractor",
+    "chain_extractors",
+    "merge_extractors",
+    "register_extractor",
+    "list_extractors",
+    "ExtractionResult",
+    "EXTRACTORS",
+    # Reference resolution/download (composable)
+    "resolve_reference",
+    "url_rewriter",
+    "resolve_and_download",
+    "chain_strategies",
+    "chain_resolvers",
+    "register_resolver",
+    "register_downloader",
+    "register_strategy",
+    "list_resolvers",
+    "list_downloaders",
+    "list_strategies",
+    "RESOLVERS",
+    "DOWNLOADERS",
+    "STRATEGIES",
+    "BUILTIN_URL_RULES",
+    # Acquisition (orchestrator)
     "acquire_reference",
     "acquire_all_references",
     "generate_search_queries",

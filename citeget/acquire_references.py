@@ -120,6 +120,7 @@ class Reference:
     venue: str = ""
     url: str = ""
     doi: str = ""
+    source_text: str = ""  # Original unprocessed text span (for fallback)
 
     def __str__(self):
         return f"[{self.number}] {self.title} ({self.year})"
@@ -755,21 +756,25 @@ def acquire_reference(
     download_dir: str | Path,
     *,
     log_entries: list,
+    strategy=None,
     libgen_topics: tuple = ("articles", "books"),
     timeout: int = 30000,
 ) -> AcquisitionResult:
     """Try to acquire a single reference PDF.
 
-    Tries strategies in order:
-    1. Direct URL download (arxiv, openreview, etc.)
-    2. Libgen search (articles topic, then books topic)
+    When *strategy* is given, delegates entirely to the composable
+    strategy system in :mod:`citeget.resolve`.  Otherwise falls back to
+    the legacy hard-coded chain for backward compatibility.
 
     Args:
         ref: The reference to acquire.
         download_dir: Where to save the PDF.
         log_entries: List to append log dicts to (mutated in place).
-        libgen_topics: Topics to try on libgen.
-        timeout: Timeout for browser operations.
+        strategy: An ``AcquisitionStrategy`` callable, a registered
+            strategy name (``str``), or ``None`` for the legacy chain.
+            Pass ``"default"`` to use the new composable default.
+        libgen_topics: Topics to try on libgen (legacy chain only).
+        timeout: Timeout for browser operations (legacy chain only).
     """
     download_dir = Path(download_dir)
     download_dir.mkdir(parents=True, exist_ok=True)
@@ -785,6 +790,35 @@ def acquire_reference(
             method="already_exists",
         )
 
+    # --- New composable path ---
+    if strategy is not None:
+        from citeget.resolve import resolve_reference, with_logging
+
+        if isinstance(strategy, str):
+            from citeget.resolve import get_strategy
+
+            strat = get_strategy(strategy)
+        else:
+            strat = strategy
+
+        strat = with_logging(strat, name="resolve", log_entries=log_entries)
+        result_path = resolve_reference(ref, filepath, strategy=strat)
+
+        if result_path:
+            return AcquisitionResult(
+                reference=ref,
+                success=True,
+                filepath=result_path,
+                method="resolved",
+            )
+        return AcquisitionResult(
+            reference=ref,
+            success=False,
+            method="failed",
+            notes="All strategies exhausted",
+        )
+
+    # --- Legacy hard-coded chain (backward compatible) ---
     timestamp = datetime.now().isoformat(timespec="seconds")
 
     # 1. Try direct URL
@@ -880,6 +914,7 @@ def acquire_all_references(
     *,
     work_dir: str | Path | None = None,
     log_file: str | Path | None = None,
+    strategy=None,
     libgen_topics: tuple = ("articles", "books"),
     delay: float = 2.0,
     verbose: bool = True,
@@ -898,8 +933,11 @@ def acquire_all_references(
             to ``{work_dir}/{datetime}__acquisition_log.txt``.
         log_file: Explicit path for the acquisition log. If None and
             ``work_dir`` is given, auto-generated with timestamp.
-        libgen_topics: Libgen topics to try.
-        delay: Seconds between libgen operations.
+        strategy: Acquisition strategy — a callable, registered name,
+            or ``None`` for the legacy chain.  Pass ``"default"`` to use
+            the composable default from :mod:`citeget.resolve`.
+        libgen_topics: Libgen topics to try (legacy chain only).
+        delay: Seconds between operations (rate limiting).
         verbose: Print progress.
 
     Returns:
@@ -954,6 +992,7 @@ def acquire_all_references(
             ref,
             download_dir,
             log_entries=log_entries,
+            strategy=strategy,
             libgen_topics=libgen_topics,
         )
 

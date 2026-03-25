@@ -77,45 +77,69 @@ def acquire(
     work_dir: str = "",
     delay: float = 2.0,
     max_refs: int = 0,
+    extractor: str = "default",
+    strategy: str = "",
+    preview: bool = False,
+    auto: bool = False,
 ):
     """Acquire PDFs for all references in a document.
 
-    Parses the REFERENCES section, tries direct URL, libgen, arxiv,
-    and sci-hub, then writes references.md and a missed-references file.
+    Extracts references (tries headers, then broad [N] scan, then bold),
+    then acquires PDFs via direct URL, libgen, arxiv, and sci-hub.
 
     Args:
-        reference_file: Path to a document containing a references section.
+        reference_file: Path to a document containing references.
         work_dir: Working directory (default: derived from reference_file).
         delay: Seconds between operations (rate limiting).
         max_refs: Max references to process (0 = all).
+        extractor: Named extractor to use (default, standard, broad, bold, ai).
+        strategy: Named acquisition strategy (default, direct, doi, arxiv_search,
+            semantic_scholar, libgen, scihub). Empty uses legacy chain.
+        preview: Show extracted references and ask for confirmation.
+        auto: Skip confirmation even in preview mode.
     """
     from pathlib import Path
     from datetime import datetime
     from citeget import (
-        parse_references_section,
         resolve_work_dir,
         acquire_all_references,
         write_references_md,
         write_missed_references_md,
     )
+    from citeget.extract import extract_references, AIExtractionRequested
 
     ref_path = Path(reference_file).expanduser()
     text = ref_path.read_text()
 
-    # Find references section
-    for marker in ("## REFERENCES", "## References", "# References", "# REFERENCES"):
-        idx = text.find(marker)
-        if idx != -1:
-            refs_text = text[idx:]
-            break
-    else:
-        print("ERROR: Could not find a references section.")
+    try:
+        result = extract_references(text, extractor=extractor)
+    except AIExtractionRequested:
+        print("AI extraction mode requires an AI agent context.")
+        print("Use the 'acquire-references' Claude skill instead.")
         return
 
-    refs = parse_references_section(refs_text)
+    refs = result.references
     if not refs:
-        print("No references found.")
+        print(
+            f"ERROR: Could not extract references "
+            f"(extractor: {result.extractor_name})."
+        )
+        print("Try: --extractor broad  or  --extractor ai")
         return
+
+    if preview and not auto:
+        print(
+            f"Extracted {len(refs)} references "
+            f"(extractor: {result.extractor_name}, "
+            f"confidence: {result.confidence}):\n"
+        )
+        for ref in refs:
+            print(f"  [{ref.number}] {ref.title[:70]}")
+            if ref.authors:
+                print(f"         {ref.authors[:50]} ({ref.year})")
+        response = input("\nProceed with acquisition? [Y/n] ")
+        if response.strip().lower() in ("n", "no"):
+            return
 
     if max_refs > 0:
         refs = refs[:max_refs]
@@ -131,7 +155,11 @@ def acquire(
     print(f"Download dir: {dl_dir}\n")
 
     successes, failures, _ = acquire_all_references(
-        refs, download_dir=dl_dir, work_dir=wd, delay=delay,
+        refs,
+        download_dir=dl_dir,
+        work_dir=wd,
+        strategy=strategy or None,
+        delay=delay,
     )
 
     write_references_md(successes, dl_dir, wd / "references.md")
