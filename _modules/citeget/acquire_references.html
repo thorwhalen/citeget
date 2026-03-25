@@ -1,0 +1,1243 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.acquire_references &mdash; citeget 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/resolve.html">citeget.resolve</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citeget.acquire_references</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citeget.acquire_references</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tools for acquiring academic references as PDFs.</span>
+
+<span class="sd">Given a structured reference (title, authors, year, URL, etc.), this module</span>
+<span class="sd">tries multiple strategies to obtain a PDF:</span>
+<span class="sd">1. Direct URL download (if a URL is provided and yields a PDF)</span>
+<span class="sd">2. ArXiv download (if URL is an arxiv link, get the PDF directly)</span>
+<span class="sd">3. Libgen search with progressively adjusted query specificity</span>
+
+<span class="sd">The query strategy for libgen searches:</span>
+<span class="sd">- Start with the full title (no punctuation) as a mid-specificity query</span>
+<span class="sd">- If too many results (&gt;20) and no good match: add first author surname</span>
+<span class="sd">- If no results: try shorter title (first 5 words)</span>
+<span class="sd">- If still no results: try author + key title words</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">REFERENCES_SUBDIR</span> <span class="o">=</span> <span class="s2">&quot;references&quot;</span>
+
+
+<div class="viewcode-block" id="resolve_work_dir">
+<a class="viewcode-back" href="../../module_docs/citeget/acquire_references.html#citeget.resolve_work_dir">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_work_dir</span><span class="p">(</span>
+    <span class="n">reference_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">work_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve the working directory for an acquisition session.</span>
+
+<span class="sd">    Rules:</span>
+<span class="sd">    - If ``work_dir`` is given as a full path, use it (create if needed,</span>
+<span class="sd">      parent must exist).</span>
+<span class="sd">    - If ``work_dir`` is a bare name (no slashes), use ``~/Downloads/{name}``.</span>
+<span class="sd">    - If ``work_dir`` is None and ``reference_file`` is given, derive from the</span>
+<span class="sd">      reference file: ``{stem} -- acquired_references/`` in the same directory.</span>
+<span class="sd">    - If neither is given, raise ValueError.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Resolved Path to the working directory.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If inputs are insufficient or invalid.</span>
+<span class="sd">        FileNotFoundError: If a specified parent directory doesn&#39;t exist.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">work_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">work_dir</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="n">work_dir</span> <span class="ow">or</span> <span class="n">work_dir</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;~&quot;</span><span class="p">):</span>
+            <span class="c1"># Full or home-relative path</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Parent directory does not exist: </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">parent</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">p</span>
+        <span class="k">elif</span> <span class="n">work_dir</span><span class="p">:</span>
+            <span class="c1"># Bare name → ~/Downloads/{name}</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span> <span class="o">/</span> <span class="s2">&quot;Downloads&quot;</span> <span class="o">/</span> <span class="n">work_dir</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">p</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;work_dir is empty&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">reference_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ref_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">reference_file</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ref_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reference file not found: </span><span class="si">{</span><span class="n">ref_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">stem</span> <span class="o">=</span> <span class="n">ref_path</span><span class="o">.</span><span class="n">stem</span>
+        <span class="n">dirname</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">stem</span><span class="si">}</span><span class="s2"> -- acquired_references&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">ref_path</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="n">dirname</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">p</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="s2">&quot;Either reference_file or work_dir must be provided. &quot;</span>
+        <span class="s2">&quot;Pass work_dir as a full path or a bare name (uses ~/Downloads/</span><span class="si">{name}</span><span class="s2">).&quot;</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="check_existing_downloads">
+<a class="viewcode-back" href="../../module_docs/citeget/acquire_references.html#citeget.check_existing_downloads">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_existing_downloads</span><span class="p">(</span>
+    <span class="n">references</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">download_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check which references already have downloaded files.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (to_acquire, already_have) — two lists of Reference objects.</span>
+<span class="sd">        ``already_have`` is a list of (Reference, filepath) tuples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
+    <span class="n">to_acquire</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">already_have</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">references</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">_make_ref_filename</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+        <span class="n">filepath</span> <span class="o">=</span> <span class="n">download_dir</span> <span class="o">/</span> <span class="n">filename</span>
+        <span class="k">if</span> <span class="n">filepath</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+            <span class="n">already_have</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ref</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">to_acquire</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">to_acquire</span><span class="p">,</span> <span class="n">already_have</span></div>
+
+
+
+<div class="viewcode-block" id="Reference">
+<a class="viewcode-back" href="../../module_docs/citeget/acquire_references.html#citeget.Reference">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Reference</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A parsed academic reference.&quot;&quot;&quot;</span>
+
+    <span class="n">number</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">raw</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># The full reference text as written</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">authors</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">year</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">venue</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">doi</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">source_text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># Original unprocessed text span (for fallback)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="AcquisitionResult">
+<a class="viewcode-back" href="../../module_docs/citeget/acquire_references.html#citeget.AcquisitionResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AcquisitionResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of trying to acquire a reference.&quot;&quot;&quot;</span>
+
+    <span class="n">reference</span><span class="p">:</span> <span class="n">Reference</span>
+    <span class="n">success</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">filepath</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># &quot;direct_url&quot;, &quot;arxiv&quot;, &quot;libgen&quot;, &quot;failed&quot;</span>
+    <span class="n">queries_tried</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">notes</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="parse_reference">
+<a class="viewcode-back" href="../../module_docs/citeget/acquire_references.html#citeget.parse_reference">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_reference</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Reference</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a reference string into a Reference object.</span>
+
+<span class="sd">    Handles formats like:</span>
+<span class="sd">        [1] A. Author, &quot;Title,&quot; in *Venue*, year. URL</span>
+<span class="sd">        A. Author, &quot;Title,&quot; Venue, vol. X, pp. Y-Z, year.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="c1"># Extract number if present</span>
+    <span class="n">num_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\[(\d+)\]\s*&quot;</span><span class="p">,</span> <span class="n">raw</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_match</span><span class="p">:</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">raw_body</span> <span class="o">=</span> <span class="n">raw</span><span class="p">[</span><span class="n">num_match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="p">:]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">raw_body</span> <span class="o">=</span> <span class="n">raw</span>
+
+    <span class="c1"># Extract URL (at end, or embedded)</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">url_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(https?://\S+)&quot;</span><span class="p">,</span> <span class="n">raw_body</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">url_match</span><span class="p">:</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">url_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Extract title — typically in quotes or after author block before comma+venue</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="c1"># Try quoted title first: &quot;Title&quot; or &quot;Title,&quot;</span>
+    <span class="n">title_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[&quot;\u201c](.+?)[&quot;\u201d]&#39;</span><span class="p">,</span> <span class="n">raw_body</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">title_match</span><span class="p">:</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="n">title_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="c1"># Extract year</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">year_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\b((?:19|20)\d</span><span class="si">{2}</span><span class="s2">)\b&quot;</span><span class="p">,</span> <span class="n">raw_body</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">year_match</span><span class="p">:</span>
+        <span class="n">year</span> <span class="o">=</span> <span class="n">year_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Extract authors — everything before the first quote or title</span>
+    <span class="n">authors</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">title_match</span><span class="p">:</span>
+        <span class="n">authors</span> <span class="o">=</span> <span class="n">raw_body</span><span class="p">[:</span> <span class="n">title_match</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Fallback: take everything before first comma-separated chunk with year</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">raw_body</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">authors</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="c1"># Extract venue — between title and year, typically in *Venue* or plain</span>
+    <span class="n">venue</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">venue_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\*(.+?)\*&quot;</span><span class="p">,</span> <span class="n">raw_body</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">venue_match</span><span class="p">:</span>
+        <span class="n">venue</span> <span class="o">=</span> <span class="n">venue_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Reference</span><span class="p">(</span>
+        <span class="n">number</span><span class="o">=</span><span class="n">number</span><span class="p">,</span>
+        <span class="n">raw</span><span class="o">=</span><span class="n">raw</span><span class="p">,</span>
+        <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">authors</span><span class="o">=</span><span class="n">authors</span><span class="p">,</span>
+        <span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span>
+        <span class="n">venue</span><span class="o">=</span><span class="n">venue</span><span class="p">,</span>
+        <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="parse_references_section">
+<a class="viewcode-back" href="../../module_docs/citeget/acquire_references.html#citeget.parse_references_section">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_references_section</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a references section into a list of Reference objects.</span>
+
+<span class="sd">    Expects lines starting with [N] as reference entries.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">refs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">current_ref</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">current_num</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">):</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">num_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\[(\d+)\]&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">num_match</span><span class="p">:</span>
+            <span class="c1"># Save previous ref</span>
+            <span class="k">if</span> <span class="n">current_ref</span><span class="p">:</span>
+                <span class="n">refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parse_reference</span><span class="p">(</span><span class="n">current_ref</span><span class="p">,</span> <span class="n">current_num</span><span class="p">))</span>
+            <span class="n">current_num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">current_ref</span> <span class="o">=</span> <span class="n">line</span>
+        <span class="k">elif</span> <span class="n">current_ref</span><span class="p">:</span>
+            <span class="c1"># Continuation line</span>
+            <span class="n">current_ref</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">line</span>
+
+    <span class="c1"># Don&#39;t forget the last one</span>
+    <span class="k">if</span> <span class="n">current_ref</span><span class="p">:</span>
+        <span class="n">refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parse_reference</span><span class="p">(</span><span class="n">current_ref</span><span class="p">,</span> <span class="n">current_num</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">refs</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_clean_title_for_query</span><span class="p">(</span><span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove punctuation and normalize whitespace for search queries.&quot;&quot;&quot;</span>
+    <span class="c1"># Remove common punctuation that hurts search</span>
+    <span class="n">cleaned</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[</span><span class="se">\&quot;</span><span class="s2">&#39;:;,.!?()</span><span class="si">{}</span><span class="s2">[\]—–\-]&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+    <span class="c1"># Collapse whitespace</span>
+    <span class="n">cleaned</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">cleaned</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">cleaned</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_first_author_surname</span><span class="p">(</span><span class="n">authors</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract the surname of the first author.&quot;&quot;&quot;</span>
+    <span class="n">surnames</span> <span class="o">=</span> <span class="n">_parse_all_surnames</span><span class="p">(</span><span class="n">authors</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">surnames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">surnames</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_all_surnames</span><span class="p">(</span><span class="n">authors</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract all author surnames from an author string.</span>
+
+<span class="sd">    Handles formats like:</span>
+<span class="sd">        &quot;A. B. Smith, C. D. Jones, and E. F. Brown&quot;</span>
+<span class="sd">        &quot;S. De et al.&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">authors</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="c1"># Handle &quot;et al.&quot; — only first author is known</span>
+    <span class="k">if</span> <span class="s2">&quot;et al&quot;</span> <span class="ow">in</span> <span class="n">authors</span><span class="p">:</span>
+        <span class="n">before_et</span> <span class="o">=</span> <span class="n">authors</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;et al&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">before_et</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">real</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tokens</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">real</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">real</span> <span class="k">else</span> <span class="n">tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span>
+
+    <span class="c1"># Split on comma and &quot;and&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">authors</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; and &quot;</span><span class="p">,</span> <span class="s2">&quot;, &quot;</span><span class="p">)</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span>
+
+    <span class="n">surnames</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="c1"># Skip initials (single letter or letter+period)</span>
+        <span class="n">real_words</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tokens</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">real_words</span><span class="p">:</span>
+            <span class="n">surnames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">real_words</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">surnames</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apa7_authors</span><span class="p">(</span><span class="n">authors</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format authors in APA 7 citation style (surnames only).</span>
+
+<span class="sd">    1 author  -&gt; &quot;Smith&quot;</span>
+<span class="sd">    2 authors -&gt; &quot;Smith &amp; Jones&quot;</span>
+<span class="sd">    3+ authors -&gt; &quot;Smith et al.&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">surnames</span> <span class="o">=</span> <span class="n">_parse_all_surnames</span><span class="p">(</span><span class="n">authors</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">surnames</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;Unknown&quot;</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">surnames</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">surnames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">surnames</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">surnames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> &amp; </span><span class="si">{</span><span class="n">surnames</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">surnames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> et al.&quot;</span>
+
+
+<div class="viewcode-block" id="generate_search_queries">
+<a class="viewcode-back" href="../../module_docs/citeget/acquire_references.html#citeget.generate_search_queries">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_search_queries</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a sequence of search queries from most to least specific.</span>
+
+<span class="sd">    Returns list of (query_string, description) tuples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">queries</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">clean_title</span> <span class="o">=</span> <span class="n">_clean_title_for_query</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">title_words</span> <span class="o">=</span> <span class="n">clean_title</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">surname</span> <span class="o">=</span> <span class="n">_first_author_surname</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">authors</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">clean_title</span><span class="p">:</span>
+        <span class="c1"># 1. Full clean title (mid-specificity — good starting point)</span>
+        <span class="n">queries</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">clean_title</span><span class="p">,</span> <span class="s2">&quot;full title&quot;</span><span class="p">))</span>
+
+        <span class="c1"># 2. Title + first author (more specific)</span>
+        <span class="k">if</span> <span class="n">surname</span><span class="p">:</span>
+            <span class="n">queries</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">clean_title</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">surname</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;title + author&quot;</span><span class="p">))</span>
+
+        <span class="c1"># 3. First 6 words of title (less specific)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">title_words</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="n">short_title</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">title_words</span><span class="p">[:</span><span class="mi">6</span><span class="p">])</span>
+            <span class="n">queries</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">short_title</span><span class="p">,</span> <span class="s2">&quot;short title (6 words)&quot;</span><span class="p">))</span>
+
+        <span class="c1"># 4. First 4 words + author (different balance)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">title_words</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">surname</span><span class="p">:</span>
+            <span class="n">queries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">title_words</span><span class="p">[:</span><span class="mi">4</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">surname</span><span class="p">,</span> <span class="s2">&quot;4 words + author&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># 5. First 3 words only (very broad)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">title_words</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">queries</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">title_words</span><span class="p">[:</span><span class="mi">3</span><span class="p">]),</span> <span class="s2">&quot;3 words (broad)&quot;</span><span class="p">))</span>
+
+    <span class="c1"># 6. Author + year (last resort, very broad)</span>
+    <span class="k">if</span> <span class="n">surname</span> <span class="ow">and</span> <span class="n">ref</span><span class="o">.</span><span class="n">year</span><span class="p">:</span>
+        <span class="n">queries</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">surname</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;author + year&quot;</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">queries</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_arxiv_url</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">&quot;arxiv.org&quot;</span> <span class="ow">in</span> <span class="n">url</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_arxiv_pdf_url</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert an arxiv abstract/abs URL to a PDF URL.&quot;&quot;&quot;</span>
+    <span class="c1"># https://arxiv.org/abs/2206.11893 -&gt; https://arxiv.org/pdf/2206.11893</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/abs/&quot;</span><span class="p">,</span> <span class="s2">&quot;/pdf/&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.pdf&quot;</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">+=</span> <span class="s2">&quot;.pdf&quot;</span>
+    <span class="k">return</span> <span class="n">url</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_download_url</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Try to download a URL as a PDF. Returns True on success.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) &quot;</span>
+                <span class="s2">&quot;AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36&quot;</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">content_type</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check if it&#39;s actually a PDF</span>
+        <span class="n">first_bytes</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span>
+        <span class="n">chunks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">8192</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">first_bytes</span><span class="p">:</span>
+                <span class="n">first_bytes</span> <span class="o">=</span> <span class="n">chunk</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span>
+            <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+
+        <span class="c1"># Accept if content-type says PDF or first bytes are %PDF</span>
+        <span class="k">if</span> <span class="sa">b</span><span class="s2">&quot;%PDF&quot;</span> <span class="ow">in</span> <span class="n">first_bytes</span> <span class="ow">or</span> <span class="s2">&quot;pdf&quot;</span> <span class="ow">in</span> <span class="n">content_type</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">1000</span>  <span class="c1"># Reject tiny files</span>
+
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Download failed for </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_try_direct_download</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Try to download the reference directly from its URL.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">url</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">url</span>
+
+    <span class="c1"># ArXiv: convert to PDF URL</span>
+    <span class="k">if</span> <span class="n">_is_arxiv_url</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">_arxiv_pdf_url</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+
+    <span class="c1"># OpenReview: try PDF URL</span>
+    <span class="k">if</span> <span class="s2">&quot;openreview.net&quot;</span> <span class="ow">in</span> <span class="n">url</span> <span class="ow">and</span> <span class="s2">&quot;/pdf?&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/forum?&quot;</span><span class="p">,</span> <span class="s2">&quot;/pdf?&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Intel white papers and other direct PDFs</span>
+    <span class="k">return</span> <span class="n">_download_url</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_filename</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">150</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Make a string safe for use as a filename.&quot;&quot;&quot;</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[&lt;&gt;:&quot;/</span><span class="se">\\</span><span class="s1">|?*]&#39;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_length</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[:</span><span class="n">max_length</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">name</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_make_ref_filename</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a filename for a reference.</span>
+
+<span class="sd">    Format: ``{title} ({authors_apa7}, {year}).pdf``</span>
+<span class="sd">    where authors_apa7 follows APA 7 citation style:</span>
+<span class="sd">    1 author -&gt; &quot;Smith&quot;, 2 -&gt; &quot;Smith &amp; Jones&quot;, 3+ -&gt; &quot;Smith et al.&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">120</span><span class="p">]</span> <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;ref_</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">apa</span> <span class="o">=</span> <span class="n">_apa7_authors</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">authors</span><span class="p">)</span> <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">authors</span> <span class="k">else</span> <span class="s2">&quot;Unknown&quot;</span>
+
+    <span class="c1"># Extract just the 4-digit year</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">year</span>
+    <span class="k">if</span> <span class="n">year</span><span class="p">:</span>
+        <span class="n">year_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\d</span><span class="si">{4}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">year_match</span><span class="p">:</span>
+            <span class="n">year</span> <span class="o">=</span> <span class="n">year_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">year</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">apa</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">year</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">apa</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">return</span> <span class="n">_sanitize_filename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.pdf&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_match_result_to_ref</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Score how well a libgen result matches a reference (0-1).&quot;&quot;&quot;</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="n">ref_title_lower</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">result_title_lower</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">result_title_lower</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+
+    <span class="c1"># Title similarity</span>
+    <span class="n">ref_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">,</span> <span class="n">ref_title_lower</span><span class="p">))</span>
+    <span class="n">result_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">,</span> <span class="n">result_title_lower</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">ref_words</span> <span class="ow">and</span> <span class="n">result_words</span><span class="p">:</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_words</span> <span class="o">&amp;</span> <span class="n">result_words</span><span class="p">)</span>
+        <span class="n">title_score</span> <span class="o">=</span> <span class="n">overlap</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ref_words</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">score</span> <span class="o">+=</span> <span class="n">title_score</span> <span class="o">*</span> <span class="mf">0.6</span>
+
+    <span class="c1"># Author match</span>
+    <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">authors</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;authors&quot;</span><span class="p">):</span>
+        <span class="n">ref_surname</span> <span class="o">=</span> <span class="n">_first_author_surname</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">authors</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">ref_surname</span> <span class="ow">and</span> <span class="n">ref_surname</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;authors&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="n">score</span> <span class="o">+=</span> <span class="mf">0.25</span>
+
+    <span class="c1"># Year match</span>
+    <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">year</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;year&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">year</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;year&quot;</span><span class="p">]:</span>
+            <span class="n">score</span> <span class="o">+=</span> <span class="mf">0.15</span>
+
+    <span class="k">return</span> <span class="n">score</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_try_libgen</span><span class="p">(</span>
+    <span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span>
+    <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">topic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;articles&quot;</span><span class="p">,</span>
+    <span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30000</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Try to find and download the reference from libgen.</span>
+
+<span class="sd">    Returns filepath on success, None on failure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">search</span> <span class="k">as</span> <span class="n">libgen_search</span><span class="p">,</span> <span class="n">download_one</span>
+
+    <span class="n">queries</span> <span class="o">=</span> <span class="n">generate_search_queries</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">query_text</span><span class="p">,</span> <span class="n">query_desc</span> <span class="ow">in</span> <span class="n">queries</span><span class="p">:</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="n">libgen_search</span><span class="p">(</span>
+                <span class="n">query_text</span><span class="p">,</span>
+                <span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span>
+                <span class="n">results_per_page</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
+                <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">log_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span>
+                    <span class="s2">&quot;ref_number&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">,</span>
+                    <span class="s2">&quot;ref_title&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">80</span><span class="p">],</span>
+                    <span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">query_text</span><span class="p">,</span>
+                    <span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="n">query_desc</span><span class="p">,</span>
+                    <span class="s2">&quot;num_results&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="s2">&quot;matched&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)[:</span><span class="mi">100</span><span class="p">],</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># Score results</span>
+        <span class="n">best_result</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">best_score</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+            <span class="n">score</span> <span class="o">=</span> <span class="n">_match_result_to_ref</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ref</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
+                <span class="n">best_score</span> <span class="o">=</span> <span class="n">score</span>
+                <span class="n">best_result</span> <span class="o">=</span> <span class="n">r</span>
+
+        <span class="n">matched</span> <span class="o">=</span> <span class="n">best_score</span> <span class="o">&gt;=</span> <span class="mf">0.4</span> <span class="ow">and</span> <span class="n">best_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="n">log_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span>
+                <span class="s2">&quot;ref_number&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">,</span>
+                <span class="s2">&quot;ref_title&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">80</span><span class="p">],</span>
+                <span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">query_text</span><span class="p">,</span>
+                <span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="n">query_desc</span><span class="p">,</span>
+                <span class="s2">&quot;num_results&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">),</span>
+                <span class="s2">&quot;matched&quot;</span><span class="p">:</span> <span class="n">matched</span><span class="p">,</span>
+                <span class="s2">&quot;best_score&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">best_score</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                <span class="s2">&quot;best_title&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="n">best_result</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">][:</span><span class="mi">80</span><span class="p">]</span> <span class="k">if</span> <span class="n">best_result</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">matched</span><span class="p">:</span>
+            <span class="c1"># Also try books topic if articles didn&#39;t yield PDF</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">downloaded</span> <span class="o">=</span> <span class="n">download_one</span><span class="p">(</span>
+                    <span class="n">best_result</span><span class="p">,</span>
+                    <span class="n">download_dir</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="p">),</span>
+                    <span class="n">timeout</span><span class="o">=</span><span class="mi">60000</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">downloaded</span><span class="p">:</span>
+                    <span class="c1"># Rename to our standard name</span>
+                    <span class="n">dl_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">downloaded</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">dl_path</span> <span class="o">!=</span> <span class="n">filepath</span> <span class="ow">and</span> <span class="n">dl_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                        <span class="k">if</span> <span class="n">filepath</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                            <span class="n">filepath</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+                        <span class="n">dl_path</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">log_entries</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;download failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">continue</span>
+
+        <span class="c1"># Strategy: if too many results and no match, queries will get more specific</span>
+        <span class="c1"># If no results, queries will get broader — the query list handles this</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_try_arxiv_search</span><span class="p">(</span>
+    <span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span>
+    <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Search arxiv API for the paper and download if found.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">xml.etree</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElementTree</span> <span class="k">as</span> <span class="n">ET</span>
+
+    <span class="n">surname</span> <span class="o">=</span> <span class="n">_first_author_surname</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">authors</span><span class="p">)</span>
+    <span class="n">clean_title</span> <span class="o">=</span> <span class="n">_clean_title_for_query</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+
+    <span class="c1"># Build arxiv query: author + title keywords</span>
+    <span class="n">query_parts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">surname</span><span class="p">:</span>
+        <span class="n">query_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;au:</span><span class="si">{</span><span class="n">surname</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">clean_title</span><span class="p">:</span>
+        <span class="c1"># Use first few significant title words</span>
+        <span class="n">title_words</span> <span class="o">=</span> <span class="n">clean_title</span><span class="o">.</span><span class="n">split</span><span class="p">()[:</span><span class="mi">6</span><span class="p">]</span>
+        <span class="n">title_q</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">title_words</span><span class="p">)</span>
+        <span class="n">query_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ti:</span><span class="si">{</span><span class="n">title_q</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">query_parts</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;+AND+&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">query_parts</span><span class="p">)</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;http://export.arxiv.org/api/query?search_query=</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&amp;max_results=5&quot;</span>
+
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">root</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">ns</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.w3.org/2005/Atom&quot;</span><span class="p">}</span>
+        <span class="n">entries</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;a:entry&quot;</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+            <span class="n">title_el</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;a:title&quot;</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">title_el</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">entry_title</span> <span class="o">=</span> <span class="n">title_el</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+            <span class="c1"># Check title similarity</span>
+            <span class="n">ref_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+            <span class="n">entry_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">,</span> <span class="n">entry_title</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+            <span class="k">if</span> <span class="n">ref_words</span> <span class="ow">and</span> <span class="n">entry_words</span><span class="p">:</span>
+                <span class="n">overlap</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_words</span> <span class="o">&amp;</span> <span class="n">entry_words</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ref_words</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">overlap</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+                    <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Find PDF link</span>
+            <span class="n">pdf_links</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">entry</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;a:link&quot;</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;application/pdf&quot;</span>
+            <span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">pdf_links</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">pdf_url</span> <span class="o">=</span> <span class="n">pdf_links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">_download_url</span><span class="p">(</span><span class="n">pdf_url</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+                <span class="n">log_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span>
+                        <span class="s2">&quot;ref_number&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">,</span>
+                        <span class="s2">&quot;ref_title&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">80</span><span class="p">],</span>
+                        <span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">query</span><span class="p">,</span>
+                        <span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="s2">&quot;arxiv_search&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;num_results&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">),</span>
+                        <span class="s2">&quot;matched&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="s2">&quot;best_score&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">overlap</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                        <span class="s2">&quot;best_title&quot;</span><span class="p">:</span> <span class="n">entry_title</span><span class="p">[:</span><span class="mi">80</span><span class="p">],</span>
+                        <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Arxiv search failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_try_scihub_via_doi</span><span class="p">(</span>
+    <span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span>
+    <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look up DOI via Crossref, then try Sci-Hub.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bs4</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeautifulSoup</span>
+
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) &quot;</span>
+            <span class="s2">&quot;AppleWebKit/537.36&quot;</span>
+        <span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Step 1: Find DOI via Crossref</span>
+    <span class="n">clean_title</span> <span class="o">=</span> <span class="n">_clean_title_for_query</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">surname</span> <span class="o">=</span> <span class="n">_first_author_surname</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">authors</span><span class="p">)</span>
+    <span class="n">crossref_query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">clean_title</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">surname</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="n">doi</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.crossref.org/works?query=</span><span class="si">{</span><span class="n">crossref_query</span><span class="si">}</span><span class="s2">&amp;rows=3&quot;</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;items&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+                <span class="n">item_title</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="n">ref_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+                <span class="n">item_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">,</span> <span class="n">item_title</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">ref_words</span> <span class="ow">and</span> <span class="n">item_words</span><span class="p">:</span>
+                    <span class="n">overlap</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_words</span> <span class="o">&amp;</span> <span class="n">item_words</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ref_words</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">overlap</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">:</span>
+                        <span class="n">doi</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;DOI&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                        <span class="k">break</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">doi</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># Step 2: Try Sci-Hub with DOI</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">scihub_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;https://sci-hub.ru/</span><span class="si">{</span><span class="n">doi</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">scihub_url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
+        <span class="c1"># Find storage links (direct PDF paths on Sci-Hub)</span>
+        <span class="n">storage_links</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">href</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s2">&quot;/storage/&quot;</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">storage_links</span><span class="p">:</span>
+            <span class="n">pdf_link</span> <span class="o">=</span> <span class="n">storage_links</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">pdf_link</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">):</span>
+                <span class="n">pdf_link</span> <span class="o">=</span> <span class="s2">&quot;https://sci-hub.ru&quot;</span> <span class="o">+</span> <span class="n">pdf_link</span>
+
+            <span class="n">pdf_resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pdf_link</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pdf_resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">pdf_resp</span><span class="o">.</span><span class="n">content</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+                <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">filepath</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">pdf_resp</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+                <span class="n">log_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span>
+                        <span class="s2">&quot;ref_number&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">,</span>
+                        <span class="s2">&quot;ref_title&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">80</span><span class="p">],</span>
+                        <span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">doi</span><span class="p">,</span>
+                        <span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="s2">&quot;scihub_doi&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;num_results&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                        <span class="s2">&quot;matched&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="s2">&quot;best_score&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+                        <span class="s2">&quot;best_title&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sci-Hub DOI lookup failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="acquire_reference">
+<a class="viewcode-back" href="../../module_docs/citeget/acquire_references.html#citeget.acquire_reference">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">acquire_reference</span><span class="p">(</span>
+    <span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span>
+    <span class="n">download_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">strategy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">libgen_topics</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;articles&quot;</span><span class="p">,</span> <span class="s2">&quot;books&quot;</span><span class="p">),</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30000</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AcquisitionResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Try to acquire a single reference PDF.</span>
+
+<span class="sd">    When *strategy* is given, delegates entirely to the composable</span>
+<span class="sd">    strategy system in :mod:`citeget.resolve`.  Otherwise falls back to</span>
+<span class="sd">    the legacy hard-coded chain for backward compatibility.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ref: The reference to acquire.</span>
+<span class="sd">        download_dir: Where to save the PDF.</span>
+<span class="sd">        log_entries: List to append log dicts to (mutated in place).</span>
+<span class="sd">        strategy: An ``AcquisitionStrategy`` callable, a registered</span>
+<span class="sd">            strategy name (``str``), or ``None`` for the legacy chain.</span>
+<span class="sd">            Pass ``&quot;default&quot;`` to use the new composable default.</span>
+<span class="sd">        libgen_topics: Topics to try on libgen (legacy chain only).</span>
+<span class="sd">        timeout: Timeout for browser operations (legacy chain only).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
+    <span class="n">download_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">_make_ref_filename</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+    <span class="n">filepath</span> <span class="o">=</span> <span class="n">download_dir</span> <span class="o">/</span> <span class="n">filename</span>
+
+    <span class="c1"># Skip if already exists</span>
+    <span class="k">if</span> <span class="n">filepath</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">filepath</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">),</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;already_exists&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># --- New composable path ---</span>
+    <span class="k">if</span> <span class="n">strategy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.resolve</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_reference</span><span class="p">,</span> <span class="n">with_logging</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.resolve</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_strategy</span>
+
+            <span class="n">strat</span> <span class="o">=</span> <span class="n">get_strategy</span><span class="p">(</span><span class="n">strategy</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">strat</span> <span class="o">=</span> <span class="n">strategy</span>
+
+        <span class="n">strat</span> <span class="o">=</span> <span class="n">with_logging</span><span class="p">(</span><span class="n">strat</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;resolve&quot;</span><span class="p">,</span> <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">)</span>
+        <span class="n">result_path</span> <span class="o">=</span> <span class="n">resolve_reference</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">strat</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result_path</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+                <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+                <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">filepath</span><span class="o">=</span><span class="n">result_path</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;resolved&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+            <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;All strategies exhausted&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># --- Legacy hard-coded chain (backward compatible) ---</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">)</span>
+
+    <span class="c1"># 1. Try direct URL</span>
+    <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_try_direct_download</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+            <span class="n">log_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span>
+                    <span class="s2">&quot;ref_number&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">,</span>
+                    <span class="s2">&quot;ref_title&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">80</span><span class="p">],</span>
+                    <span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+                    <span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct_url&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;num_results&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="s2">&quot;matched&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">&quot;best_score&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+                    <span class="s2">&quot;best_title&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+                <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+                <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">filepath</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">),</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;direct_url&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span>
+                    <span class="s2">&quot;ref_number&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">,</span>
+                    <span class="s2">&quot;ref_title&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">80</span><span class="p">],</span>
+                    <span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+                    <span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="s2">&quot;direct_url&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;num_results&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="s2">&quot;matched&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;best_score&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="s2">&quot;best_title&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;direct download failed or not PDF&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+    <span class="c1"># 2. Try libgen with each topic</span>
+    <span class="n">queries_tried</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">topic</span> <span class="ow">in</span> <span class="n">libgen_topics</span><span class="p">:</span>
+        <span class="n">result_path</span> <span class="o">=</span> <span class="n">_try_libgen</span><span class="p">(</span>
+            <span class="n">ref</span><span class="p">,</span>
+            <span class="n">filepath</span><span class="p">,</span>
+            <span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span>
+            <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">result_path</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+                <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+                <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">filepath</span><span class="o">=</span><span class="n">result_path</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;libgen_</span><span class="si">{</span><span class="n">topic</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">queries_tried</span><span class="o">=</span><span class="n">queries_tried</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="c1"># 3. Try arxiv API search (finds preprints not caught by URL)</span>
+    <span class="n">arxiv_path</span> <span class="o">=</span> <span class="n">_try_arxiv_search</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">arxiv_path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">filepath</span><span class="o">=</span><span class="n">arxiv_path</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;arxiv_search&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 4. Try Sci-Hub via DOI lookup (Crossref → Sci-Hub)</span>
+    <span class="n">scihub_path</span> <span class="o">=</span> <span class="n">_try_scihub_via_doi</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">scihub_path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">filepath</span><span class="o">=</span><span class="n">scihub_path</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;scihub_doi&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+        <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+        <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span>
+        <span class="n">queries_tried</span><span class="o">=</span><span class="n">queries_tried</span><span class="p">,</span>
+        <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;All strategies exhausted&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="acquire_all_references">
+<a class="viewcode-back" href="../../module_docs/citeget/acquire_references.html#citeget.acquire_all_references">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">acquire_all_references</span><span class="p">(</span>
+    <span class="n">references</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">download_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">work_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">strategy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">libgen_topics</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;articles&quot;</span><span class="p">,</span> <span class="s2">&quot;books&quot;</span><span class="p">),</span>
+    <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Acquire PDFs for a list of references.</span>
+
+<span class="sd">    Checks for already-downloaded files first and skips them, reporting</span>
+<span class="sd">    which references are being skipped so the user can re-download by</span>
+<span class="sd">    renaming or removing the existing file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        references: List of Reference objects.</span>
+<span class="sd">        download_dir: Where to save PDFs (the ``references/`` subdirectory</span>
+<span class="sd">            inside the work_dir, or a standalone directory).</span>
+<span class="sd">        work_dir: Optional work directory — if given, ``log_file`` defaults</span>
+<span class="sd">            to ``{work_dir}/{datetime}__acquisition_log.txt``.</span>
+<span class="sd">        log_file: Explicit path for the acquisition log. If None and</span>
+<span class="sd">            ``work_dir`` is given, auto-generated with timestamp.</span>
+<span class="sd">        strategy: Acquisition strategy — a callable, registered name,</span>
+<span class="sd">            or ``None`` for the legacy chain.  Pass ``&quot;default&quot;`` to use</span>
+<span class="sd">            the composable default from :mod:`citeget.resolve`.</span>
+<span class="sd">        libgen_topics: Libgen topics to try (legacy chain only).</span>
+<span class="sd">        delay: Seconds between operations (rate limiting).</span>
+<span class="sd">        verbose: Print progress.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (successes, failures, log_entries) where successes and failures</span>
+<span class="sd">        are lists of AcquisitionResult.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
+    <span class="n">download_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Default log file with timestamp</span>
+    <span class="k">if</span> <span class="n">log_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">work_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H%M&quot;</span><span class="p">)</span>
+        <span class="n">log_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ts</span><span class="si">}</span><span class="s2">__acquisition_log.txt&quot;</span>
+
+    <span class="n">log_entries</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">successes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">failures</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># (C) Check for already-downloaded files</span>
+    <span class="n">to_acquire</span><span class="p">,</span> <span class="n">already_have</span> <span class="o">=</span> <span class="n">check_existing_downloads</span><span class="p">(</span><span class="n">references</span><span class="p">,</span> <span class="n">download_dir</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">already_have</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Skipping </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">already_have</span><span class="p">)</span><span class="si">}</span><span class="s2"> already-downloaded reference(s):&quot;</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">ref</span><span class="p">,</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="n">already_have</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  [</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;        -&gt; </span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;  (To re-download, rename or move the existing file.)</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Record already-have as successes</span>
+    <span class="k">for</span> <span class="n">ref</span><span class="p">,</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="n">already_have</span><span class="p">:</span>
+        <span class="n">successes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">AcquisitionResult</span><span class="p">(</span>
+                <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+                <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">filepath</span><span class="o">=</span><span class="n">fpath</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;already_exists&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ref</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">)</span><span class="si">}</span><span class="s2">] Ref [</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">]: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">...&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">acquire_reference</span><span class="p">(</span>
+            <span class="n">ref</span><span class="p">,</span>
+            <span class="n">download_dir</span><span class="p">,</span>
+            <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">,</span>
+            <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span>
+            <span class="n">libgen_topics</span><span class="o">=</span><span class="n">libgen_topics</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+            <span class="n">successes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  SUCCESS (</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2">) -&gt; </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">filepath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">failures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  FAILED: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Rate limit between libgen operations</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">delay</span><span class="p">:</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+
+    <span class="c1"># Write log</span>
+    <span class="k">if</span> <span class="n">log_file</span><span class="p">:</span>
+        <span class="n">_write_log</span><span class="p">(</span><span class="n">log_entries</span><span class="p">,</span> <span class="n">log_file</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">successes</span><span class="p">,</span> <span class="n">failures</span><span class="p">,</span> <span class="n">log_entries</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_log</span><span class="p">(</span><span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write acquisition log as a TSV file for easy parsing.&quot;&quot;&quot;</span>
+    <span class="n">log_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span>
+    <span class="n">log_file</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;timestamp&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ref_number&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;ref_title&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;query&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;query_type&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;num_results&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;matched&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;best_score&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;best_title&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;error&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">log_entries</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+                <span class="c1"># Escape tabs and newlines</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
+                <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="write_references_md">
+<a class="viewcode-back" href="../../module_docs/citeget/acquire_references.html#citeget.write_references_md">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_references_md</span><span class="p">(</span>
+    <span class="n">successes</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">download_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">output_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a references.md with hyperlinks to local downloaded files.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">quote</span>
+
+    <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# Acquired References</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">successes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">reference</span>
+            <span class="n">filepath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">filepath</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">filepath</span> <span class="ow">and</span> <span class="n">filepath</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="c1"># Relative path from output_file&#39;s directory, URL-encoded</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">rel</span> <span class="o">=</span> <span class="n">filepath</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">output_file</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">rel</span> <span class="o">=</span> <span class="n">filepath</span>
+                <span class="c1"># Use ./ prefix and URL-encode for markdown link compatibility</span>
+                <span class="n">encoded</span> <span class="o">=</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">quote</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">rel</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+                <span class="n">link</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;./</span><span class="si">{</span><span class="n">encoded</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;./&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">encoded</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">raw</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - **Local file**: [</span><span class="si">{</span><span class="n">filepath</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">](</span><span class="si">{</span><span class="n">link</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Method: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">raw</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Method: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2"> (file missing)</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="write_missed_references_md">
+<a class="viewcode-back" href="../../module_docs/citeget/acquire_references.html#citeget.write_missed_references_md">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_missed_references_md</span><span class="p">(</span>
+    <span class="n">failures</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">output_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a markdown file listing references that could not be acquired.&quot;&quot;&quot;</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# Missed References</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Generated: </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total missed: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">failures</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">failures</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+            <span class="n">ref</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">reference</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">raw</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - Notes: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

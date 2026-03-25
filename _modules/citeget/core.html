@@ -1,0 +1,646 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.core &mdash; citeget 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/resolve.html">citeget.resolve</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citeget.core</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citeget.core</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Core search and download logic for libgen.vg.</span>
+
+<span class="sd">Requires: playwright (with chromium browser installed).</span>
+<span class="sd">Install browsers: ``python -m playwright install chromium``</span>
+
+<span class="sd">The flow:</span>
+<span class="sd">1. Construct search URL with query + topic</span>
+<span class="sd">2. Load page in headless Chromium (JS-rendered table)</span>
+<span class="sd">3. Parse results table into list of dicts</span>
+<span class="sd">4. For each result to download:</span>
+<span class="sd">   a. Visit /ads.php to get session key</span>
+<span class="sd">   b. Download file from /get.php</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="n">BASE_URL</span> <span class="o">=</span> <span class="s2">&quot;https://libgen.vg&quot;</span>
+
+<span class="n">TOPIC_ALIASES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;books&quot;</span><span class="p">:</span> <span class="s2">&quot;l&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;articles&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fiction&quot;</span><span class="p">:</span> <span class="s2">&quot;f&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;comics&quot;</span><span class="p">:</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;magazines&quot;</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;standards&quot;</span><span class="p">:</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span>
+    <span class="c1"># Pass-through for raw codes</span>
+    <span class="s2">&quot;l&quot;</span><span class="p">:</span> <span class="s2">&quot;l&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;f&quot;</span><span class="p">:</span> <span class="s2">&quot;f&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;c&quot;</span><span class="p">:</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;m&quot;</span><span class="p">:</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;s&quot;</span><span class="p">:</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1"># Default columns and objects to search in (all of them)</span>
+<span class="n">_DEFAULT_COLUMNS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="s2">&quot;i&quot;</span><span class="p">]</span>
+<span class="n">_DEFAULT_OBJECTS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;f&quot;</span><span class="p">,</span> <span class="s2">&quot;e&quot;</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_topic</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve a human-friendly topic name to its single-letter code.&quot;&quot;&quot;</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">topic</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TOPIC_ALIASES</span><span class="p">:</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">!r}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">TOPIC_ALIASES</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unknown topic </span><span class="si">{</span><span class="n">topic</span><span class="si">!r}</span><span class="s2">. Valid topics: </span><span class="si">{</span><span class="n">valid</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(or raw codes: l, a, f, c, m, s)&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">TOPIC_ALIASES</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_search_url</span><span class="p">(</span>
+    <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">topic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;l&quot;</span><span class="p">,</span>
+    <span class="n">results_per_page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the search URL for libgen.vg.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlencode</span><span class="p">,</span> <span class="n">quote_plus</span>
+
+    <span class="c1"># Build params manually because of repeated keys (columns[], objects[])</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;req=</span><span class="si">{</span><span class="n">quote_plus</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">_DEFAULT_COLUMNS</span><span class="p">:</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;columns[]=</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">_DEFAULT_OBJECTS</span><span class="p">:</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;objects[]=</span><span class="si">{</span><span class="n">obj</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;topics[]=</span><span class="si">{</span><span class="n">topic</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;res=</span><span class="si">{</span><span class="n">results_per_page</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;filesuns=all&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">BASE_URL</span><span class="si">}</span><span class="s2">/index.php?</span><span class="si">{</span><span class="s1">&#39;&amp;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_title_cell</span><span class="p">(</span><span class="n">cell</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract title, DOI, and series info from the compound column 0 cell.&quot;&quot;&quot;</span>
+    <span class="n">links</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">query_selector_all</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">doi</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">series</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">links</span><span class="p">:</span>
+        <span class="n">href</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">text_content</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s2">&quot;series.php&quot;</span> <span class="ow">in</span> <span class="n">href</span><span class="p">:</span>
+            <span class="n">series</span> <span class="o">=</span> <span class="n">text</span>
+        <span class="k">elif</span> <span class="s2">&quot;edition.php&quot;</span> <span class="ow">in</span> <span class="n">href</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;DOI:&quot;</span><span class="p">):</span>
+                <span class="n">doi</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="mi">4</span><span class="p">:]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">_is_volume_or_date</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+                <span class="k">continue</span>  <span class="c1"># skip volume/issue/date entries</span>
+            <span class="k">elif</span> <span class="n">text</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">title</span><span class="p">:</span>  <span class="c1"># take the first non-date, non-DOI edition link</span>
+                    <span class="n">title</span> <span class="o">=</span> <span class="n">text</span>
+
+    <span class="k">return</span> <span class="n">title</span><span class="p">,</span> <span class="n">doi</span><span class="p">,</span> <span class="n">series</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_volume_or_date</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if text is a volume/issue/date string rather than a title.&quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="c1"># &quot;vol. X iss. Y&quot;, &quot;vol. X&quot;, &quot;iss. Y&quot;</span>
+    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;vol\.\s*\d&quot;</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;iss\.\s*\d&quot;</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="c1"># Date patterns: &quot;2001-mar&quot;, &quot;2001 March&quot;, etc.</span>
+    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\d</span><span class="si">{4}</span><span class="s2">[-\s]&quot;</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_size</span><span class="p">(</span><span class="n">size_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clean up size text (e.g., &#39;75 kB&#39;, &#39;2 MB&#39;).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">size_text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_results_table</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse the #tablelibgen table into a list of result dicts.&quot;&quot;&quot;</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">query_selector_all</span><span class="p">(</span><span class="s2">&quot;tr&quot;</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>  <span class="c1"># skip header</span>
+        <span class="n">cells</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">query_selector_all</span><span class="p">(</span><span class="s2">&quot;td&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cells</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">9</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">title</span><span class="p">,</span> <span class="n">doi</span><span class="p">,</span> <span class="n">series</span> <span class="o">=</span> <span class="n">_parse_title_cell</span><span class="p">(</span><span class="n">cells</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">authors</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text_content</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">publisher</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">text_content</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">year</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">text_content</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">language</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">text_content</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">pages</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">text_content</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">_parse_size</span><span class="p">(</span><span class="n">cells</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">text_content</span><span class="p">())</span>
+        <span class="n">extension</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span><span class="o">.</span><span class="n">text_content</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="c1"># Extract mirror links</span>
+        <span class="n">mirror_cell</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
+        <span class="n">mirror_links</span> <span class="o">=</span> <span class="n">mirror_cell</span><span class="o">.</span><span class="n">query_selector_all</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
+        <span class="n">mirrors</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">libgen_href</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">ml</span> <span class="ow">in</span> <span class="n">mirror_links</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">ml</span><span class="o">.</span><span class="n">text_content</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">href</span> <span class="o">=</span> <span class="n">ml</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">mirrors</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">href</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">libgen_href</span> <span class="ow">and</span> <span class="s2">&quot;/ads.php&quot;</span> <span class="ow">in</span> <span class="n">href</span><span class="p">:</span>
+                <span class="n">libgen_href</span> <span class="o">=</span> <span class="n">href</span>
+
+        <span class="c1"># Extract md5 from the libgen mirror link</span>
+        <span class="n">md5</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">libgen_href</span><span class="p">:</span>
+            <span class="n">md5_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;md5=([a-fA-F0-9]</span><span class="si">{32}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">libgen_href</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">md5_match</span><span class="p">:</span>
+                <span class="n">md5</span> <span class="o">=</span> <span class="n">md5_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
+                <span class="s2">&quot;authors&quot;</span><span class="p">:</span> <span class="n">authors</span><span class="p">,</span>
+                <span class="s2">&quot;publisher&quot;</span><span class="p">:</span> <span class="n">publisher</span><span class="p">,</span>
+                <span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="n">year</span><span class="p">,</span>
+                <span class="s2">&quot;language&quot;</span><span class="p">:</span> <span class="n">language</span><span class="p">,</span>
+                <span class="s2">&quot;pages&quot;</span><span class="p">:</span> <span class="n">pages</span><span class="p">,</span>
+                <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="n">size</span><span class="p">,</span>
+                <span class="s2">&quot;extension&quot;</span><span class="p">:</span> <span class="n">extension</span><span class="p">,</span>
+                <span class="s2">&quot;doi&quot;</span><span class="p">:</span> <span class="n">doi</span><span class="p">,</span>
+                <span class="s2">&quot;series&quot;</span><span class="p">:</span> <span class="n">series</span><span class="p">,</span>
+                <span class="s2">&quot;md5&quot;</span><span class="p">:</span> <span class="n">md5</span><span class="p">,</span>
+                <span class="s2">&quot;libgen_href&quot;</span><span class="p">:</span> <span class="n">libgen_href</span><span class="p">,</span>
+                <span class="s2">&quot;mirrors&quot;</span><span class="p">:</span> <span class="n">mirrors</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">results</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_browser_context</span><span class="p">(</span><span class="n">playwright</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">headless</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a browser and context with ad blocking.&quot;&quot;&quot;</span>
+    <span class="n">browser</span> <span class="o">=</span> <span class="n">playwright</span><span class="o">.</span><span class="n">chromium</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span><span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">)</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">new_context</span><span class="p">()</span>
+    <span class="c1"># Block ad domains</span>
+    <span class="n">context</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;**/*inopportunefable*&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">route</span><span class="p">:</span> <span class="n">route</span><span class="o">.</span><span class="n">abort</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">browser</span><span class="p">,</span> <span class="n">context</span>
+
+
+<div class="viewcode-block" id="search">
+<a class="viewcode-back" href="../../module_docs/citeget/core.html#citeget.search">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">search</span><span class="p">(</span>
+    <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">topic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;books&quot;</span><span class="p">,</span>
+    <span class="n">results_per_page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">headless</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20000</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Search libgen.vg and return a list of result dicts.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        query: Search terms.</span>
+<span class="sd">        topic: What to search for — &quot;books&quot;, &quot;articles&quot;, &quot;fiction&quot;, &quot;comics&quot;,</span>
+<span class="sd">               &quot;magazines&quot;, or &quot;standards&quot;.</span>
+<span class="sd">        results_per_page: How many results per page (25, 50, or 100).</span>
+<span class="sd">        headless: Run browser in headless mode (default True).</span>
+<span class="sd">        timeout: Page load timeout in ms.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of dicts with keys: title, authors, publisher, year, language,</span>
+<span class="sd">        pages, size, extension, doi, series, md5, libgen_href, mirrors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>
+
+    <span class="n">topic_code</span> <span class="o">=</span> <span class="n">_resolve_topic</span><span class="p">(</span><span class="n">topic</span><span class="p">)</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">_build_search_url</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">topic</span><span class="o">=</span><span class="n">topic_code</span><span class="p">,</span> <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+        <span class="n">browser</span><span class="p">,</span> <span class="n">context</span> <span class="o">=</span> <span class="n">_create_browser_context</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">page</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">new_page</span><span class="p">()</span>
+            <span class="n">page</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">wait_until</span><span class="o">=</span><span class="s2">&quot;networkidle&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+
+            <span class="n">table</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">query_selector</span><span class="p">(</span><span class="s2">&quot;#tablelibgen&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">table</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>
+
+            <span class="k">return</span> <span class="n">_parse_results_table</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">browser</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_download_url</span><span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">ads_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Navigate to ads.php and extract the get.php download URL.&quot;&quot;&quot;</span>
+    <span class="n">full_url</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">BASE_URL</span><span class="si">}{</span><span class="n">ads_url</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">ads_url</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">ads_url</span>
+    <span class="p">)</span>
+    <span class="n">page</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">full_url</span><span class="p">,</span> <span class="n">wait_until</span><span class="o">=</span><span class="s2">&quot;networkidle&quot;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+
+    <span class="n">get_link</span> <span class="o">=</span> <span class="n">page</span><span class="o">.</span><span class="n">query_selector</span><span class="p">(</span><span class="s1">&#39;a[href*=&quot;get.php&quot;]&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">get_link</span><span class="p">:</span>
+        <span class="n">href</span> <span class="o">=</span> <span class="n">get_link</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">href</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">href</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;http&quot;</span><span class="p">):</span>
+            <span class="n">href</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">BASE_URL</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">href</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">href</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_filename</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Make a string safe for use as a filename.&quot;&quot;&quot;</span>
+    <span class="c1"># Remove or replace problematic characters</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[&lt;&gt;:&quot;/</span><span class="se">\\</span><span class="s1">|?*]&#39;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_length</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[:</span><span class="n">max_length</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">name</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_apa7_authors</span><span class="p">(</span><span class="n">authors_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format authors in APA 7 citation style (surnames only).</span>
+
+<span class="sd">    Expects semicolon-separated or comma-separated author names from libgen.</span>
+<span class="sd">    1 author  -&gt; &quot;Smith&quot;</span>
+<span class="sd">    2 authors -&gt; &quot;Smith &amp; Jones&quot;</span>
+<span class="sd">    3+ authors -&gt; &quot;Smith et al.&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">authors_str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;Unknown&quot;</span>
+
+    <span class="c1"># Split on semicolons (libgen format) or &quot; and &quot;</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s*;\s*|\s+and\s+&quot;</span><span class="p">,</span> <span class="n">authors_str</span><span class="p">)</span>
+    <span class="n">surnames</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+        <span class="n">part</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">part</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="c1"># Take last word that&#39;s not an initial</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">real</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tokens</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">real</span><span class="p">:</span>
+            <span class="n">surnames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">real</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">tokens</span><span class="p">:</span>
+            <span class="n">surnames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">surnames</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;Unknown&quot;</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">surnames</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">surnames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">surnames</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">surnames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> &amp; </span><span class="si">{</span><span class="n">surnames</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">surnames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> et al.&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_make_filename</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a filename from result metadata.</span>
+
+<span class="sd">    Format: ``{title} ({authors_apa7}, {year}).{ext}``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)[:</span><span class="mi">120</span><span class="p">]</span> <span class="ow">or</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;md5&quot;</span><span class="p">,</span> <span class="s2">&quot;unknown&quot;</span><span class="p">)</span>
+    <span class="n">apa</span> <span class="o">=</span> <span class="n">_apa7_authors</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;authors&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">))</span>
+
+    <span class="n">year</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;year&quot;</span><span class="p">):</span>
+        <span class="n">year_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\d</span><span class="si">{4}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;year&quot;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">year_match</span><span class="p">:</span>
+            <span class="n">year</span> <span class="o">=</span> <span class="n">year_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">year</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">apa</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">year</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">apa</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;extension&quot;</span><span class="p">,</span> <span class="s2">&quot;pdf&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_sanitize_filename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+<div class="viewcode-block" id="download_one">
+<a class="viewcode-back" href="../../module_docs/citeget/core.html#citeget.download_one">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">download_one</span><span class="p">(</span>
+    <span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">download_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+    <span class="n">page</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60000</span><span class="p">,</span>
+    <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download a single result. Returns the saved file path, or None on failure.</span>
+
+<span class="sd">    If ``page`` is provided (a Playwright Page object), reuse it.</span>
+<span class="sd">    Otherwise, creates a new browser session (slower but standalone).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        result: A result dict from ``search()``.</span>
+<span class="sd">        download_dir: Where to save the file.</span>
+<span class="sd">        page: Optional Playwright page to reuse.</span>
+<span class="sd">        timeout: Download timeout in ms.</span>
+<span class="sd">        delay: Seconds to wait between page loads (rate limiting).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Path to the downloaded file, or None if download failed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>
+
+    <span class="n">libgen_href</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;libgen_href&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">libgen_href</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+    <span class="n">download_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">_make_filename</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="n">filepath</span> <span class="o">=</span> <span class="n">download_dir</span> <span class="o">/</span> <span class="n">filename</span>
+
+    <span class="c1"># Skip if already downloaded</span>
+    <span class="k">if</span> <span class="n">filepath</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_do_download</span><span class="p">(</span><span class="n">pg</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">delay</span><span class="p">:</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+
+        <span class="n">get_url</span> <span class="o">=</span> <span class="n">_get_download_url</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">libgen_href</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">get_url</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># Use Playwright&#39;s download handling</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">pg</span><span class="o">.</span><span class="n">expect_download</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span> <span class="k">as</span> <span class="n">download_info</span><span class="p">:</span>
+                <span class="n">pg</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">get_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+            <span class="n">download</span> <span class="o">=</span> <span class="n">download_info</span><span class="o">.</span><span class="n">value</span>
+
+            <span class="c1"># Use server-suggested filename if available, else our generated one</span>
+            <span class="n">suggested</span> <span class="o">=</span> <span class="n">download</span><span class="o">.</span><span class="n">suggested_filename</span>
+            <span class="k">if</span> <span class="n">suggested</span> <span class="ow">and</span> <span class="n">suggested</span> <span class="o">!=</span> <span class="s2">&quot;download&quot;</span><span class="p">:</span>
+                <span class="c1"># Keep our naming but use suggested extension if different</span>
+                <span class="k">pass</span>
+
+            <span class="n">download</span><span class="o">.</span><span class="n">save_as</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">))</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="c1"># Fallback: try direct request via page context</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">get_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+                    <span class="n">filepath</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">body</span><span class="p">())</span>
+                    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">page</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_do_download</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+
+    <span class="c1"># Standalone mode: create browser</span>
+    <span class="k">with</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+        <span class="n">browser</span><span class="p">,</span> <span class="n">context</span> <span class="o">=</span> <span class="n">_create_browser_context</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">headless</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pg</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">new_page</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">_do_download</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">browser</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="download_results">
+<a class="viewcode-back" href="../../module_docs/citeget/core.html#citeget.download_results">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">download_results</span><span class="p">(</span>
+    <span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">download_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+    <span class="n">max_downloads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+    <span class="n">headless</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60000</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download multiple results. Returns list of (result, filepath) tuples.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        results: List of result dicts from ``search()``.</span>
+<span class="sd">        download_dir: Where to save files.</span>
+<span class="sd">        max_downloads: Max number to download (0 = all).</span>
+<span class="sd">        delay: Seconds between downloads (rate limiting).</span>
+<span class="sd">        headless: Run browser in headless mode.</span>
+<span class="sd">        timeout: Per-download timeout in ms.</span>
+<span class="sd">        verbose: Print progress.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of (result_dict, filepath_or_None) tuples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>
+
+    <span class="n">to_download</span> <span class="o">=</span> <span class="n">results</span><span class="p">[:</span><span class="n">max_downloads</span><span class="p">]</span> <span class="k">if</span> <span class="n">max_downloads</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">results</span>
+    <span class="n">downloaded</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">with</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
+        <span class="n">browser</span><span class="p">,</span> <span class="n">context</span> <span class="o">=</span> <span class="n">_create_browser_context</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">page</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">new_page</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_download</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="n">title</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;?&quot;</span><span class="p">)[:</span><span class="mi">60</span><span class="p">]</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">to_download</span><span class="p">)</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+
+                <span class="n">filepath</span> <span class="o">=</span> <span class="n">download_one</span><span class="p">(</span>
+                    <span class="n">result</span><span class="p">,</span>
+                    <span class="n">download_dir</span><span class="o">=</span><span class="n">download_dir</span><span class="p">,</span>
+                    <span class="n">page</span><span class="o">=</span><span class="n">page</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                    <span class="n">delay</span><span class="o">=</span><span class="n">delay</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">downloaded</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">result</span><span class="p">,</span> <span class="n">filepath</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">filepath</span><span class="p">:</span>
+                        <span class="n">size</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  -&gt; saved (</span><span class="si">{</span><span class="n">size</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> bytes)&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  -&gt; FAILED&quot;</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">browser</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">downloaded</span></div>
+
+
+
+<div class="viewcode-block" id="search_and_download">
+<a class="viewcode-back" href="../../module_docs/citeget/core.html#citeget.search_and_download">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">search_and_download</span><span class="p">(</span>
+    <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">topic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;books&quot;</span><span class="p">,</span>
+    <span class="n">download_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
+    <span class="n">max_downloads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">results_per_page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+    <span class="n">headless</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30000</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Search libgen and download matching results in one shot.</span>
+
+<span class="sd">    This is the main convenience function. It runs the search, then downloads</span>
+<span class="sd">    up to ``max_downloads`` results into ``download_dir``.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        query: Search terms.</span>
+<span class="sd">        topic: &quot;books&quot;, &quot;articles&quot;, &quot;fiction&quot;, etc.</span>
+<span class="sd">        download_dir: Where to save files.</span>
+<span class="sd">        max_downloads: Max number to download (default 5, 0 = all).</span>
+<span class="sd">        results_per_page: Results per search page.</span>
+<span class="sd">        delay: Seconds between downloads.</span>
+<span class="sd">        headless: Headless browser mode.</span>
+<span class="sd">        timeout: Timeout in ms for page loads.</span>
+<span class="sd">        verbose: Print progress.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of (result_dict, filepath_or_None) tuples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Searching libgen.vg for: </span><span class="si">{</span><span class="n">query</span><span class="si">!r}</span><span class="s2"> (topic=</span><span class="si">{</span><span class="n">topic</span><span class="si">}</span><span class="s2">)...&quot;</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span>
+        <span class="n">query</span><span class="p">,</span>
+        <span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span>
+        <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">,</span>
+        <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> results.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">max_downloads</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloading up to </span><span class="si">{</span><span class="n">max_downloads</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">download_results</span><span class="p">(</span>
+        <span class="n">results</span><span class="p">,</span>
+        <span class="n">download_dir</span><span class="o">=</span><span class="n">download_dir</span><span class="p">,</span>
+        <span class="n">max_downloads</span><span class="o">=</span><span class="n">max_downloads</span><span class="p">,</span>
+        <span class="n">delay</span><span class="o">=</span><span class="n">delay</span><span class="p">,</span>
+        <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">,</span>
+        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

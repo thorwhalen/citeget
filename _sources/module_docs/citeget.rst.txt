@@ -1,0 +1,4 @@
+citeget
+=======
+.. automodule:: citeget
+   :members:

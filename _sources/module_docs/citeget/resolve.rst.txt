@@ -1,0 +1,4 @@
+citeget.resolve
+===============
+.. automodule:: citeget.resolve
+   :members:

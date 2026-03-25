@@ -1,0 +1,12 @@
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   module_docs/citeget
+   module_docs/citeget/__main__
+   module_docs/citeget/acquire_references
+   module_docs/citeget/article_pub
+   module_docs/citeget/cli
+   module_docs/citeget/core
+   module_docs/citeget/extract
+   module_docs/citeget/resolve

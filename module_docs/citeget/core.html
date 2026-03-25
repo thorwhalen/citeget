@@ -1,0 +1,236 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.core &mdash; citeget 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="citeget.extract" href="extract.html" />
+    <link rel="prev" title="citeget.cli" href="cli.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">citeget.cli</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">citeget.core</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.core.download_one"><code class="docutils literal notranslate"><span class="pre">download_one()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.core.download_results"><code class="docutils literal notranslate"><span class="pre">download_results()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.core.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.core.search_and_download"><code class="docutils literal notranslate"><span class="pre">search_and_download()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resolve.html">citeget.resolve</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">citeget.core</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/citeget/core.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-citeget.core">
+<span id="citeget-core"></span><h1>citeget.core<a class="headerlink" href="#module-citeget.core" title="Link to this heading"></a></h1>
+<p>Core search and download logic for libgen.vg.</p>
+<p>Requires: playwright (with chromium browser installed).
+Install browsers: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">playwright</span> <span class="pre">install</span> <span class="pre">chromium</span></code></p>
+<p>The flow:
+1. Construct search URL with query + topic
+2. Load page in headless Chromium (JS-rendered table)
+3. Parse results table into list of dicts
+4. For each result to download:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li><p>Visit /ads.php to get session key</p></li>
+<li><p>Download file from /get.php</p></li>
+</ol>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.core.download_one">
+<span class="sig-prename descclassname"><span class="pre">citeget.core.</span></span><span class="sig-name descname"><span class="pre">download_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/citeget/core.html#download_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.core.download_one" title="Link to this definition"></a></dt>
+<dd><p>Download a single result. Returns the saved file path, or None on failure.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">page</span></code> is provided (a Playwright Page object), reuse it.
+Otherwise, creates a new browser session (slower but standalone).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> – A result dict from <code class="docutils literal notranslate"><span class="pre">search()</span></code>.</p></li>
+<li><p><strong>download_dir</strong> – Where to save the file.</p></li>
+<li><p><strong>page</strong> – Optional Playwright page to reuse.</p></li>
+<li><p><strong>timeout</strong> – Download timeout in ms.</p></li>
+<li><p><strong>delay</strong> – Seconds to wait between page loads (rate limiting).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path to the downloaded file, or None if download failed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.core.download_results">
+<span class="sig-prename descclassname"><span class="pre">citeget.core.</span></span><span class="sig-name descname"><span class="pre">download_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_downloads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headless</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../../_modules/citeget/core.html#download_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.core.download_results" title="Link to this definition"></a></dt>
+<dd><p>Download multiple results. Returns list of (result, filepath) tuples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results</strong> – List of result dicts from <code class="docutils literal notranslate"><span class="pre">search()</span></code>.</p></li>
+<li><p><strong>download_dir</strong> – Where to save files.</p></li>
+<li><p><strong>max_downloads</strong> – Max number to download (0 = all).</p></li>
+<li><p><strong>delay</strong> – Seconds between downloads (rate limiting).</p></li>
+<li><p><strong>headless</strong> – Run browser in headless mode.</p></li>
+<li><p><strong>timeout</strong> – Per-download timeout in ms.</p></li>
+<li><p><strong>verbose</strong> – Print progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of (result_dict, filepath_or_None) tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.core.search">
+<span class="sig-prename descclassname"><span class="pre">citeget.core.</span></span><span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'books'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_per_page</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headless</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../../_modules/citeget/core.html#search"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.core.search" title="Link to this definition"></a></dt>
+<dd><p>Search libgen.vg and return a list of result dicts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> – Search terms.</p></li>
+<li><p><strong>topic</strong> – What to search for — “books”, “articles”, “fiction”, “comics”,
+“magazines”, or “standards”.</p></li>
+<li><p><strong>results_per_page</strong> – How many results per page (25, 50, or 100).</p></li>
+<li><p><strong>headless</strong> – Run browser in headless mode (default True).</p></li>
+<li><p><strong>timeout</strong> – Page load timeout in ms.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>title, authors, publisher, year, language,
+pages, size, extension, doi, series, md5, libgen_href, mirrors.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of dicts with keys</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.core.search_and_download">
+<span class="sig-prename descclassname"><span class="pre">citeget.core.</span></span><span class="sig-name descname"><span class="pre">search_and_download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'books'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_downloads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_per_page</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headless</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../../_modules/citeget/core.html#search_and_download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.core.search_and_download" title="Link to this definition"></a></dt>
+<dd><p>Search libgen and download matching results in one shot.</p>
+<p>This is the main convenience function. It runs the search, then downloads
+up to <code class="docutils literal notranslate"><span class="pre">max_downloads</span></code> results into <code class="docutils literal notranslate"><span class="pre">download_dir</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> – Search terms.</p></li>
+<li><p><strong>topic</strong> – “books”, “articles”, “fiction”, etc.</p></li>
+<li><p><strong>download_dir</strong> – Where to save files.</p></li>
+<li><p><strong>max_downloads</strong> – Max number to download (default 5, 0 = all).</p></li>
+<li><p><strong>results_per_page</strong> – Results per search page.</p></li>
+<li><p><strong>delay</strong> – Seconds between downloads.</p></li>
+<li><p><strong>headless</strong> – Headless browser mode.</p></li>
+<li><p><strong>timeout</strong> – Timeout in ms for page loads.</p></li>
+<li><p><strong>verbose</strong> – Print progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of (result_dict, filepath_or_None) tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cli.html" class="btn btn-neutral float-left" title="citeget.cli" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="extract.html" class="btn btn-neutral float-right" title="citeget.extract" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

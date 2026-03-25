@@ -1,0 +1,954 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.resolve &mdash; citeget 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/resolve.html">citeget.resolve</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citeget.resolve</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citeget.resolve</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Composable download and URL-resolution for academic references.</span>
+
+<span class="sd">The acquisition pipeline has three layers:</span>
+
+<span class="sd">- **UrlResolver** ``(Reference) -&gt; list[str]`` — turn citation info into</span>
+<span class="sd">  candidate download URLs (URL rewriting, DOI lookup, search APIs).</span>
+<span class="sd">- **Downloader** ``(url, filepath) -&gt; bool`` — fetch a URL, validate the</span>
+<span class="sd">  content, save to disk.</span>
+<span class="sd">- **AcquisitionStrategy** ``(Reference, Path) -&gt; Optional[str]`` — a complete</span>
+<span class="sd">  unit that combines resolvers and downloaders (or does its own thing, like</span>
+<span class="sd">  libgen&#39;s playwright-based search+download).</span>
+
+<span class="sd">The factory :func:`resolve_and_download` wires a resolver to a downloader.</span>
+<span class="sd">:func:`chain` composes strategies (try first, fall back to second).</span>
+
+<span class="sd">Usage::</span>
+
+<span class="sd">    from citeget.resolve import resolve_reference</span>
+
+<span class="sd">    # Zero-config: tries all built-in strategies in order</span>
+<span class="sd">    path = resolve_reference(ref, Path(&quot;paper.pdf&quot;))</span>
+
+<span class="sd">    # Custom chain</span>
+<span class="sd">    from citeget.resolve import chain, STRATEGIES</span>
+<span class="sd">    my = chain(STRATEGIES[&quot;direct&quot;], STRATEGIES[&quot;arxiv_search&quot;])</span>
+<span class="sd">    resolve_reference(ref, filepath, strategy=my)</span>
+
+<span class="sd">    # Add a repository rule</span>
+<span class="sd">    from citeget.resolve import url_rewriter, BUILTIN_URL_RULES, register_resolver</span>
+<span class="sd">    rules = {**BUILTIN_URL_RULES, &quot;myrepo.org&quot;: lambda u: u.replace(&quot;/view/&quot;, &quot;/dl/&quot;)}</span>
+<span class="sd">    register_resolver(&quot;my_rewriter&quot;, url_rewriter(rules=rules))</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">runtime_checkable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">citeget.acquire_references</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reference</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Protocols</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="UrlResolver">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.UrlResolver">[docs]</a>
+<span class="nd">@runtime_checkable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">UrlResolver</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn a :class:`Reference` into candidate download URLs.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span></div>
+
+
+
+<div class="viewcode-block" id="Downloader">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.Downloader">[docs]</a>
+<span class="nd">@runtime_checkable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Downloader</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fetch *url*, validate content, save to *filepath*.</span>
+
+<span class="sd">    Returns ``True`` on success.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span> <span class="o">...</span></div>
+
+
+
+<div class="viewcode-block" id="AcquisitionStrategy">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.AcquisitionStrategy">[docs]</a>
+<span class="nd">@runtime_checkable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AcquisitionStrategy</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Complete acquire-one-reference unit.</span>
+
+<span class="sd">    Returns the filepath string on success, ``None`` on failure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Registries  (same pattern as citeget.extract)</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="n">RESOLVERS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">UrlResolver</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">DOWNLOADERS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Downloader</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">STRATEGIES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AcquisitionStrategy</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="register_resolver">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.register_resolver">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_resolver</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">resolver</span><span class="p">:</span> <span class="n">UrlResolver</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a named URL resolver.&quot;&quot;&quot;</span>
+    <span class="n">RESOLVERS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">resolver</span></div>
+
+
+
+<div class="viewcode-block" id="get_resolver">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.get_resolver">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_resolver</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UrlResolver</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve a registered resolver by name.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        KeyError: If *name* is not registered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">RESOLVERS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="list_resolvers">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.list_resolvers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_resolvers</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return names of all registered resolvers.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">RESOLVERS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="register_downloader">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.register_downloader">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_downloader</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">downloader</span><span class="p">:</span> <span class="n">Downloader</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a named downloader.&quot;&quot;&quot;</span>
+    <span class="n">DOWNLOADERS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">downloader</span></div>
+
+
+
+<div class="viewcode-block" id="get_downloader">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.get_downloader">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_downloader</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Downloader</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve a registered downloader by name.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        KeyError: If *name* is not registered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">DOWNLOADERS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="list_downloaders">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.list_downloaders">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_downloaders</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return names of all registered downloaders.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">DOWNLOADERS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="register_strategy">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.register_strategy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_strategy</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="n">AcquisitionStrategy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a named acquisition strategy.&quot;&quot;&quot;</span>
+    <span class="n">STRATEGIES</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">strategy</span></div>
+
+
+
+<div class="viewcode-block" id="get_strategy">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.get_strategy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_strategy</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AcquisitionStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve a registered strategy by name.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        KeyError: If *name* is not registered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">STRATEGIES</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="list_strategies">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.list_strategies">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_strategies</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return names of all registered strategies.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">STRATEGIES</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Composition helpers</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="chain">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.chain">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">chain</span><span class="p">(</span><span class="o">*</span><span class="n">strategies</span><span class="p">:</span> <span class="n">AcquisitionStrategy</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AcquisitionStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Try *strategies* in order, return the first success.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_chained</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="n">strategies</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">strategy</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">_chained</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<div class="viewcode-block" id="chain_resolvers">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.chain_resolvers">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">chain_resolvers</span><span class="p">(</span><span class="o">*</span><span class="n">resolvers</span><span class="p">:</span> <span class="n">UrlResolver</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UrlResolver</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Concatenate URL lists from multiple resolvers (deduped, order-preserving).&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_chained</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">urls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">resolver</span> <span class="ow">in</span> <span class="n">resolvers</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">resolver</span><span class="p">(</span><span class="n">ref</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">url</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                    <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+                    <span class="n">urls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">urls</span>
+
+    <span class="k">return</span> <span class="n">_chained</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Strategy factory</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="resolve_and_download">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.resolve_and_download">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_and_download</span><span class="p">(</span>
+    <span class="n">resolver</span><span class="p">:</span> <span class="n">UrlResolver</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">downloader</span><span class="p">:</span> <span class="n">Downloader</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AcquisitionStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a strategy that resolves URLs then tries to download each.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        resolver: A :class:`UrlResolver` callable or registered name.</span>
+<span class="sd">        downloader: A :class:`Downloader` callable or registered name.</span>
+<span class="sd">            ``None`` uses the ``&quot;pdf&quot;`` downloader.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">resolver</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">resolver</span> <span class="o">=</span> <span class="n">RESOLVERS</span><span class="p">[</span><span class="n">resolver</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">downloader</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">downloader</span> <span class="o">=</span> <span class="n">DOWNLOADERS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pdf&quot;</span><span class="p">,</span> <span class="n">_pdf_downloader</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">downloader</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">downloader</span> <span class="o">=</span> <span class="n">DOWNLOADERS</span><span class="p">[</span><span class="n">downloader</span><span class="p">]</span>
+
+    <span class="n">_res</span><span class="p">,</span> <span class="n">_dl</span> <span class="o">=</span> <span class="n">resolver</span><span class="p">,</span> <span class="n">downloader</span>  <span class="c1"># close over resolved values</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_strategy</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">_res</span><span class="p">(</span><span class="n">ref</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Trying URL: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_dl</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">_strategy</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Built-in downloaders</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="n">_DEFAULT_HEADERS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">&quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) &quot;</span>
+        <span class="s2">&quot;AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36&quot;</span>
+    <span class="p">)</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_pdf_downloader</span><span class="p">(</span>
+    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download *url*, validate as PDF (``%PDF`` magic or content-type).&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">_DEFAULT_HEADERS</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">content_type</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">first_bytes</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span>
+        <span class="n">chunks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">8192</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">first_bytes</span><span class="p">:</span>
+                <span class="n">first_bytes</span> <span class="o">=</span> <span class="n">chunk</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span>
+            <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="sa">b</span><span class="s2">&quot;%PDF&quot;</span> <span class="ow">in</span> <span class="n">first_bytes</span> <span class="ow">or</span> <span class="s2">&quot;pdf&quot;</span> <span class="ow">in</span> <span class="n">content_type</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+            <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
+                    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">1000</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;PDF download failed for </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_any_downloader</span><span class="p">(</span>
+    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Download *url* without format validation (HTML, PDF, anything).&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">_DEFAULT_HEADERS</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="n">chunk_size</span><span class="o">=</span><span class="mi">8192</span><span class="p">):</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">500</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Download failed for </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="n">register_downloader</span><span class="p">(</span><span class="s2">&quot;pdf&quot;</span><span class="p">,</span> <span class="n">_pdf_downloader</span><span class="p">)</span>
+<span class="n">register_downloader</span><span class="p">(</span><span class="s2">&quot;any&quot;</span><span class="p">,</span> <span class="n">_any_downloader</span><span class="p">)</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Built-in URL rewrite rules</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="n">UrlTransform</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rewrite_arxiv</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;``arxiv.org/abs/X`` → ``arxiv.org/pdf/X.pdf``&quot;&quot;&quot;</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/abs/&quot;</span><span class="p">,</span> <span class="s2">&quot;/pdf/&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.pdf&quot;</span><span class="p">):</span>
+        <span class="n">url</span> <span class="o">+=</span> <span class="s2">&quot;.pdf&quot;</span>
+    <span class="k">return</span> <span class="n">url</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rewrite_openreview</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;``openreview.net/forum?id=X`` → ``openreview.net/pdf?id=X``&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/forum?&quot;</span><span class="p">,</span> <span class="s2">&quot;/pdf?&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rewrite_pmc</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;``ncbi.nlm.nih.gov/pmc/articles/PMCX`` → PDF endpoint.&quot;&quot;&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(PMC\d+)&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;https://www.ncbi.nlm.nih.gov/pmc/articles/</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">/pdf/&quot;</span>
+    <span class="k">return</span> <span class="n">url</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rewrite_biorxiv</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;``biorxiv.org`` / ``medrxiv.org`` content → ``.full.pdf``.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.full.pdf&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.pdf&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">url</span>
+    <span class="k">return</span> <span class="n">url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.full.pdf&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rewrite_ssrn</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;``ssrn.com/abstract=X`` → direct PDF delivery URL.&quot;&quot;&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;abstract[_=](\d+)&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+        <span class="n">aid</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://papers.ssrn.com/sol3/Delivery.cfm/&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;SSRN_ID</span><span class="si">{</span><span class="n">aid</span><span class="si">}</span><span class="s2">_code.pdf?abstractid=</span><span class="si">{</span><span class="n">aid</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">url</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rewrite_acm</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;``dl.acm.org/doi/10.X`` → ``dl.acm.org/doi/pdf/10.X``&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;/doi/pdf/&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">url</span> <span class="ow">and</span> <span class="s2">&quot;/doi/&quot;</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/doi/&quot;</span><span class="p">,</span> <span class="s2">&quot;/doi/pdf/&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">url</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rewrite_ieee</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;``ieeexplore.ieee.org/document/X`` → stamp PDF endpoint.&quot;&quot;&quot;</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;/document/(\d+)&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://ieeexplore.ieee.org/stampPDF/&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;getPDF.jsp?arnumber=</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">url</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rewrite_siam</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;``epubs.siam.org/doi/X`` → ``epubs.siam.org/doi/pdf/X``&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;/doi/pdf/&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">url</span> <span class="ow">and</span> <span class="s2">&quot;/doi/&quot;</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/doi/&quot;</span><span class="p">,</span> <span class="s2">&quot;/doi/pdf/&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">url</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rewrite_springer</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;``link.springer.com/article/10.X`` → content/pdf endpoint.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;/content/pdf/&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">url</span> <span class="ow">and</span> <span class="s2">&quot;/article/&quot;</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">url</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/article/&quot;</span><span class="p">,</span> <span class="s2">&quot;/content/pdf/&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.pdf&quot;</span>
+    <span class="k">return</span> <span class="n">url</span>
+
+
+<span class="n">BUILTIN_URL_RULES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">UrlTransform</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;arxiv.org&quot;</span><span class="p">:</span> <span class="n">_rewrite_arxiv</span><span class="p">,</span>
+    <span class="s2">&quot;openreview.net&quot;</span><span class="p">:</span> <span class="n">_rewrite_openreview</span><span class="p">,</span>
+    <span class="s2">&quot;ncbi.nlm.nih.gov/pmc&quot;</span><span class="p">:</span> <span class="n">_rewrite_pmc</span><span class="p">,</span>
+    <span class="s2">&quot;biorxiv.org&quot;</span><span class="p">:</span> <span class="n">_rewrite_biorxiv</span><span class="p">,</span>
+    <span class="s2">&quot;medrxiv.org&quot;</span><span class="p">:</span> <span class="n">_rewrite_biorxiv</span><span class="p">,</span>
+    <span class="s2">&quot;ssrn.com&quot;</span><span class="p">:</span> <span class="n">_rewrite_ssrn</span><span class="p">,</span>
+    <span class="s2">&quot;dl.acm.org&quot;</span><span class="p">:</span> <span class="n">_rewrite_acm</span><span class="p">,</span>
+    <span class="s2">&quot;ieeexplore.ieee.org&quot;</span><span class="p">:</span> <span class="n">_rewrite_ieee</span><span class="p">,</span>
+    <span class="s2">&quot;epubs.siam.org&quot;</span><span class="p">:</span> <span class="n">_rewrite_siam</span><span class="p">,</span>
+    <span class="s2">&quot;link.springer.com&quot;</span><span class="p">:</span> <span class="n">_rewrite_springer</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># URL-rewriter resolver factory</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="url_rewriter">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.url_rewriter">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">url_rewriter</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">rules</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">UrlTransform</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UrlResolver</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a resolver that rewrites known repository URLs to direct PDFs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        rules: Domain-substring → transform mapping.</span>
+<span class="sd">            ``None`` uses :data:`BUILTIN_URL_RULES`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_rules</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">BUILTIN_URL_RULES</span><span class="p">)</span> <span class="k">if</span> <span class="n">rules</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">(</span><span class="n">rules</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">urls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">domain</span><span class="p">,</span> <span class="n">transform</span> <span class="ow">in</span> <span class="n">_rules</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">domain</span> <span class="ow">in</span> <span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">:</span>
+                <span class="n">rewritten</span> <span class="o">=</span> <span class="n">transform</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">rewritten</span> <span class="ow">and</span> <span class="n">rewritten</span> <span class="o">!=</span> <span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">:</span>
+                    <span class="n">urls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rewritten</span><span class="p">)</span>
+        <span class="c1"># Always include the original URL as fallback</span>
+        <span class="n">urls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">urls</span>
+
+    <span class="k">return</span> <span class="n">_resolve</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># DOI resolver  (Crossref lookup → Unpaywall open-access → sci-hub fallback)</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_lookup_doi_crossref</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Look up a DOI via Crossref text search.  Returns DOI string or ``&quot;&quot;``.&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+    <span class="n">clean_title</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[</span><span class="se">\&quot;</span><span class="s2">&#39;:;,.!?()</span><span class="si">{}</span><span class="s2">[\]—–\-]&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">clean_title</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">clean_title</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">surname</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">authors</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.acquire_references</span><span class="w"> </span><span class="kn">import</span> <span class="n">_first_author_surname</span>
+
+        <span class="n">surname</span> <span class="o">=</span> <span class="n">_first_author_surname</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">authors</span><span class="p">)</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">clean_title</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">surname</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">query</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.crossref.org/works?query=</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&amp;rows=3&quot;</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">_DEFAULT_HEADERS</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;message&quot;</span><span class="p">][</span><span class="s2">&quot;items&quot;</span><span class="p">]</span>
+        <span class="n">ref_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+            <span class="n">item_title</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="n">item_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">,</span> <span class="n">item_title</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">ref_words</span> <span class="ow">and</span> <span class="n">item_words</span><span class="p">:</span>
+                <span class="n">overlap</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_words</span> <span class="o">&amp;</span> <span class="n">item_words</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ref_words</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">overlap</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;DOI&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Crossref lookup failed: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_unpaywall_pdf</span><span class="p">(</span><span class="n">doi</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">email</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Query Unpaywall for an open-access PDF URL.  Returns URL or ``&quot;&quot;``.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">email</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;https://api.unpaywall.org/v2/</span><span class="si">{</span><span class="n">doi</span><span class="si">}</span><span class="s2">?email=</span><span class="si">{</span><span class="n">email</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="n">best</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;best_oa_location&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="n">best</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url_for_pdf&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="doi_resolver">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.doi_resolver">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">doi_resolver</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">email</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UrlResolver</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve via DOI: Crossref lookup → Unpaywall (open access) → Sci-Hub.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        email: Email for the Unpaywall API (optional; skipped if empty).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">doi</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">doi</span> <span class="ow">or</span> <span class="n">_lookup_doi_crossref</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">doi</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="n">urls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># Unpaywall (legal open access)</span>
+        <span class="n">oa_url</span> <span class="o">=</span> <span class="n">_unpaywall_pdf</span><span class="p">(</span><span class="n">doi</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="n">email</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">oa_url</span><span class="p">:</span>
+            <span class="n">urls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oa_url</span><span class="p">)</span>
+        <span class="c1"># Sci-hub last resort</span>
+        <span class="n">urls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;https://sci-hub.ru/</span><span class="si">{</span><span class="n">doi</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">urls</span>
+
+    <span class="k">return</span> <span class="n">_resolve</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Arxiv API search resolver</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="arxiv_search_resolver">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.arxiv_search_resolver">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">arxiv_search_resolver</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">UrlResolver</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Search the arxiv API by author + title, return PDF URLs.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">xml.etree</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElementTree</span> <span class="k">as</span> <span class="n">ET</span>
+
+        <span class="n">surname</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">authors</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.acquire_references</span><span class="w"> </span><span class="kn">import</span> <span class="n">_first_author_surname</span>
+
+            <span class="n">surname</span> <span class="o">=</span> <span class="n">_first_author_surname</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">authors</span><span class="p">)</span>
+
+        <span class="n">clean_title</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[</span><span class="se">\&quot;</span><span class="s2">&#39;:;,.!?()</span><span class="si">{}</span><span class="s2">[\]—–\-]&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">clean_title</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">clean_title</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="n">query_parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">surname</span><span class="p">:</span>
+            <span class="n">query_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;au:</span><span class="si">{</span><span class="n">surname</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">clean_title</span><span class="p">:</span>
+            <span class="n">title_words</span> <span class="o">=</span> <span class="n">clean_title</span><span class="o">.</span><span class="n">split</span><span class="p">()[:</span><span class="mi">6</span><span class="p">]</span>
+            <span class="n">query_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ti:</span><span class="si">{</span><span class="s1">&#39;+&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">title_words</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">query_parts</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;+AND+&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">query_parts</span><span class="p">)</span>
+        <span class="n">api_url</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;http://export.arxiv.org/api/query?&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;search_query=</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&amp;max_results=5&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+            <span class="n">ns</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.w3.org/2005/Atom&quot;</span><span class="p">}</span>
+
+            <span class="n">ref_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+            <span class="n">urls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;a:entry&quot;</span><span class="p">,</span> <span class="n">ns</span><span class="p">):</span>
+                <span class="n">title_el</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;a:title&quot;</span><span class="p">,</span> <span class="n">ns</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">title_el</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">title_el</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">entry_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+                    <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">,</span> <span class="n">title_el</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">ref_words</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">entry_words</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">overlap</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_words</span> <span class="o">&amp;</span> <span class="n">entry_words</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ref_words</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">overlap</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">entry</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;a:link&quot;</span><span class="p">,</span> <span class="n">ns</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;application/pdf&quot;</span><span class="p">:</span>
+                        <span class="n">href</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">href</span><span class="p">:</span>
+                            <span class="n">urls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">href</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">urls</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Arxiv search failed: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">return</span> <span class="n">_resolve</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Semantic Scholar resolver</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="semantic_scholar_resolver">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.semantic_scholar_resolver">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">semantic_scholar_resolver</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">UrlResolver</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Query the Semantic Scholar API for open-access PDF links.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">200</span><span class="p">],</span> <span class="s2">&quot;limit&quot;</span><span class="p">:</span> <span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;fields&quot;</span><span class="p">:</span> <span class="s2">&quot;openAccessPdf,title&quot;</span><span class="p">}</span>
+            <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="s2">&quot;https://api.semanticscholar.org/graph/v1/paper/search&quot;</span><span class="p">,</span>
+                <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
+                <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">[]</span>
+
+            <span class="n">ref_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+            <span class="n">urls</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">paper</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="n">paper_title</span> <span class="o">=</span> <span class="n">paper</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="n">paper_words</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+&quot;</span><span class="p">,</span> <span class="n">paper_title</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+                <span class="k">if</span> <span class="n">ref_words</span> <span class="ow">and</span> <span class="n">paper_words</span><span class="p">:</span>
+                    <span class="n">overlap</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_words</span> <span class="o">&amp;</span> <span class="n">paper_words</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span>
+                        <span class="nb">len</span><span class="p">(</span><span class="n">ref_words</span><span class="p">),</span> <span class="mi">1</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">overlap</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                <span class="n">oa</span> <span class="o">=</span> <span class="n">paper</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;openAccessPdf&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">oa</span> <span class="ow">and</span> <span class="n">oa</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;url&quot;</span><span class="p">):</span>
+                    <span class="n">urls</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oa</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">urls</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Semantic Scholar search failed: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">return</span> <span class="n">_resolve</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Wrappers for existing search+download strategies</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="libgen_strategy">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.libgen_strategy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">libgen_strategy</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">topics</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;articles&quot;</span><span class="p">,</span> <span class="s2">&quot;books&quot;</span><span class="p">),</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30000</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AcquisitionStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap the existing libgen search+download as an :class:`AcquisitionStrategy`.</span>
+
+<span class="sd">    This is a self-contained strategy (not a resolver+downloader pair) because</span>
+<span class="sd">    libgen requires playwright-based browser automation for both search and</span>
+<span class="sd">    download.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_strategy</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.acquire_references</span><span class="w"> </span><span class="kn">import</span> <span class="n">_try_libgen</span>
+
+        <span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">topic</span> <span class="ow">in</span> <span class="n">topics</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">_try_libgen</span><span class="p">(</span>
+                <span class="n">ref</span><span class="p">,</span>
+                <span class="n">filepath</span><span class="p">,</span>
+                <span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span>
+                <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">,</span>
+                <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">_strategy</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<div class="viewcode-block" id="scihub_strategy">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.scihub_strategy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">scihub_strategy</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AcquisitionStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap the existing Sci-Hub/DOI download as an :class:`AcquisitionStrategy`.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_strategy</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.acquire_references</span><span class="w"> </span><span class="kn">import</span> <span class="n">_try_scihub_via_doi</span>
+
+        <span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">_try_scihub_via_doi</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_strategy</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Logging wrapper</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="with_logging">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.with_logging">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">with_logging</span><span class="p">(</span>
+    <span class="n">strategy</span><span class="p">:</span> <span class="n">AcquisitionStrategy</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AcquisitionStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrap a strategy to append a log entry on each call.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        strategy: The strategy to wrap.</span>
+<span class="sd">        name: Label for log entries.</span>
+<span class="sd">        log_entries: List to append dicts to (mutated in place).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_logged</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">strategy</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">log_entries</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">log_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">),</span>
+                    <span class="s2">&quot;ref_number&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">,</span>
+                    <span class="s2">&quot;ref_title&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">80</span><span class="p">],</span>
+                    <span class="s2">&quot;strategy&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+                    <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+                    <span class="s2">&quot;filepath&quot;</span><span class="p">:</span> <span class="n">result</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">return</span> <span class="n">_logged</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Register built-in resolvers and strategies</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="n">register_resolver</span><span class="p">(</span><span class="s2">&quot;url_rewriter&quot;</span><span class="p">,</span> <span class="n">url_rewriter</span><span class="p">())</span>
+<span class="n">register_resolver</span><span class="p">(</span><span class="s2">&quot;doi&quot;</span><span class="p">,</span> <span class="n">doi_resolver</span><span class="p">())</span>
+<span class="n">register_resolver</span><span class="p">(</span><span class="s2">&quot;arxiv_search&quot;</span><span class="p">,</span> <span class="n">arxiv_search_resolver</span><span class="p">())</span>
+<span class="n">register_resolver</span><span class="p">(</span><span class="s2">&quot;semantic_scholar&quot;</span><span class="p">,</span> <span class="n">semantic_scholar_resolver</span><span class="p">())</span>
+
+<span class="n">register_strategy</span><span class="p">(</span><span class="s2">&quot;direct&quot;</span><span class="p">,</span> <span class="n">resolve_and_download</span><span class="p">(</span><span class="s2">&quot;url_rewriter&quot;</span><span class="p">))</span>
+<span class="n">register_strategy</span><span class="p">(</span><span class="s2">&quot;doi&quot;</span><span class="p">,</span> <span class="n">resolve_and_download</span><span class="p">(</span><span class="s2">&quot;doi&quot;</span><span class="p">))</span>
+<span class="n">register_strategy</span><span class="p">(</span><span class="s2">&quot;arxiv_search&quot;</span><span class="p">,</span> <span class="n">resolve_and_download</span><span class="p">(</span><span class="s2">&quot;arxiv_search&quot;</span><span class="p">))</span>
+<span class="n">register_strategy</span><span class="p">(</span><span class="s2">&quot;semantic_scholar&quot;</span><span class="p">,</span> <span class="n">resolve_and_download</span><span class="p">(</span><span class="s2">&quot;semantic_scholar&quot;</span><span class="p">))</span>
+<span class="n">register_strategy</span><span class="p">(</span><span class="s2">&quot;libgen&quot;</span><span class="p">,</span> <span class="n">libgen_strategy</span><span class="p">())</span>
+<span class="n">register_strategy</span><span class="p">(</span><span class="s2">&quot;scihub&quot;</span><span class="p">,</span> <span class="n">scihub_strategy</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_default_strategy</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AcquisitionStrategy</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the default acquisition chain.</span>
+
+<span class="sd">    Order:</span>
+<span class="sd">    1. Direct URL + repository-aware rewriting  (fast, free)</span>
+<span class="sd">    2. DOI → Unpaywall open-access PDF          (legal)</span>
+<span class="sd">    3. Arxiv API search                         (free preprints)</span>
+<span class="sd">    4. Semantic Scholar API                     (open-access PDFs)</span>
+<span class="sd">    5. Libgen search                            (broad, playwright)</span>
+<span class="sd">    6. Sci-Hub via DOI                          (last resort)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">chain</span><span class="p">(</span>
+        <span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">&quot;direct&quot;</span><span class="p">],</span>
+        <span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">&quot;doi&quot;</span><span class="p">],</span>
+        <span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">&quot;arxiv_search&quot;</span><span class="p">],</span>
+        <span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">&quot;semantic_scholar&quot;</span><span class="p">],</span>
+        <span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">&quot;libgen&quot;</span><span class="p">],</span>
+        <span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">&quot;scihub&quot;</span><span class="p">],</span>
+    <span class="p">)</span>
+
+
+<span class="n">register_strategy</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">_build_default_strategy</span><span class="p">())</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Main entry point</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="resolve_reference">
+<a class="viewcode-back" href="../../module_docs/citeget/resolve.html#citeget.resolve_reference">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">resolve_reference</span><span class="p">(</span>
+    <span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span>
+    <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">strategy</span><span class="p">:</span> <span class="n">AcquisitionStrategy</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve and download a single reference.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ref: The reference to acquire.</span>
+<span class="sd">        filepath: Target file path for the download.</span>
+<span class="sd">        strategy: An :class:`AcquisitionStrategy` callable, a registered</span>
+<span class="sd">            strategy name (``str``), or ``None`` to use ``&quot;default&quot;``.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Filepath string on success, ``None`` on failure.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        KeyError: If a string name is not in the registry.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">strategy</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">strat</span> <span class="o">=</span> <span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">strategy</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">strat</span> <span class="o">=</span> <span class="n">get_strategy</span><span class="p">(</span><span class="n">strategy</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">strat</span> <span class="o">=</span> <span class="n">strategy</span>
+
+    <span class="k">return</span> <span class="n">strat</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

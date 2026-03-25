@@ -1,0 +1,191 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.cli &mdash; citeget 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="citeget.core" href="core.html" />
+    <link rel="prev" title="citeget.article_pub" href="article_pub.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">citeget.cli</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.cli.acquire"><code class="docutils literal notranslate"><span class="pre">acquire()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.cli.download"><code class="docutils literal notranslate"><span class="pre">download()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.cli.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.cli.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resolve.html">citeget.resolve</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">citeget.cli</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/citeget/cli.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-citeget.cli">
+<span id="citeget-cli"></span><h1>citeget.cli<a class="headerlink" href="#module-citeget.cli" title="Link to this heading"></a></h1>
+<p>CLI entry points for citeget.</p>
+<p>Provides search, download, and reference acquisition commands.
+Can be used standalone or dispatched via argh.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.cli.acquire">
+<span class="sig-prename descclassname"><span class="pre">citeget.cli.</span></span><span class="sig-name descname"><span class="pre">acquire</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_refs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extractor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preview</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/cli.html#acquire"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.cli.acquire" title="Link to this definition"></a></dt>
+<dd><p>Acquire PDFs for all references in a document.</p>
+<p>Extracts references (tries headers, then broad [N] scan, then bold),
+then acquires PDFs via direct URL, libgen, arxiv, and sci-hub.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference_file</strong> – Path to a document containing references.</p></li>
+<li><p><strong>work_dir</strong> – Working directory (default: derived from reference_file).</p></li>
+<li><p><strong>delay</strong> – Seconds between operations (rate limiting).</p></li>
+<li><p><strong>max_refs</strong> – Max references to process (0 = all).</p></li>
+<li><p><strong>extractor</strong> – Named extractor to use (default, standard, broad, bold, ai).</p></li>
+<li><p><strong>strategy</strong> – Named acquisition strategy (default, direct, doi, arxiv_search,
+semantic_scholar, libgen, scihub). Empty uses legacy chain.</p></li>
+<li><p><strong>preview</strong> – Show extracted references and ask for confirmation.</p></li>
+<li><p><strong>auto</strong> – Skip confirmation even in preview mode.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.cli.download">
+<span class="sig-prename descclassname"><span class="pre">citeget.cli.</span></span><span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'books'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_downloads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/cli.html#download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.cli.download" title="Link to this definition"></a></dt>
+<dd><p>Search libgen.vg and download top results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> – Search terms.</p></li>
+<li><p><strong>topic</strong> – “books”, “articles”, “fiction”, etc.</p></li>
+<li><p><strong>download_dir</strong> – Directory to save files into.</p></li>
+<li><p><strong>max_downloads</strong> – Max number of files to download (0 = all).</p></li>
+<li><p><strong>delay</strong> – Seconds between downloads (rate limiting).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.cli.main">
+<span class="sig-prename descclassname"><span class="pre">citeget.cli.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/cli.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.cli.main" title="Link to this definition"></a></dt>
+<dd><p>CLI dispatcher.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.cli.search">
+<span class="sig-prename descclassname"><span class="pre">citeget.cli.</span></span><span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'books'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_per_page</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/cli.html#search"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.cli.search" title="Link to this definition"></a></dt>
+<dd><p>Search libgen.vg and print results as a numbered table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> – Search terms.</p></li>
+<li><p><strong>topic</strong> – “books”, “articles”, “fiction”, “comics”, “magazines”, “standards”.</p></li>
+<li><p><strong>results_per_page</strong> – Results per page (25, 50, or 100).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="article_pub.html" class="btn btn-neutral float-left" title="citeget.article_pub" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="core.html" class="btn btn-neutral float-right" title="citeget.core" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

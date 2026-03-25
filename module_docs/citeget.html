@@ -1,0 +1,602 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget &mdash; citeget 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="citeget.__main__" href="citeget/__main__.html" />
+    <link rel="prev" title="Welcome to citeget’s documentation!" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">citeget</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.AcquisitionResult"><code class="docutils literal notranslate"><span class="pre">AcquisitionResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.ExtractionResult"><code class="docutils literal notranslate"><span class="pre">ExtractionResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.Reference"><code class="docutils literal notranslate"><span class="pre">Reference</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.acquire_all_references"><code class="docutils literal notranslate"><span class="pre">acquire_all_references()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.acquire_reference"><code class="docutils literal notranslate"><span class="pre">acquire_reference()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.chain_extractors"><code class="docutils literal notranslate"><span class="pre">chain_extractors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.chain_resolvers"><code class="docutils literal notranslate"><span class="pre">chain_resolvers()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.chain_strategies"><code class="docutils literal notranslate"><span class="pre">chain_strategies()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.check_existing_downloads"><code class="docutils literal notranslate"><span class="pre">check_existing_downloads()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.download_one"><code class="docutils literal notranslate"><span class="pre">download_one()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.download_results"><code class="docutils literal notranslate"><span class="pre">download_results()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract_references"><code class="docutils literal notranslate"><span class="pre">extract_references()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.generate_search_queries"><code class="docutils literal notranslate"><span class="pre">generate_search_queries()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.list_downloaders"><code class="docutils literal notranslate"><span class="pre">list_downloaders()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.list_extractors"><code class="docutils literal notranslate"><span class="pre">list_extractors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.list_resolvers"><code class="docutils literal notranslate"><span class="pre">list_resolvers()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.list_strategies"><code class="docutils literal notranslate"><span class="pre">list_strategies()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.merge_extractors"><code class="docutils literal notranslate"><span class="pre">merge_extractors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.parse_reference"><code class="docutils literal notranslate"><span class="pre">parse_reference()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.parse_references_section"><code class="docutils literal notranslate"><span class="pre">parse_references_section()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.regex_extractor"><code class="docutils literal notranslate"><span class="pre">regex_extractor()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.register_downloader"><code class="docutils literal notranslate"><span class="pre">register_downloader()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.register_extractor"><code class="docutils literal notranslate"><span class="pre">register_extractor()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.register_resolver"><code class="docutils literal notranslate"><span class="pre">register_resolver()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.register_strategy"><code class="docutils literal notranslate"><span class="pre">register_strategy()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve_and_download"><code class="docutils literal notranslate"><span class="pre">resolve_and_download()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve_reference"><code class="docutils literal notranslate"><span class="pre">resolve_reference()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve_work_dir"><code class="docutils literal notranslate"><span class="pre">resolve_work_dir()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.search_and_download"><code class="docutils literal notranslate"><span class="pre">search_and_download()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.url_rewriter"><code class="docutils literal notranslate"><span class="pre">url_rewriter()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.write_missed_references_md"><code class="docutils literal notranslate"><span class="pre">write_missed_references_md()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.write_references_md"><code class="docutils literal notranslate"><span class="pre">write_references_md()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="citeget/__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citeget/acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citeget/article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citeget/cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citeget/core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citeget/extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="citeget/resolve.html">citeget.resolve</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">citeget</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/module_docs/citeget.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-citeget">
+<span id="citeget"></span><h1>citeget<a class="headerlink" href="#module-citeget" title="Link to this heading"></a></h1>
+<p>citeget — Find, acquire, and manage academic references.</p>
+<p>Tools for searching Library Genesis, downloading papers, and bulk-acquiring
+all references cited in a document. Designed for use by AI agents (via Claude
+Code skills) and by humans (via CLI and Python API).</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">search</span><span class="p">,</span> <span class="n">search_and_download</span>
+
+<span class="c1"># Search libgen and get metadata</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span><span class="s2">&quot;graph theory&quot;</span><span class="p">,</span> <span class="n">topic</span><span class="o">=</span><span class="s2">&quot;articles&quot;</span><span class="p">)</span>
+
+<span class="c1"># Search and download top results</span>
+<span class="n">search_and_download</span><span class="p">(</span><span class="s2">&quot;python programming&quot;</span><span class="p">,</span> <span class="n">download_dir</span><span class="o">=</span><span class="s2">&quot;~/papers&quot;</span><span class="p">,</span> <span class="n">max_downloads</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Acquire all references from a document</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_references_section</span><span class="p">,</span> <span class="n">acquire_all_references</span><span class="p">,</span> <span class="n">resolve_work_dir</span>
+
+<span class="n">work_dir</span> <span class="o">=</span> <span class="n">resolve_work_dir</span><span class="p">(</span><span class="n">reference_file</span><span class="o">=</span><span class="s2">&quot;my_paper.md&quot;</span><span class="p">)</span>
+<span class="n">refs</span> <span class="o">=</span> <span class="n">parse_references_section</span><span class="p">(</span><span class="n">refs_text</span><span class="p">)</span>
+<span class="n">successes</span><span class="p">,</span> <span class="n">failures</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">acquire_all_references</span><span class="p">(</span>
+    <span class="n">refs</span><span class="p">,</span> <span class="n">download_dir</span><span class="o">=</span><span class="n">work_dir</span> <span class="o">/</span> <span class="s2">&quot;references&quot;</span><span class="p">,</span> <span class="n">work_dir</span><span class="o">=</span><span class="n">work_dir</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Topics (for libgen search):</dt><dd><ul class="simple">
+<li><p>“books” or “l” — Libgen (books)</p></li>
+<li><p>“articles” or “a” — Scientific Articles</p></li>
+<li><p>“fiction” or “f” — Fiction</p></li>
+<li><p>“comics” or “c” — Comics</p></li>
+<li><p>“magazines” or “m” — Magazines</p></li>
+<li><p>“standards” or “s” — Standards</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.AcquisitionResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">AcquisitionResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference:</span> <span class="pre">~citeget.acquire_references.Reference</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">success:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath:</span> <span class="pre">str</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queries_tried:</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/acquire_references.html#AcquisitionResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.AcquisitionResult" title="Link to this definition"></a></dt>
+<dd><p>Result of trying to acquire a reference.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.ExtractionResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">ExtractionResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">references</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="citeget/acquire_references.html#citeget.acquire_references.Reference" title="citeget.acquire_references.Reference"><span class="pre">Reference</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extractor_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'unknown'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/extract.html#ExtractionResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.ExtractionResult" title="Link to this definition"></a></dt>
+<dd><p>Result of extracting references from text.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.Reference">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">Reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raw</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">authors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">year</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">venue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">doi</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/acquire_references.html#Reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.Reference" title="Link to this definition"></a></dt>
+<dd><p>A parsed academic reference.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.acquire_all_references">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">acquire_all_references</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">references</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">libgen_topics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('articles',</span> <span class="pre">'books')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="reference internal" href="../_modules/citeget/acquire_references.html#acquire_all_references"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.acquire_all_references" title="Link to this definition"></a></dt>
+<dd><p>Acquire PDFs for a list of references.</p>
+<p>Checks for already-downloaded files first and skips them, reporting
+which references are being skipped so the user can re-download by
+renaming or removing the existing file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>references</strong> – List of Reference objects.</p></li>
+<li><p><strong>download_dir</strong> – Where to save PDFs (the <code class="docutils literal notranslate"><span class="pre">references/</span></code> subdirectory
+inside the work_dir, or a standalone directory).</p></li>
+<li><p><strong>work_dir</strong> – Optional work directory — if given, <code class="docutils literal notranslate"><span class="pre">log_file</span></code> defaults
+to <code class="docutils literal notranslate"><span class="pre">{work_dir}/{datetime}__acquisition_log.txt</span></code>.</p></li>
+<li><p><strong>log_file</strong> – Explicit path for the acquisition log. If None and
+<code class="docutils literal notranslate"><span class="pre">work_dir</span></code> is given, auto-generated with timestamp.</p></li>
+<li><p><strong>strategy</strong> – Acquisition strategy — a callable, registered name,
+or <code class="docutils literal notranslate"><span class="pre">None</span></code> for the legacy chain.  Pass <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> to use
+the composable default from <a class="reference internal" href="citeget/resolve.html#module-citeget.resolve" title="citeget.resolve"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citeget.resolve</span></code></a>.</p></li>
+<li><p><strong>libgen_topics</strong> – Libgen topics to try (legacy chain only).</p></li>
+<li><p><strong>delay</strong> – Seconds between operations (rate limiting).</p></li>
+<li><p><strong>verbose</strong> – Print progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(successes, failures, log_entries) where successes and failures
+are lists of AcquisitionResult.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.acquire_reference">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">acquire_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/acquire_references.html#citeget.acquire_references.Reference" title="citeget.acquire_references.Reference"><span class="pre">Reference</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_entries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">libgen_topics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('articles',</span> <span class="pre">'books')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="citeget/acquire_references.html#citeget.acquire_references.AcquisitionResult" title="citeget.acquire_references.AcquisitionResult"><span class="pre">AcquisitionResult</span></a></span></span><a class="reference internal" href="../_modules/citeget/acquire_references.html#acquire_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.acquire_reference" title="Link to this definition"></a></dt>
+<dd><p>Try to acquire a single reference PDF.</p>
+<p>When <em>strategy</em> is given, delegates entirely to the composable
+strategy system in <a class="reference internal" href="citeget/resolve.html#module-citeget.resolve" title="citeget.resolve"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citeget.resolve</span></code></a>.  Otherwise falls back to
+the legacy hard-coded chain for backward compatibility.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref</strong> – The reference to acquire.</p></li>
+<li><p><strong>download_dir</strong> – Where to save the PDF.</p></li>
+<li><p><strong>log_entries</strong> – List to append log dicts to (mutated in place).</p></li>
+<li><p><strong>strategy</strong> – An <code class="docutils literal notranslate"><span class="pre">AcquisitionStrategy</span></code> callable, a registered
+strategy name (<code class="docutils literal notranslate"><span class="pre">str</span></code>), or <code class="docutils literal notranslate"><span class="pre">None</span></code> for the legacy chain.
+Pass <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> to use the new composable default.</p></li>
+<li><p><strong>libgen_topics</strong> – Topics to try on libgen (legacy chain only).</p></li>
+<li><p><strong>timeout</strong> – Timeout for browser operations (legacy chain only).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.chain_extractors">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">chain_extractors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">extractors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/extract.html#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="citeget/extract.html#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></span><a class="headerlink" href="#citeget.chain_extractors" title="Link to this definition"></a></dt>
+<dd><p>Try <em>extractors</em> in order, return the first non-empty result.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.chain_resolvers">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">chain_resolvers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">resolvers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/resolve.html#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="citeget/resolve.html#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a></span></span><a class="reference internal" href="../_modules/citeget/resolve.html#chain_resolvers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.chain_resolvers" title="Link to this definition"></a></dt>
+<dd><p>Concatenate URL lists from multiple resolvers (deduped, order-preserving).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.chain_strategies">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">chain_strategies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">strategies</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/resolve.html#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="citeget/resolve.html#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></span><a class="headerlink" href="#citeget.chain_strategies" title="Link to this definition"></a></dt>
+<dd><p>Try <em>strategies</em> in order, return the first success.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.check_existing_downloads">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">check_existing_downloads</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">references</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="reference internal" href="../_modules/citeget/acquire_references.html#check_existing_downloads"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.check_existing_downloads" title="Link to this definition"></a></dt>
+<dd><p>Check which references already have downloaded files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(to_acquire, already_have) — two lists of Reference objects.
+<code class="docutils literal notranslate"><span class="pre">already_have</span></code> is a list of (Reference, filepath) tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.download_one">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">download_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">page</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/citeget/core.html#download_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.download_one" title="Link to this definition"></a></dt>
+<dd><p>Download a single result. Returns the saved file path, or None on failure.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">page</span></code> is provided (a Playwright Page object), reuse it.
+Otherwise, creates a new browser session (slower but standalone).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> – A result dict from <code class="docutils literal notranslate"><span class="pre">search()</span></code>.</p></li>
+<li><p><strong>download_dir</strong> – Where to save the file.</p></li>
+<li><p><strong>page</strong> – Optional Playwright page to reuse.</p></li>
+<li><p><strong>timeout</strong> – Download timeout in ms.</p></li>
+<li><p><strong>delay</strong> – Seconds to wait between page loads (rate limiting).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path to the downloaded file, or None if download failed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.download_results">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">download_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_downloads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headless</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">60000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../_modules/citeget/core.html#download_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.download_results" title="Link to this definition"></a></dt>
+<dd><p>Download multiple results. Returns list of (result, filepath) tuples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results</strong> – List of result dicts from <code class="docutils literal notranslate"><span class="pre">search()</span></code>.</p></li>
+<li><p><strong>download_dir</strong> – Where to save files.</p></li>
+<li><p><strong>max_downloads</strong> – Max number to download (0 = all).</p></li>
+<li><p><strong>delay</strong> – Seconds between downloads (rate limiting).</p></li>
+<li><p><strong>headless</strong> – Run browser in headless mode.</p></li>
+<li><p><strong>timeout</strong> – Per-download timeout in ms.</p></li>
+<li><p><strong>verbose</strong> – Print progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of (result_dict, filepath_or_None) tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract_references">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">extract_references</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extractor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/extract.html#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="citeget/extract.html#citeget.extract.ExtractionResult" title="citeget.extract.ExtractionResult"><span class="pre">ExtractionResult</span></a></span></span><a class="reference internal" href="../_modules/citeget/extract.html#extract_references"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract_references" title="Link to this definition"></a></dt>
+<dd><p>Extract references from document text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> – Full document text.</p></li>
+<li><p><strong>extractor</strong> – An <code class="xref py py-class docutils literal notranslate"><span class="pre">Extractor</span></code> callable, a registered extractor
+name (<code class="docutils literal notranslate"><span class="pre">str</span></code>), or <code class="docutils literal notranslate"><span class="pre">None</span></code> to use the <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> chain.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#citeget.ExtractionResult" title="citeget.ExtractionResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtractionResult</span></code></a> with parsed references and metadata.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="citeget/extract.html#citeget.extract.AIExtractionRequested" title="citeget.extract.AIExtractionRequested"><strong>AIExtractionRequested</strong></a> – If the <code class="docutils literal notranslate"><span class="pre">&quot;ai&quot;</span></code> extractor is selected.</p></li>
+<li><p><strong>KeyError</strong> – If a string name is not in the registry.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.generate_search_queries">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">generate_search_queries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/acquire_references.html#citeget.acquire_references.Reference" title="citeget.acquire_references.Reference"><span class="pre">Reference</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../_modules/citeget/acquire_references.html#generate_search_queries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.generate_search_queries" title="Link to this definition"></a></dt>
+<dd><p>Generate a sequence of search queries from most to least specific.</p>
+<p>Returns list of (query_string, description) tuples.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.list_downloaders">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">list_downloaders</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citeget/resolve.html#list_downloaders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.list_downloaders" title="Link to this definition"></a></dt>
+<dd><p>Return names of all registered downloaders.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.list_extractors">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">list_extractors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citeget/extract.html#list_extractors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.list_extractors" title="Link to this definition"></a></dt>
+<dd><p>Return names of all registered extractors.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.list_resolvers">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">list_resolvers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citeget/resolve.html#list_resolvers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.list_resolvers" title="Link to this definition"></a></dt>
+<dd><p>Return names of all registered resolvers.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.list_strategies">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">list_strategies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/citeget/resolve.html#list_strategies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.list_strategies" title="Link to this definition"></a></dt>
+<dd><p>Return names of all registered strategies.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.merge_extractors">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">merge_extractors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">extractors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/extract.html#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="citeget/extract.html#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></span><a class="headerlink" href="#citeget.merge_extractors" title="Link to this definition"></a></dt>
+<dd><p>Run all <em>extractors</em>, deduplicate by reference number.</p>
+<p>Fields from earlier extractors take priority; later ones fill blanks.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.parse_reference">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">parse_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="citeget/acquire_references.html#citeget.acquire_references.Reference" title="citeget.acquire_references.Reference"><span class="pre">Reference</span></a></span></span><a class="reference internal" href="../_modules/citeget/acquire_references.html#parse_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.parse_reference" title="Link to this definition"></a></dt>
+<dd><p>Parse a reference string into a Reference object.</p>
+<dl class="simple">
+<dt>Handles formats like:</dt><dd><p>[1] A. Author, “Title,” in <em>Venue</em>, year. URL
+A. Author, “Title,” Venue, vol. X, pp. Y-Z, year.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.parse_references_section">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">parse_references_section</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../_modules/citeget/acquire_references.html#parse_references_section"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.parse_references_section" title="Link to this definition"></a></dt>
+<dd><p>Parse a references section into a list of Reference objects.</p>
+<p>Expects lines starting with [N] as reference entries.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.regex_extractor">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">regex_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_patterns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('(?mi)^#{1,3}\\s*(references|bibliography|works\\s+cited|literature)\\s*$',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'^\\s*\\[(\\d+)\\]'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'(?m)^#{1,3}\\s+\\S'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">whole_document_fallback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="citeget/extract.html#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></span><a class="reference internal" href="../_modules/citeget/extract.html#regex_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.regex_extractor" title="Link to this definition"></a></dt>
+<dd><p>Create an extractor from regex patterns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>section_patterns</strong> – Regexes to find the start of a references section.
+Tried in order; first match wins.  Pass <code class="docutils literal notranslate"><span class="pre">()</span></code> to skip header
+detection entirely.</p></li>
+<li><p><strong>entry_pattern</strong> – Regex matching the start of a reference entry.
+Must have group(1) capturing the reference number.</p></li>
+<li><p><strong>stop_pattern</strong> – Regex signalling the end of the section (e.g. a new
+heading).  <code class="docutils literal notranslate"><span class="pre">None</span></code> means extract to end of text.</p></li>
+<li><p><strong>whole_document_fallback</strong> – If no section header is found, scan the
+whole document for <em>entry_pattern</em> matches.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.register_downloader">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">register_downloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/resolve.html#citeget.resolve.Downloader" title="citeget.resolve.Downloader"><span class="pre">Downloader</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/citeget/resolve.html#register_downloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.register_downloader" title="Link to this definition"></a></dt>
+<dd><p>Register a named downloader.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.register_extractor">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">register_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extractor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/extract.html#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#citeget.register_extractor" title="Link to this definition"></a></dt>
+<dd><p>Register a named extractor.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.register_resolver">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">register_resolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/resolve.html#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/citeget/resolve.html#register_resolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.register_resolver" title="Link to this definition"></a></dt>
+<dd><p>Register a named URL resolver.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.register_strategy">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">register_strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/resolve.html#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/citeget/resolve.html#register_strategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.register_strategy" title="Link to this definition"></a></dt>
+<dd><p>Register a named acquisition strategy.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve_and_download">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">resolve_and_download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/resolve.html#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/resolve.html#citeget.resolve.Downloader" title="citeget.resolve.Downloader"><span class="pre">Downloader</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="citeget/resolve.html#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></span><a class="reference internal" href="../_modules/citeget/resolve.html#resolve_and_download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve_and_download" title="Link to this definition"></a></dt>
+<dd><p>Create a strategy that resolves URLs then tries to download each.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resolver</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">UrlResolver</span></code> callable or registered name.</p></li>
+<li><p><strong>downloader</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">Downloader</span></code> callable or registered name.
+<code class="docutils literal notranslate"><span class="pre">None</span></code> uses the <code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code> downloader.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve_reference">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">resolve_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/acquire_references.html#citeget.acquire_references.Reference" title="citeget.acquire_references.Reference"><span class="pre">Reference</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="citeget/resolve.html#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/citeget/resolve.html#resolve_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve_reference" title="Link to this definition"></a></dt>
+<dd><p>Resolve and download a single reference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref</strong> – The reference to acquire.</p></li>
+<li><p><strong>filepath</strong> – Target file path for the download.</p></li>
+<li><p><strong>strategy</strong> – An <code class="xref py py-class docutils literal notranslate"><span class="pre">AcquisitionStrategy</span></code> callable, a registered
+strategy name (<code class="docutils literal notranslate"><span class="pre">str</span></code>), or <code class="docutils literal notranslate"><span class="pre">None</span></code> to use <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Filepath string on success, <code class="docutils literal notranslate"><span class="pre">None</span></code> on failure.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>KeyError</strong> – If a string name is not in the registry.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve_work_dir">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">resolve_work_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../_modules/citeget/acquire_references.html#resolve_work_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve_work_dir" title="Link to this definition"></a></dt>
+<dd><p>Resolve the working directory for an acquisition session.</p>
+<p>Rules:
+- If <code class="docutils literal notranslate"><span class="pre">work_dir</span></code> is given as a full path, use it (create if needed,</p>
+<blockquote>
+<div><p>parent must exist).</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">work_dir</span></code> is a bare name (no slashes), use <code class="docutils literal notranslate"><span class="pre">~/Downloads/{name}</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">work_dir</span></code> is None and <code class="docutils literal notranslate"><span class="pre">reference_file</span></code> is given, derive from the
+reference file: <code class="docutils literal notranslate"><span class="pre">{stem}</span> <span class="pre">--</span> <span class="pre">acquired_references/</span></code> in the same directory.</p></li>
+<li><p>If neither is given, raise ValueError.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Resolved Path to the working directory.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If inputs are insufficient or invalid.</p></li>
+<li><p><strong>FileNotFoundError</strong> – If a specified parent directory doesn’t exist.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.search">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'books'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_per_page</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headless</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../_modules/citeget/core.html#search"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.search" title="Link to this definition"></a></dt>
+<dd><p>Search libgen.vg and return a list of result dicts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> – Search terms.</p></li>
+<li><p><strong>topic</strong> – What to search for — “books”, “articles”, “fiction”, “comics”,
+“magazines”, or “standards”.</p></li>
+<li><p><strong>results_per_page</strong> – How many results per page (25, 50, or 100).</p></li>
+<li><p><strong>headless</strong> – Run browser in headless mode (default True).</p></li>
+<li><p><strong>timeout</strong> – Page load timeout in ms.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>title, authors, publisher, year, language,
+pages, size, extension, doi, series, md5, libgen_href, mirrors.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of dicts with keys</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.search_and_download">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">search_and_download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'books'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_downloads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_per_page</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">headless</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../_modules/citeget/core.html#search_and_download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.search_and_download" title="Link to this definition"></a></dt>
+<dd><p>Search libgen and download matching results in one shot.</p>
+<p>This is the main convenience function. It runs the search, then downloads
+up to <code class="docutils literal notranslate"><span class="pre">max_downloads</span></code> results into <code class="docutils literal notranslate"><span class="pre">download_dir</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> – Search terms.</p></li>
+<li><p><strong>topic</strong> – “books”, “articles”, “fiction”, etc.</p></li>
+<li><p><strong>download_dir</strong> – Where to save files.</p></li>
+<li><p><strong>max_downloads</strong> – Max number to download (default 5, 0 = all).</p></li>
+<li><p><strong>results_per_page</strong> – Results per search page.</p></li>
+<li><p><strong>delay</strong> – Seconds between downloads.</p></li>
+<li><p><strong>headless</strong> – Headless browser mode.</p></li>
+<li><p><strong>timeout</strong> – Timeout in ms for page loads.</p></li>
+<li><p><strong>verbose</strong> – Print progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of (result_dict, filepath_or_None) tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.url_rewriter">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">url_rewriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rules</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="citeget/resolve.html#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a></span></span><a class="reference internal" href="../_modules/citeget/resolve.html#url_rewriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.url_rewriter" title="Link to this definition"></a></dt>
+<dd><p>Create a resolver that rewrites known repository URLs to direct PDFs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rules</strong> – Domain-substring → transform mapping.
+<code class="docutils literal notranslate"><span class="pre">None</span></code> uses <code class="xref py py-data docutils literal notranslate"><span class="pre">BUILTIN_URL_RULES</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.write_missed_references_md">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">write_missed_references_md</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">failures</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/acquire_references.html#write_missed_references_md"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.write_missed_references_md" title="Link to this definition"></a></dt>
+<dd><p>Write a markdown file listing references that could not be acquired.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.write_references_md">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">write_references_md</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">successes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/acquire_references.html#write_references_md"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.write_references_md" title="Link to this definition"></a></dt>
+<dd><p>Write a references.md with hyperlinks to local downloaded files.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to citeget’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="citeget/__main__.html" class="btn btn-neutral float-right" title="citeget.__main__" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

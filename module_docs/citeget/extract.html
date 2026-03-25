@@ -1,0 +1,317 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.extract &mdash; citeget 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="citeget.resolve" href="resolve.html" />
+    <link rel="prev" title="citeget.core" href="core.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">citeget.core</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">citeget.extract</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.AIExtractionRequested"><code class="docutils literal notranslate"><span class="pre">AIExtractionRequested</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.ExtractionResult"><code class="docutils literal notranslate"><span class="pre">ExtractionResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.Extractor"><code class="docutils literal notranslate"><span class="pre">Extractor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.ai_extractor"><code class="docutils literal notranslate"><span class="pre">ai_extractor()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.chain"><code class="docutils literal notranslate"><span class="pre">chain()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.extract_references"><code class="docutils literal notranslate"><span class="pre">extract_references()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.get_extractor"><code class="docutils literal notranslate"><span class="pre">get_extractor()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.list_extractors"><code class="docutils literal notranslate"><span class="pre">list_extractors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.load_extractors"><code class="docutils literal notranslate"><span class="pre">load_extractors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.markdown_link_extractor"><code class="docutils literal notranslate"><span class="pre">markdown_link_extractor()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.merge"><code class="docutils literal notranslate"><span class="pre">merge()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.regex_extractor"><code class="docutils literal notranslate"><span class="pre">regex_extractor()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.register"><code class="docutils literal notranslate"><span class="pre">register()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.extract.save_extractors"><code class="docutils literal notranslate"><span class="pre">save_extractors()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="resolve.html">citeget.resolve</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">citeget.extract</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/citeget/extract.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-citeget.extract">
+<span id="citeget-extract"></span><h1>citeget.extract<a class="headerlink" href="#module-citeget.extract" title="Link to this heading"></a></h1>
+<p>Composable reference extraction from documents.</p>
+<p>An <strong>extractor</strong> is any <code class="docutils literal notranslate"><span class="pre">Callable[[str],</span> <span class="pre">list[Reference]]</span></code>.  This module
+provides a registry of named extractors, a regex-based factory for creating
+new ones, and composition helpers (<code class="docutils literal notranslate"><span class="pre">chain</span></code>, <code class="docutils literal notranslate"><span class="pre">merge</span></code>) for combining them.</p>
+<p>The main entry point is <a class="reference internal" href="#citeget.extract.extract_references" title="citeget.extract.extract_references"><code class="xref py py-func docutils literal notranslate"><span class="pre">extract_references()</span></code></a>, which runs the default
+extraction chain (or a caller-specified extractor) and returns an
+<a class="reference internal" href="#citeget.extract.ExtractionResult" title="citeget.extract.ExtractionResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtractionResult</span></code></a>.</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citeget.extract</span><span class="w"> </span><span class="kn">import</span> <span class="n">extract_references</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">extract_references</span><span class="p">(</span><span class="n">document_text</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">references</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+
+<span class="c1"># Custom extractor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citeget.extract</span><span class="w"> </span><span class="kn">import</span> <span class="n">regex_extractor</span><span class="p">,</span> <span class="n">register</span>
+<span class="n">my_ext</span> <span class="o">=</span> <span class="n">regex_extractor</span><span class="p">(</span><span class="n">section_patterns</span><span class="o">=</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?mi)^REFERENCES\s*$&quot;</span><span class="p">,))</span>
+<span class="n">register</span><span class="p">(</span><span class="s2">&quot;ieee&quot;</span><span class="p">,</span> <span class="n">my_ext</span><span class="p">)</span>
+
+<span class="c1"># Compose</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citeget.extract</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
+<span class="n">combined</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">my_ext</span><span class="p">,</span> <span class="n">extract_references</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py exception">
+<dt class="sig sig-object py" id="citeget.extract.AIExtractionRequested">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">AIExtractionRequested</span></span><a class="reference internal" href="../../_modules/citeget/extract.html#AIExtractionRequested"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.AIExtractionRequested" title="Link to this definition"></a></dt>
+<dd><p>Signal that AI-based extraction should be used.</p>
+<p>Not an error — a control-flow signal caught by the CLI or agent layer.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.extract.ExtractionResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">ExtractionResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">references</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="acquire_references.html#citeget.acquire_references.Reference" title="citeget.acquire_references.Reference"><span class="pre">Reference</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extractor_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">confidence</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'unknown'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/extract.html#ExtractionResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.ExtractionResult" title="Link to this definition"></a></dt>
+<dd><p>Result of extracting references from text.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.extract.Extractor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">Extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/extract.html#Extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.Extractor" title="Link to this definition"></a></dt>
+<dd><p>Any callable: <code class="docutils literal notranslate"><span class="pre">(str)</span> <span class="pre">-&gt;</span> <span class="pre">list[Reference]</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract.ai_extractor">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">ai_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="acquire_references.html#citeget.acquire_references.Reference" title="citeget.acquire_references.Reference"><span class="pre">Reference</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/citeget/extract.html#ai_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.ai_extractor" title="Link to this definition"></a></dt>
+<dd><p>Placeholder extractor that signals AI extraction is needed.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract.chain">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">chain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">extractors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></span><a class="reference internal" href="../../_modules/citeget/extract.html#chain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.chain" title="Link to this definition"></a></dt>
+<dd><p>Try <em>extractors</em> in order, return the first non-empty result.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract.extract_references">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">extract_references</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extractor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.extract.ExtractionResult" title="citeget.extract.ExtractionResult"><span class="pre">ExtractionResult</span></a></span></span><a class="reference internal" href="../../_modules/citeget/extract.html#extract_references"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.extract_references" title="Link to this definition"></a></dt>
+<dd><p>Extract references from document text.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> – Full document text.</p></li>
+<li><p><strong>extractor</strong> – An <a class="reference internal" href="#citeget.extract.Extractor" title="citeget.extract.Extractor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Extractor</span></code></a> callable, a registered extractor
+name (<code class="docutils literal notranslate"><span class="pre">str</span></code>), or <code class="docutils literal notranslate"><span class="pre">None</span></code> to use the <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code> chain.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#citeget.extract.ExtractionResult" title="citeget.extract.ExtractionResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExtractionResult</span></code></a> with parsed references and metadata.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><a class="reference internal" href="#citeget.extract.AIExtractionRequested" title="citeget.extract.AIExtractionRequested"><strong>AIExtractionRequested</strong></a> – If the <code class="docutils literal notranslate"><span class="pre">&quot;ai&quot;</span></code> extractor is selected.</p></li>
+<li><p><strong>KeyError</strong> – If a string name is not in the registry.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract.get_extractor">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">get_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></span><a class="reference internal" href="../../_modules/citeget/extract.html#get_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.get_extractor" title="Link to this definition"></a></dt>
+<dd><p>Retrieve a registered extractor by name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>KeyError</strong> – If <em>name</em> is not registered.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract.list_extractors">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">list_extractors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/citeget/extract.html#list_extractors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.list_extractors" title="Link to this definition"></a></dt>
+<dd><p>Return names of all registered extractors.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract.load_extractors">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">load_extractors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/citeget/extract.html#load_extractors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.load_extractors" title="Link to this definition"></a></dt>
+<dd><p>Load extractors from a JSON file and register them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Names of the extractors that were loaded and registered.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract.markdown_link_extractor">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">markdown_link_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_chars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></span><a class="reference internal" href="../../_modules/citeget/extract.html#markdown_link_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.markdown_link_extractor" title="Link to this definition"></a></dt>
+<dd><p>Create an extractor that treats every <code class="docutils literal notranslate"><span class="pre">[name](url)</span></code> as a reference.</p>
+<p>Each markdown hyperlink becomes a <code class="xref py py-class docutils literal notranslate"><span class="pre">Reference</span></code> with:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">title</span></code> ← the link text (<em>name</em>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">url</span></code> ← the link target</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">raw</span></code> ← the surrounding context (up to <em>context_chars</em> around the link)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">source_text</span></code> ← same context, preserving original formatting</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">year</span></code> ← extracted from context if a 4-digit year is nearby</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">authors</span></code> ← extracted from context if text before the link looks
+like an author list (heuristic: comma-separated capitalised words)</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>context_chars</strong> – How many characters of surrounding text to capture
+on each side of the link.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract.merge">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">extractors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></span><a class="reference internal" href="../../_modules/citeget/extract.html#merge"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.merge" title="Link to this definition"></a></dt>
+<dd><p>Run all <em>extractors</em>, deduplicate by reference number.</p>
+<p>Fields from earlier extractors take priority; later ones fill blanks.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract.regex_extractor">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">regex_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_patterns</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('(?mi)^#{1,3}\\s*(references|bibliography|works\\s+cited|literature)\\s*$',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'^\\s*\\[(\\d+)\\]'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'(?m)^#{1,3}\\s+\\S'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">whole_document_fallback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></span><a class="reference internal" href="../../_modules/citeget/extract.html#regex_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.regex_extractor" title="Link to this definition"></a></dt>
+<dd><p>Create an extractor from regex patterns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>section_patterns</strong> – Regexes to find the start of a references section.
+Tried in order; first match wins.  Pass <code class="docutils literal notranslate"><span class="pre">()</span></code> to skip header
+detection entirely.</p></li>
+<li><p><strong>entry_pattern</strong> – Regex matching the start of a reference entry.
+Must have group(1) capturing the reference number.</p></li>
+<li><p><strong>stop_pattern</strong> – Regex signalling the end of the section (e.g. a new
+heading).  <code class="docutils literal notranslate"><span class="pre">None</span></code> means extract to end of text.</p></li>
+<li><p><strong>whole_document_fallback</strong> – If no section header is found, scan the
+whole document for <em>entry_pattern</em> matches.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract.register">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extractor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.extract.Extractor" title="citeget.extract.Extractor"><span class="pre">Extractor</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/citeget/extract.html#register"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.register" title="Link to this definition"></a></dt>
+<dd><p>Register a named extractor.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract.save_extractors">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">save_extractors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/citeget/extract.html#save_extractors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.extract.save_extractors" title="Link to this definition"></a></dt>
+<dd><p>Save regex-based extractors to a JSON file.</p>
+<p>Only extractors whose underlying callable carries a <code class="docutils literal notranslate"><span class="pre">_config</span></code> dict
+(i.e. those created via <a class="reference internal" href="#citeget.extract.regex_extractor" title="citeget.extract.regex_extractor"><code class="xref py py-func docutils literal notranslate"><span class="pre">regex_extractor()</span></code></a>) can be serialised.
+Built-in names (<code class="docutils literal notranslate"><span class="pre">default</span></code>, <code class="docutils literal notranslate"><span class="pre">ai</span></code>) are skipped.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – JSON file to write.</p></li>
+<li><p><strong>names</strong> – Extractor names to save.  <code class="docutils literal notranslate"><span class="pre">None</span></code> saves all serialisable ones.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="core.html" class="btn btn-neutral float-left" title="citeget.core" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="resolve.html" class="btn btn-neutral float-right" title="citeget.resolve" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

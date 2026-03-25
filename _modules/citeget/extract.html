@@ -1,0 +1,602 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.extract &mdash; citeget 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/resolve.html">citeget.resolve</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citeget.extract</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citeget.extract</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Composable reference extraction from documents.</span>
+
+<span class="sd">An **extractor** is any ``Callable[[str], list[Reference]]``.  This module</span>
+<span class="sd">provides a registry of named extractors, a regex-based factory for creating</span>
+<span class="sd">new ones, and composition helpers (``chain``, ``merge``) for combining them.</span>
+
+<span class="sd">The main entry point is :func:`extract_references`, which runs the default</span>
+<span class="sd">extraction chain (or a caller-specified extractor) and returns an</span>
+<span class="sd">:class:`ExtractionResult`.</span>
+
+<span class="sd">Usage::</span>
+
+<span class="sd">    from citeget.extract import extract_references</span>
+
+<span class="sd">    result = extract_references(document_text)</span>
+<span class="sd">    for ref in result.references:</span>
+<span class="sd">        print(ref.number, ref.title)</span>
+
+<span class="sd">    # Custom extractor</span>
+<span class="sd">    from citeget.extract import regex_extractor, register</span>
+<span class="sd">    my_ext = regex_extractor(section_patterns=(r&quot;(?mi)^REFERENCES\\s*$&quot;,))</span>
+<span class="sd">    register(&quot;ieee&quot;, my_ext)</span>
+
+<span class="sd">    # Compose</span>
+<span class="sd">    from citeget.extract import chain</span>
+<span class="sd">    combined = chain(my_ext, extract_references)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">runtime_checkable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">citeget.acquire_references</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reference</span><span class="p">,</span> <span class="n">parse_reference</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Protocol &amp; result type</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="Extractor">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.Extractor">[docs]</a>
+<span class="nd">@runtime_checkable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Extractor</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Any callable: ``(str) -&gt; list[Reference]``.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Reference</span><span class="p">]:</span> <span class="o">...</span></div>
+
+
+
+<div class="viewcode-block" id="ExtractionResult">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.ExtractionResult">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ExtractionResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Result of extracting references from text.&quot;&quot;&quot;</span>
+
+    <span class="n">references</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Reference</span><span class="p">]</span>
+    <span class="n">extractor_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">confidence</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>  <span class="c1"># &quot;high&quot;, &quot;medium&quot;, &quot;low&quot;</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Registry</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="n">EXTRACTORS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Extractor</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="register">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.register">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">extractor</span><span class="p">:</span> <span class="n">Extractor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Register a named extractor.&quot;&quot;&quot;</span>
+    <span class="n">EXTRACTORS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">extractor</span></div>
+
+
+
+<div class="viewcode-block" id="get_extractor">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.get_extractor">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_extractor</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Extractor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve a registered extractor by name.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        KeyError: If *name* is not registered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">EXTRACTORS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="list_extractors">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.list_extractors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_extractors</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return names of all registered extractors.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">EXTRACTORS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># AI-agent signal</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="AIExtractionRequested">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.AIExtractionRequested">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AIExtractionRequested</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Signal that AI-based extraction should be used.</span>
+
+<span class="sd">    Not an error — a control-flow signal caught by the CLI or agent layer.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ai_extractor">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.ai_extractor">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ai_extractor</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Reference</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Placeholder extractor that signals AI extraction is needed.&quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="n">AIExtractionRequested</span><span class="p">(</span>
+        <span class="s2">&quot;AI-based extraction requested. &quot;</span>
+        <span class="s2">&quot;This should be caught by the CLI or agent layer.&quot;</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Internal helpers</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="n">DEFAULT_SECTION_PATTERNS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="sa">r</span><span class="s2">&quot;(?mi)^#{1,3}\s*(references|bibliography|works\s+cited|literature)\s*$&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_section</span><span class="p">(</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">section_patterns</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+    <span class="n">stop_pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find a references section in *text* using regex patterns.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">section_patterns</span><span class="p">:</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="n">rest</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">():]</span>
+            <span class="k">if</span> <span class="n">stop_pattern</span><span class="p">:</span>
+                <span class="n">end_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">stop_pattern</span><span class="p">,</span> <span class="n">rest</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">end_match</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">rest</span><span class="p">[:</span> <span class="n">end_match</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span>
+            <span class="k">return</span> <span class="n">rest</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_strip_markdown</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove markdown bold/italic markers from text.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\*{1,2}&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_extract_entries</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">entry_pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Reference</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract numbered reference entries from *text*.&quot;&quot;&quot;</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Reference</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">current_lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">current_num</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+        <span class="n">stripped</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">stripped</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="c1"># Strip markdown bold markers for pattern matching</span>
+        <span class="n">clean</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\*\*&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">stripped</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">entry_pattern</span><span class="p">,</span> <span class="n">clean</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">current_lines</span><span class="p">:</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_lines</span><span class="p">)</span>
+                <span class="n">raw</span> <span class="o">=</span> <span class="n">_strip_markdown</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_lines</span><span class="p">))</span>
+                <span class="n">ref</span> <span class="o">=</span> <span class="n">parse_reference</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">current_num</span><span class="p">)</span>
+                <span class="n">ref</span><span class="o">.</span><span class="n">source_text</span> <span class="o">=</span> <span class="n">source</span>
+                <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+            <span class="n">current_num</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">current_lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">stripped</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">current_lines</span><span class="p">:</span>
+            <span class="n">current_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stripped</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">current_lines</span><span class="p">:</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_lines</span><span class="p">)</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">_strip_markdown</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">current_lines</span><span class="p">))</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">parse_reference</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="n">current_num</span><span class="p">)</span>
+        <span class="n">ref</span><span class="o">.</span><span class="n">source_text</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">entries</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Regex extractor factory</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="regex_extractor">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.regex_extractor">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">regex_extractor</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">section_patterns</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_SECTION_PATTERNS</span><span class="p">,</span>
+    <span class="n">entry_pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^\s*\[(\d+)\]&quot;</span><span class="p">,</span>
+    <span class="n">stop_pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;(?m)^#{1,3}\s+\S&quot;</span><span class="p">,</span>
+    <span class="n">whole_document_fallback</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Extractor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an extractor from regex patterns.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        section_patterns: Regexes to find the start of a references section.</span>
+<span class="sd">            Tried in order; first match wins.  Pass ``()`` to skip header</span>
+<span class="sd">            detection entirely.</span>
+<span class="sd">        entry_pattern: Regex matching the start of a reference entry.</span>
+<span class="sd">            Must have group(1) capturing the reference number.</span>
+<span class="sd">        stop_pattern: Regex signalling the end of the section (e.g. a new</span>
+<span class="sd">            heading).  ``None`` means extract to end of text.</span>
+<span class="sd">        whole_document_fallback: If no section header is found, scan the</span>
+<span class="sd">            whole document for *entry_pattern* matches.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extract</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Reference</span><span class="p">]:</span>
+        <span class="n">section_text</span> <span class="o">=</span> <span class="n">_find_section</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">section_patterns</span><span class="p">,</span> <span class="n">stop_pattern</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">section_text</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">whole_document_fallback</span><span class="p">:</span>
+            <span class="n">section_text</span> <span class="o">=</span> <span class="n">text</span>
+        <span class="k">if</span> <span class="n">section_text</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">_extract_entries</span><span class="p">(</span><span class="n">section_text</span><span class="p">,</span> <span class="n">entry_pattern</span><span class="p">)</span>
+
+    <span class="c1"># Attach config for serialisation support</span>
+    <span class="n">_extract</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="p">{</span>  <span class="c1"># type: ignore[attr-defined]</span>
+        <span class="s2">&quot;section_patterns&quot;</span><span class="p">:</span> <span class="n">section_patterns</span><span class="p">,</span>
+        <span class="s2">&quot;entry_pattern&quot;</span><span class="p">:</span> <span class="n">entry_pattern</span><span class="p">,</span>
+        <span class="s2">&quot;stop_pattern&quot;</span><span class="p">:</span> <span class="n">stop_pattern</span><span class="p">,</span>
+        <span class="s2">&quot;whole_document_fallback&quot;</span><span class="p">:</span> <span class="n">whole_document_fallback</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">_extract</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Composition</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="chain">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.chain">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">chain</span><span class="p">(</span><span class="o">*</span><span class="n">extractors</span><span class="p">:</span> <span class="n">Extractor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Extractor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Try *extractors* in order, return the first non-empty result.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_chained</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Reference</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">extractors</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">ext</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="k">return</span> <span class="n">_chained</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<div class="viewcode-block" id="merge">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.merge">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">merge</span><span class="p">(</span><span class="o">*</span><span class="n">extractors</span><span class="p">:</span> <span class="n">Extractor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Extractor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run all *extractors*, deduplicate by reference number.</span>
+
+<span class="sd">    Fields from earlier extractors take priority; later ones fill blanks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_merged</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Reference</span><span class="p">]:</span>
+        <span class="n">by_number</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Reference</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">extractors</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">ext</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">number</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">by_number</span><span class="p">:</span>
+                    <span class="n">by_number</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">]</span> <span class="o">=</span> <span class="n">ref</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">existing</span> <span class="o">=</span> <span class="n">by_number</span><span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">fld</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;authors&quot;</span><span class="p">,</span> <span class="s2">&quot;year&quot;</span><span class="p">,</span> <span class="s2">&quot;venue&quot;</span><span class="p">,</span> <span class="s2">&quot;url&quot;</span><span class="p">,</span> <span class="s2">&quot;doi&quot;</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">existing</span><span class="p">,</span> <span class="n">fld</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">fld</span><span class="p">):</span>
+                            <span class="nb">setattr</span><span class="p">(</span><span class="n">existing</span><span class="p">,</span> <span class="n">fld</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">fld</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">by_number</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_merged</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Built-in extractors</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="markdown_link_extractor">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.markdown_link_extractor">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">markdown_link_extractor</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">context_chars</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Extractor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an extractor that treats every ``[name](url)`` as a reference.</span>
+
+<span class="sd">    Each markdown hyperlink becomes a :class:`Reference` with:</span>
+
+<span class="sd">    - ``title`` ← the link text (*name*)</span>
+<span class="sd">    - ``url`` ← the link target</span>
+<span class="sd">    - ``raw`` ← the surrounding context (up to *context_chars* around the link)</span>
+<span class="sd">    - ``source_text`` ← same context, preserving original formatting</span>
+<span class="sd">    - ``year`` ← extracted from context if a 4-digit year is nearby</span>
+<span class="sd">    - ``authors`` ← extracted from context if text before the link looks</span>
+<span class="sd">      like an author list (heuristic: comma-separated capitalised words)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        context_chars: How many characters of surrounding text to capture</span>
+<span class="sd">            on each side of the link.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_link_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\[([^\]]+)\]\((https?://[^)]+)\)&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extract</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Reference</span><span class="p">]:</span>
+        <span class="n">refs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Reference</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">_link_re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span><span class="p">),</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="c1"># Gather context around the match</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="o">-</span> <span class="n">context_chars</span><span class="p">)</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">),</span> <span class="n">m</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="o">+</span> <span class="n">context_chars</span><span class="p">)</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+            <span class="c1"># Try to extract year from context</span>
+            <span class="n">year</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">year_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\b((?:19|20)\d</span><span class="si">{2}</span><span class="s2">)\b&quot;</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">year_match</span><span class="p">:</span>
+                <span class="n">year</span> <span class="o">=</span> <span class="n">year_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># Heuristic for authors: look at text just before the link</span>
+            <span class="c1"># on the same line for patterns like &quot;Author, Author, ...&quot;</span>
+            <span class="n">authors</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">pre_text</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="o">-</span> <span class="mi">300</span><span class="p">):</span> <span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span>
+            <span class="c1"># Take the last line fragment before the link</span>
+            <span class="n">last_line</span> <span class="o">=</span> <span class="n">pre_text</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="c1"># Strip leading markdown (bullets, bold, brackets)</span>
+            <span class="n">last_line</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^[\s\-*&gt;#]+&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">last_line</span><span class="p">)</span>
+            <span class="c1"># If it looks like &quot;Surname, Surname, ...&quot; before a quote/title</span>
+            <span class="n">author_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;^([A-Z][a-z]+(?:\s*,\s*[A-Z][a-z]+)*(?:\s*,?\s*(?:and|&amp;)\s*[A-Z][a-z]+)?)\s*[,.]&quot;</span><span class="p">,</span>
+                <span class="n">last_line</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">author_match</span><span class="p">:</span>
+                <span class="n">authors</span> <span class="o">=</span> <span class="n">author_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Reference</span><span class="p">(</span>
+                <span class="n">number</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                <span class="n">raw</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">authors</span><span class="o">=</span><span class="n">authors</span><span class="p">,</span>
+                <span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span>
+                <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+                <span class="n">source_text</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+            <span class="p">))</span>
+        <span class="k">return</span> <span class="n">refs</span>
+
+    <span class="k">return</span> <span class="n">_extract</span>  <span class="c1"># type: ignore[return-value]</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_default_extractor</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Extractor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the default extraction chain.&quot;&quot;&quot;</span>
+    <span class="c1"># 1. Standard: explicit References/Bibliography header + [N] entries</span>
+    <span class="n">standard</span> <span class="o">=</span> <span class="n">regex_extractor</span><span class="p">(</span><span class="n">whole_document_fallback</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># 2. Broad: any [N] pattern in the whole document (no header needed)</span>
+    <span class="n">broad</span> <span class="o">=</span> <span class="n">regex_extractor</span><span class="p">(</span><span class="n">section_patterns</span><span class="o">=</span><span class="p">())</span>
+
+    <span class="c1"># 3. Bold-numbered: **[N]** patterns (e.g. tiered reference lists)</span>
+    <span class="n">bold</span> <span class="o">=</span> <span class="n">regex_extractor</span><span class="p">(</span>
+        <span class="n">section_patterns</span><span class="o">=</span><span class="p">(),</span>
+        <span class="n">entry_pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;^\s*\*?\*?\[(\d+)\]&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">chain</span><span class="p">(</span><span class="n">standard</span><span class="p">,</span> <span class="n">broad</span><span class="p">,</span> <span class="n">bold</span><span class="p">)</span>
+
+
+<span class="c1"># Register built-ins at import time</span>
+<span class="n">register</span><span class="p">(</span><span class="s2">&quot;standard&quot;</span><span class="p">,</span> <span class="n">regex_extractor</span><span class="p">(</span><span class="n">whole_document_fallback</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="n">register</span><span class="p">(</span><span class="s2">&quot;broad&quot;</span><span class="p">,</span> <span class="n">regex_extractor</span><span class="p">(</span><span class="n">section_patterns</span><span class="o">=</span><span class="p">()))</span>
+<span class="n">register</span><span class="p">(</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">regex_extractor</span><span class="p">(</span>
+    <span class="n">section_patterns</span><span class="o">=</span><span class="p">(),</span> <span class="n">entry_pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;^\s*\*?\*?\[(\d+)\]&quot;</span><span class="p">,</span>
+<span class="p">))</span>
+<span class="n">register</span><span class="p">(</span><span class="s2">&quot;markdown_links&quot;</span><span class="p">,</span> <span class="n">markdown_link_extractor</span><span class="p">())</span>
+<span class="n">register</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">_build_default_extractor</span><span class="p">())</span>
+<span class="n">register</span><span class="p">(</span><span class="s2">&quot;ai&quot;</span><span class="p">,</span> <span class="n">ai_extractor</span><span class="p">)</span>
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Main entry point</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="extract_references">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.extract_references">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_references</span><span class="p">(</span>
+    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">extractor</span><span class="p">:</span> <span class="n">Extractor</span> <span class="o">|</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExtractionResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract references from document text.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        text: Full document text.</span>
+<span class="sd">        extractor: An :class:`Extractor` callable, a registered extractor</span>
+<span class="sd">            name (``str``), or ``None`` to use the ``&quot;default&quot;`` chain.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :class:`ExtractionResult` with parsed references and metadata.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        AIExtractionRequested: If the ``&quot;ai&quot;`` extractor is selected.</span>
+<span class="sd">        KeyError: If a string name is not in the registry.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">extractor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">EXTRACTORS</span><span class="p">[</span><span class="s2">&quot;default&quot;</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extractor</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">get_extractor</span><span class="p">(</span><span class="n">extractor</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">extractor</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">extractor</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">extractor</span><span class="p">,</span> <span class="s2">&quot;__name__&quot;</span><span class="p">,</span> <span class="s2">&quot;custom&quot;</span><span class="p">)</span>
+
+    <span class="n">refs</span> <span class="o">=</span> <span class="n">ext</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="n">confidence</span> <span class="o">=</span> <span class="s2">&quot;high&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">refs</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span> <span class="k">else</span> <span class="p">(</span><span class="s2">&quot;medium&quot;</span> <span class="k">if</span> <span class="n">refs</span> <span class="k">else</span> <span class="s2">&quot;low&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ExtractionResult</span><span class="p">(</span>
+        <span class="n">references</span><span class="o">=</span><span class="n">refs</span><span class="p">,</span>
+        <span class="n">extractor_name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="n">confidence</span><span class="o">=</span><span class="n">confidence</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Persistence (save/load regex-based extractors)</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="save_extractors">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.save_extractors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">save_extractors</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save regex-based extractors to a JSON file.</span>
+
+<span class="sd">    Only extractors whose underlying callable carries a ``_config`` dict</span>
+<span class="sd">    (i.e. those created via :func:`regex_extractor`) can be serialised.</span>
+<span class="sd">    Built-in names (``default``, ``ai``) are skipped.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: JSON file to write.</span>
+<span class="sd">        names: Extractor names to save.  ``None`` saves all serialisable ones.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">skip</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="s2">&quot;ai&quot;</span><span class="p">}</span>
+    <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">EXTRACTORS</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">skip</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">ext</span><span class="p">,</span> <span class="s2">&quot;_config&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span>
+
+    <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="load_extractors">
+<a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.load_extractors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_extractors</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load extractors from a JSON file and register them.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Names of the extractors that were loaded and registered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+    <span class="n">loaded</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># Convert lists back to tuples where needed</span>
+        <span class="k">if</span> <span class="s2">&quot;section_patterns&quot;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;section_patterns&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;section_patterns&quot;</span><span class="p">])</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">regex_extractor</span><span class="p">(</span><span class="o">**</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">register</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
+        <span class="n">loaded</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">loaded</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

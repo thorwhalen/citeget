@@ -1,0 +1,377 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.resolve &mdash; citeget 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="citeget.extract" href="extract.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extract.html">citeget.extract</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">citeget.resolve</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy"><code class="docutils literal notranslate"><span class="pre">AcquisitionStrategy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.Downloader"><code class="docutils literal notranslate"><span class="pre">Downloader</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.UrlResolver"><code class="docutils literal notranslate"><span class="pre">UrlResolver</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.arxiv_search_resolver"><code class="docutils literal notranslate"><span class="pre">arxiv_search_resolver()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.chain"><code class="docutils literal notranslate"><span class="pre">chain()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.chain_resolvers"><code class="docutils literal notranslate"><span class="pre">chain_resolvers()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.doi_resolver"><code class="docutils literal notranslate"><span class="pre">doi_resolver()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.get_downloader"><code class="docutils literal notranslate"><span class="pre">get_downloader()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.get_resolver"><code class="docutils literal notranslate"><span class="pre">get_resolver()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.get_strategy"><code class="docutils literal notranslate"><span class="pre">get_strategy()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.libgen_strategy"><code class="docutils literal notranslate"><span class="pre">libgen_strategy()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.list_downloaders"><code class="docutils literal notranslate"><span class="pre">list_downloaders()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.list_resolvers"><code class="docutils literal notranslate"><span class="pre">list_resolvers()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.list_strategies"><code class="docutils literal notranslate"><span class="pre">list_strategies()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.register_downloader"><code class="docutils literal notranslate"><span class="pre">register_downloader()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.register_resolver"><code class="docutils literal notranslate"><span class="pre">register_resolver()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.register_strategy"><code class="docutils literal notranslate"><span class="pre">register_strategy()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.resolve_and_download"><code class="docutils literal notranslate"><span class="pre">resolve_and_download()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.resolve_reference"><code class="docutils literal notranslate"><span class="pre">resolve_reference()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.scihub_strategy"><code class="docutils literal notranslate"><span class="pre">scihub_strategy()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.semantic_scholar_resolver"><code class="docutils literal notranslate"><span class="pre">semantic_scholar_resolver()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.url_rewriter"><code class="docutils literal notranslate"><span class="pre">url_rewriter()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.with_logging"><code class="docutils literal notranslate"><span class="pre">with_logging()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">citeget.resolve</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/citeget/resolve.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-citeget.resolve">
+<span id="citeget-resolve"></span><h1>citeget.resolve<a class="headerlink" href="#module-citeget.resolve" title="Link to this heading"></a></h1>
+<p>Composable download and URL-resolution for academic references.</p>
+<p>The acquisition pipeline has three layers:</p>
+<ul class="simple">
+<li><p><strong>UrlResolver</strong> <code class="docutils literal notranslate"><span class="pre">(Reference)</span> <span class="pre">-&gt;</span> <span class="pre">list[str]</span></code> — turn citation info into
+candidate download URLs (URL rewriting, DOI lookup, search APIs).</p></li>
+<li><p><strong>Downloader</strong> <code class="docutils literal notranslate"><span class="pre">(url,</span> <span class="pre">filepath)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code> — fetch a URL, validate the
+content, save to disk.</p></li>
+<li><p><strong>AcquisitionStrategy</strong> <code class="docutils literal notranslate"><span class="pre">(Reference,</span> <span class="pre">Path)</span> <span class="pre">-&gt;</span> <span class="pre">Optional[str]</span></code> — a complete
+unit that combines resolvers and downloaders (or does its own thing, like
+libgen’s playwright-based search+download).</p></li>
+</ul>
+<p>The factory <a class="reference internal" href="#citeget.resolve.resolve_and_download" title="citeget.resolve.resolve_and_download"><code class="xref py py-func docutils literal notranslate"><span class="pre">resolve_and_download()</span></code></a> wires a resolver to a downloader.
+<a class="reference internal" href="#citeget.resolve.chain" title="citeget.resolve.chain"><code class="xref py py-func docutils literal notranslate"><span class="pre">chain()</span></code></a> composes strategies (try first, fall back to second).</p>
+<p>Usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citeget.resolve</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_reference</span>
+
+<span class="c1"># Zero-config: tries all built-in strategies in order</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">resolve_reference</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;paper.pdf&quot;</span><span class="p">))</span>
+
+<span class="c1"># Custom chain</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citeget.resolve</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">STRATEGIES</span>
+<span class="n">my</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">&quot;direct&quot;</span><span class="p">],</span> <span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">&quot;arxiv_search&quot;</span><span class="p">])</span>
+<span class="n">resolve_reference</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">my</span><span class="p">)</span>
+
+<span class="c1"># Add a repository rule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citeget.resolve</span><span class="w"> </span><span class="kn">import</span> <span class="n">url_rewriter</span><span class="p">,</span> <span class="n">BUILTIN_URL_RULES</span><span class="p">,</span> <span class="n">register_resolver</span>
+<span class="n">rules</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">BUILTIN_URL_RULES</span><span class="p">,</span> <span class="s2">&quot;myrepo.org&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/view/&quot;</span><span class="p">,</span> <span class="s2">&quot;/dl/&quot;</span><span class="p">)}</span>
+<span class="n">register_resolver</span><span class="p">(</span><span class="s2">&quot;my_rewriter&quot;</span><span class="p">,</span> <span class="n">url_rewriter</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="n">rules</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.resolve.AcquisitionStrategy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">AcquisitionStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/resolve.html#AcquisitionStrategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.AcquisitionStrategy" title="Link to this definition"></a></dt>
+<dd><p>Complete acquire-one-reference unit.</p>
+<p>Returns the filepath string on success, <code class="docutils literal notranslate"><span class="pre">None</span></code> on failure.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.resolve.Downloader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">Downloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/resolve.html#Downloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.Downloader" title="Link to this definition"></a></dt>
+<dd><p>Fetch <em>url</em>, validate content, save to <em>filepath</em>.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">True</span></code> on success.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.resolve.UrlResolver">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">UrlResolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/resolve.html#UrlResolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.UrlResolver" title="Link to this definition"></a></dt>
+<dd><p>Turn a <code class="xref py py-class docutils literal notranslate"><span class="pre">Reference</span></code> into candidate download URLs.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.arxiv_search_resolver">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">arxiv_search_resolver</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#arxiv_search_resolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.arxiv_search_resolver" title="Link to this definition"></a></dt>
+<dd><p>Search the arxiv API by author + title, return PDF URLs.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.chain">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">chain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">strategies</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#chain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.chain" title="Link to this definition"></a></dt>
+<dd><p>Try <em>strategies</em> in order, return the first success.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.chain_resolvers">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">chain_resolvers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">resolvers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#chain_resolvers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.chain_resolvers" title="Link to this definition"></a></dt>
+<dd><p>Concatenate URL lists from multiple resolvers (deduped, order-preserving).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.doi_resolver">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">doi_resolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">email</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#doi_resolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.doi_resolver" title="Link to this definition"></a></dt>
+<dd><p>Resolve via DOI: Crossref lookup → Unpaywall (open access) → Sci-Hub.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>email</strong> – Email for the Unpaywall API (optional; skipped if empty).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.get_downloader">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">get_downloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.Downloader" title="citeget.resolve.Downloader"><span class="pre">Downloader</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#get_downloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.get_downloader" title="Link to this definition"></a></dt>
+<dd><p>Retrieve a registered downloader by name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>KeyError</strong> – If <em>name</em> is not registered.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.get_resolver">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">get_resolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#get_resolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.get_resolver" title="Link to this definition"></a></dt>
+<dd><p>Retrieve a registered resolver by name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>KeyError</strong> – If <em>name</em> is not registered.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.get_strategy">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">get_strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#get_strategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.get_strategy" title="Link to this definition"></a></dt>
+<dd><p>Retrieve a registered strategy by name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>KeyError</strong> – If <em>name</em> is not registered.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.libgen_strategy">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">libgen_strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('articles',</span> <span class="pre">'books')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30000</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#libgen_strategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.libgen_strategy" title="Link to this definition"></a></dt>
+<dd><p>Wrap the existing libgen search+download as an <a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">AcquisitionStrategy</span></code></a>.</p>
+<p>This is a self-contained strategy (not a resolver+downloader pair) because
+libgen requires playwright-based browser automation for both search and
+download.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.list_downloaders">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">list_downloaders</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#list_downloaders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.list_downloaders" title="Link to this definition"></a></dt>
+<dd><p>Return names of all registered downloaders.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.list_resolvers">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">list_resolvers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#list_resolvers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.list_resolvers" title="Link to this definition"></a></dt>
+<dd><p>Return names of all registered resolvers.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.list_strategies">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">list_strategies</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#list_strategies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.list_strategies" title="Link to this definition"></a></dt>
+<dd><p>Return names of all registered strategies.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.register_downloader">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">register_downloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.resolve.Downloader" title="citeget.resolve.Downloader"><span class="pre">Downloader</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#register_downloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.register_downloader" title="Link to this definition"></a></dt>
+<dd><p>Register a named downloader.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.register_resolver">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">register_resolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#register_resolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.register_resolver" title="Link to this definition"></a></dt>
+<dd><p>Register a named URL resolver.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.register_strategy">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">register_strategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#register_strategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.register_strategy" title="Link to this definition"></a></dt>
+<dd><p>Register a named acquisition strategy.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.resolve_and_download">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">resolve_and_download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resolver</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.resolve.Downloader" title="citeget.resolve.Downloader"><span class="pre">Downloader</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#resolve_and_download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.resolve_and_download" title="Link to this definition"></a></dt>
+<dd><p>Create a strategy that resolves URLs then tries to download each.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>resolver</strong> – A <a class="reference internal" href="#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">UrlResolver</span></code></a> callable or registered name.</p></li>
+<li><p><strong>downloader</strong> – A <a class="reference internal" href="#citeget.resolve.Downloader" title="citeget.resolve.Downloader"><code class="xref py py-class docutils literal notranslate"><span class="pre">Downloader</span></code></a> callable or registered name.
+<code class="docutils literal notranslate"><span class="pre">None</span></code> uses the <code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code> downloader.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.resolve_reference">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">resolve_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="acquire_references.html#citeget.acquire_references.Reference" title="citeget.acquire_references.Reference"><span class="pre">Reference</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#resolve_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.resolve_reference" title="Link to this definition"></a></dt>
+<dd><p>Resolve and download a single reference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ref</strong> – The reference to acquire.</p></li>
+<li><p><strong>filepath</strong> – Target file path for the download.</p></li>
+<li><p><strong>strategy</strong> – An <a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">AcquisitionStrategy</span></code></a> callable, a registered
+strategy name (<code class="docutils literal notranslate"><span class="pre">str</span></code>), or <code class="docutils literal notranslate"><span class="pre">None</span></code> to use <code class="docutils literal notranslate"><span class="pre">&quot;default&quot;</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Filepath string on success, <code class="docutils literal notranslate"><span class="pre">None</span></code> on failure.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>KeyError</strong> – If a string name is not in the registry.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.scihub_strategy">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">scihub_strategy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#scihub_strategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.scihub_strategy" title="Link to this definition"></a></dt>
+<dd><p>Wrap the existing Sci-Hub/DOI download as an <a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><code class="xref py py-class docutils literal notranslate"><span class="pre">AcquisitionStrategy</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.semantic_scholar_resolver">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">semantic_scholar_resolver</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#semantic_scholar_resolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.semantic_scholar_resolver" title="Link to this definition"></a></dt>
+<dd><p>Query the Semantic Scholar API for open-access PDF links.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.url_rewriter">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">url_rewriter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rules</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.UrlResolver" title="citeget.resolve.UrlResolver"><span class="pre">UrlResolver</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#url_rewriter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.url_rewriter" title="Link to this definition"></a></dt>
+<dd><p>Create a resolver that rewrites known repository URLs to direct PDFs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rules</strong> – Domain-substring → transform mapping.
+<code class="docutils literal notranslate"><span class="pre">None</span></code> uses <code class="xref py py-data docutils literal notranslate"><span class="pre">BUILTIN_URL_RULES</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.resolve.with_logging">
+<span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">with_logging</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_entries</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy" title="citeget.resolve.AcquisitionStrategy"><span class="pre">AcquisitionStrategy</span></a></span></span><a class="reference internal" href="../../_modules/citeget/resolve.html#with_logging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.with_logging" title="Link to this definition"></a></dt>
+<dd><p>Wrap a strategy to append a log entry on each call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>strategy</strong> – The strategy to wrap.</p></li>
+<li><p><strong>name</strong> – Label for log entries.</p></li>
+<li><p><strong>log_entries</strong> – List to append dicts to (mutated in place).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="extract.html" class="btn btn-neutral float-left" title="citeget.extract" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
