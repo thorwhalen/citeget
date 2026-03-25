@@ -1,0 +1,262 @@
+{
+  "ieee_software": {
+    "name": "IEEE Software",
+    "publisher": "IEEE Computer Society",
+    "type": "magazine",
+    "peer_reviewed": true,
+    "submission_model": "open",
+    "frequency": "bimonthly",
+    "scope": "Software engineering methods, tools, processes, and practice. Bridges research and professional practice. Practitioner-focused.",
+    "audience": "Working software engineers and engineering managers",
+    "tone": "Semi-formal, practitioner-friendly, concrete examples valued",
+    "word_limit": 4200,
+    "word_limit_notes": "Each figure or table counts as 250 words against the limit",
+    "abstract_word_limit": 150,
+    "reference_limit": 15,
+    "page_limit": null,
+    "required_sections": ["abstract", "introduction", "conclusion"],
+    "required_elements": [
+      "practitioner_takeaways_3_bullets",
+      "author_bio",
+      "author_photo"
+    ],
+    "citation_style": "IEEE numbered [1] [2] ordered by appearance",
+    "template": "Word or LaTeX; IEEE magazine style",
+    "template_url": "https://www.computer.org/csdl/magazine/so/write-for-us/14426",
+    "submission_portal": "https://ieee.atyponrex.com/journal/sw-cs",
+    "pre_submission_contact": "sigrid.eldh@ieee.org",
+    "pre_submission_recommended": true,
+    "review_type": "single-blind",
+    "decision_timeline_weeks": "4-8",
+    "open_access_option": true,
+    "author_guidelines_url": "https://www.computer.org/csdl/magazine/so/write-for-us/14426",
+    "cfp_url": "https://www.computer.org/digital-library/magazines/so/cfp-ieee-software",
+    "best_for": [
+      "experience_report",
+      "tool_paper",
+      "methods_overview",
+      "practitioner_study",
+      "lessons_learned"
+    ],
+    "not_suitable_for": [
+      "pure_theory",
+      "heavy_formal_methods",
+      "narrow_tool_without_lessons"
+    ],
+    "special_notes": "Three practitioner takeaways must be actionable, not restatements of abstract. Author photo required."
+  },
+
+  "cacm_practice": {
+    "name": "Communications of the ACM — Practice",
+    "publisher": "ACM",
+    "type": "magazine",
+    "peer_reviewed": true,
+    "submission_model": "open",
+    "frequency": "monthly",
+    "scope": "Engineering experience and practitioner knowledge from real-world CS and software practice. Not a research venue — engineering stories, case studies, and hard-won lessons.",
+    "audience": "Broad CS audience including non-SE specialists; practitioners and researchers",
+    "tone": "Accessible to non-specialists; must be followable by a computer scientist outside the subfield",
+    "word_limit": null,
+    "word_limit_notes": "Approximately 6,000 words; 10 single-column single-spaced pages including figures",
+    "page_limit": 10,
+    "page_limit_format": "single-column, single-spaced",
+    "abstract_word_limit": null,
+    "reference_limit": 40,
+    "reference_order": "alphabetical by first author last name",
+    "required_sections": ["abstract"],
+    "required_elements": [
+      "relevance_statement_why_cacm_readers_care"
+    ],
+    "citation_style": "ACM style; numbered or author-year depending on template; alphabetical in reference list",
+    "template": "ACM acmsmall LaTeX or Word",
+    "submission_portal": "https://mc.manuscriptcentral.com/cacm",
+    "review_type": "editorial board + peer review",
+    "decision_timeline_weeks": "4-8",
+    "open_access_option": false,
+    "author_guidelines_url": "https://cacm.acm.org/author-guidelines/",
+    "best_for": [
+      "case_study",
+      "experience_report",
+      "engineering_story",
+      "practitioner_lesson",
+      "system_design_retrospective"
+    ],
+    "not_suitable_for": [
+      "narrow_research",
+      "tool_without_broad_lessons",
+      "highly_domain_specific_work"
+    ],
+    "special_notes": "Key CACM test: could a computer scientist outside this subfield follow this article? Broad relevance is mandatory. Relevance statement required at submission."
+  },
+
+  "cacm_research": {
+    "name": "Communications of the ACM — Research and Advances",
+    "publisher": "ACM",
+    "type": "magazine",
+    "peer_reviewed": true,
+    "submission_model": "open",
+    "frequency": "monthly",
+    "scope": "Innovative ideas, technical visions, open challenges, and significant results of broad interest to computing. Not a journal — results must be compelling to a broad CS audience.",
+    "audience": "All of computing; broad CS readership including non-specialists",
+    "tone": "Accessible but technically substantive",
+    "word_limit": null,
+    "page_limit": 10,
+    "page_limit_format": "single-column, single-spaced",
+    "abstract_word_limit": null,
+    "reference_limit": 40,
+    "reference_order": "alphabetical by first author last name",
+    "required_elements": [
+      "relevance_statement_why_cacm_readers_care"
+    ],
+    "citation_style": "ACM style; alphabetical reference list",
+    "template": "ACM acmsmall LaTeX or Word",
+    "submission_portal": "https://mc.manuscriptcentral.com/cacm",
+    "review_type": "editorial board + peer review",
+    "decision_timeline_weeks": "4-8",
+    "author_guidelines_url": "https://cacm.acm.org/author-guidelines/",
+    "best_for": [
+      "vision_paper",
+      "novel_technique_broad_impact",
+      "open_problems_survey",
+      "paradigm_shift_argument",
+      "empirical_study_broad_implications"
+    ],
+    "not_suitable_for": [
+      "narrow_incremental_research",
+      "practitioner_experience_without_novelty"
+    ],
+    "special_notes": "Higher novelty bar than Practice section. Still requires broad accessibility. The 'why does this matter to all of CS?' test applies."
+  },
+
+  "cacm_viewpoints": {
+    "name": "Communications of the ACM — Viewpoints / Opinion",
+    "publisher": "ACM",
+    "type": "magazine",
+    "peer_reviewed": true,
+    "submission_model": "open",
+    "frequency": "monthly",
+    "scope": "Broad-interest opinions, nontechnical perspectives, point-counterpoint debates on computing issues. Includes Viewpoints, Point/Counterpoint, and Letters.",
+    "audience": "All of computing; opinion accessible to non-specialists",
+    "tone": "Opinion-forward, accessible, clear thesis",
+    "word_limit": null,
+    "page_limit": 5,
+    "page_limit_format": "single-column, single-spaced (~3,000 words)",
+    "abstract_word_limit": null,
+    "reference_limit": 10,
+    "required_elements": [
+      "clear_thesis_in_first_two_paragraphs",
+      "relevance_statement_why_cacm_readers_care"
+    ],
+    "citation_style": "ACM style; alphabetical",
+    "submission_portal": "https://mc.manuscriptcentral.com/cacm",
+    "review_type": "editorial board",
+    "decision_timeline_weeks": "4-6",
+    "author_guidelines_url": "https://cacm.acm.org/author-guidelines/",
+    "best_for": [
+      "opinion_piece",
+      "position_paper",
+      "point_counterpoint",
+      "field_critique",
+      "provocative_argument"
+    ],
+    "not_suitable_for": [
+      "empirical_research",
+      "tool_papers",
+      "neutral_surveys"
+    ],
+    "special_notes": "Strongest thesis wins. CACM values point-counterpoint and well-argued contrarian views. The author must be willing to take a clear stance."
+  },
+
+  "ieee_tse": {
+    "name": "IEEE Transactions on Software Engineering",
+    "publisher": "IEEE Computer Society",
+    "type": "archival journal",
+    "peer_reviewed": true,
+    "submission_model": "open",
+    "frequency": "monthly",
+    "scope": "Rigorous software engineering research: theoretical, empirical, methodological. All aspects of software development, testing, maintenance, and management.",
+    "audience": "Software engineering researchers",
+    "tone": "Formal academic; rigorous methodology expected",
+    "word_limit": null,
+    "page_limit": 12,
+    "page_limit_format": "IEEE two-column formatted pages (roughly 8,000-10,000 words equivalent)",
+    "overlength_charge_per_page_usd": 220,
+    "short_paper_page_limit": 4,
+    "abstract_requirements": "Structured: Objective, Methods, Results, Conclusion; self-contained; no abbreviations or citations",
+    "keywords_count": "3-4, alphabetical order, comma-separated",
+    "reference_limit": null,
+    "required_sections": [
+      "structured_abstract",
+      "introduction",
+      "related_work",
+      "methodology",
+      "evaluation_or_results",
+      "threats_to_validity",
+      "conclusion"
+    ],
+    "required_elements": [
+      "data_availability_statement_if_applicable",
+      "conflict_of_interest_statement",
+      "funding_acknowledgment_if_applicable"
+    ],
+    "citation_style": "IEEE numbered [1] [2] ordered by appearance",
+    "template": "IEEE two-column Transactions format; LaTeX preferred, Word acceptable",
+    "template_url": "https://www.computer.org/csdl/journal/ts/write-for-us/15090",
+    "submission_portal": "https://www.computer.org/csdl/journal/ts/write-for-us/15090",
+    "review_type": "single-blind; 3+ external expert reviewers",
+    "decision_timeline_weeks": "12-26",
+    "open_access_option": true,
+    "open_access_apc_note": "Hybrid journal; choose open access with APC or traditional",
+    "author_guidelines_url": "https://www.computer.org/csdl/journal/ts/write-for-us/15090",
+    "best_for": [
+      "empirical_study",
+      "formal_methods",
+      "controlled_experiment",
+      "systematic_literature_review",
+      "tool_with_rigorous_evaluation",
+      "theoretical_contribution"
+    ],
+    "not_suitable_for": [
+      "opinion_piece",
+      "experience_report_without_evaluation",
+      "short_practitioner_note"
+    ],
+    "special_notes": "Threats to validity section is expected for empirical work. ORCID numbers for all authors strongly recommended. Replication package / data availability statement improves reception."
+  },
+
+  "acm_queue": {
+    "name": "ACM Queue",
+    "publisher": "ACM",
+    "type": "magazine",
+    "peer_reviewed": false,
+    "submission_model": "invitation_only",
+    "frequency": "bimonthly",
+    "scope": "Deep technical practitioner content: what is hard about X in production? Distributed systems, performance, security, reliability, infrastructure. Written by engineers for engineers.",
+    "audience": "Senior engineers, architects, tech leads; highly technical practitioners",
+    "tone": "Conversational, direct, practitioner war-story style. No hedging. No academic formality.",
+    "word_limit": 3500,
+    "word_limit_notes": "Acceptable range 3,000-4,500 words; target 3,500",
+    "reference_limit": null,
+    "citation_style": "ACM numbered [1] [2]",
+    "required_elements": [
+      "editorial_invitation_or_prior_contact",
+      "problem_focused_framing_not_solution_promotion"
+    ],
+    "submission_portal": "queue-info@acm.org",
+    "review_type": "editorial panel (practitioners), not peer review",
+    "decision_timeline_weeks": "varies (invitation-based)",
+    "author_guidelines_url": "https://queue.acm.org/author_guidelines.cfm",
+    "best_for": [
+      "production_experience_story",
+      "deep_technical_war_story",
+      "hard_problem_in_practice",
+      "systems_engineering_lesson"
+    ],
+    "not_suitable_for": [
+      "academic_research",
+      "promotional_tool_paper",
+      "beginner_tutorial"
+    ],
+    "special_notes": "INVITATION ONLY. Cannot cold-submit. Must pitch to queue-info@acm.org or receive editorial invitation. The core editorial mandate: 'What is hard about implementing X? What are the gotchas?' — not promotional content. Articles not indexed as peer-reviewed; consider this for academic CV purposes."
+  }
+}

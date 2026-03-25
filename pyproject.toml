@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=67.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "citeget"
+version = "0.1.0"
+description = "Find, acquire, and manage academic references — for AI agents and humans."
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10"
+keywords = ["references", "citations", "libgen", "papers", "pdf", "academic", "ai-agent"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "playwright",
+    "requests",
+    "beautifulsoup4",
+    "argh",
+]
+
+[project.scripts]
+citeget = "citeget.cli:main"
+
+[project.urls]
+Repository = "https://github.com/thorwhalen/citeget"
+
+[tool.setuptools.packages.find]
+include = ["citeget*"]
+
+[tool.setuptools.package-data]
+citeget = ["data/*", "article_pub/data/*"]
