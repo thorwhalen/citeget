@@ -45,9 +45,7 @@ def _resolve_topic(topic: str) -> str:
     """Resolve a human-friendly topic name to its single-letter code."""
     key = topic.lower().strip()
     if key not in TOPIC_ALIASES:
-        valid = ", ".join(
-            f"{k!r}" for k in TOPIC_ALIASES if len(k) > 1
-        )
+        valid = ", ".join(f"{k!r}" for k in TOPIC_ALIASES if len(k) > 1)
         raise ValueError(
             f"Unknown topic {topic!r}. Valid topics: {valid} "
             f"(or raw codes: l, a, f, c, m, s)"
@@ -232,9 +230,7 @@ def search(
 
 def _get_download_url(page, ads_url: str, *, timeout: int = 15000) -> Optional[str]:
     """Navigate to ads.php and extract the get.php download URL."""
-    full_url = (
-        f"{BASE_URL}{ads_url}" if ads_url.startswith("/") else ads_url
-    )
+    full_url = f"{BASE_URL}{ads_url}" if ads_url.startswith("/") else ads_url
     page.goto(full_url, wait_until="networkidle", timeout=timeout)
 
     get_link = page.query_selector('a[href*="get.php"]')
@@ -436,7 +432,7 @@ def download_results(
             for i, result in enumerate(to_download):
                 if verbose:
                     title = result.get("title", "?")[:60]
-                    print(f"[{i+1}/{len(to_download)}] {title}...")
+                    print(f"[{i + 1}/{len(to_download)}] {title}...")
 
                 filepath = download_one(
                     result,

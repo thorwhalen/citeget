@@ -41,6 +41,7 @@ from citeget.acquire_references import Reference, parse_reference
 # Protocol & result type
 # ---------------------------------------------------------------------------
 
+
 @runtime_checkable
 class Extractor(Protocol):
     """Any callable: ``(str) -> list[Reference]``."""
@@ -87,6 +88,7 @@ def list_extractors() -> list[str]:
 # AI-agent signal
 # ---------------------------------------------------------------------------
 
+
 class AIExtractionRequested(Exception):
     """Signal that AI-based extraction should be used.
 
@@ -120,7 +122,7 @@ def _find_section(
     for pattern in section_patterns:
         match = re.search(pattern, text)
         if match:
-            rest = text[match.end():]
+            rest = text[match.end() :]
             if stop_pattern:
                 end_match = re.search(stop_pattern, rest)
                 if end_match:
@@ -174,6 +176,7 @@ def _extract_entries(text: str, entry_pattern: str) -> list[Reference]:
 # Regex extractor factory
 # ---------------------------------------------------------------------------
 
+
 def regex_extractor(
     *,
     section_patterns: tuple[str, ...] = DEFAULT_SECTION_PATTERNS,
@@ -217,6 +220,7 @@ def regex_extractor(
 # Composition
 # ---------------------------------------------------------------------------
 
+
 def chain(*extractors: Extractor) -> Extractor:
     """Try *extractors* in order, return the first non-empty result."""
 
@@ -255,6 +259,7 @@ def merge(*extractors: Extractor) -> Extractor:
 # ---------------------------------------------------------------------------
 # Built-in extractors
 # ---------------------------------------------------------------------------
+
 
 def markdown_link_extractor(
     *,
@@ -298,7 +303,7 @@ def markdown_link_extractor(
             # Heuristic for authors: look at text just before the link
             # on the same line for patterns like "Author, Author, ..."
             authors = ""
-            pre_text = text[max(0, m.start() - 300): m.start()]
+            pre_text = text[max(0, m.start() - 300) : m.start()]
             # Take the last line fragment before the link
             last_line = pre_text.rsplit("\n", 1)[-1].strip()
             # Strip leading markdown (bullets, bold, brackets)
@@ -311,15 +316,17 @@ def markdown_link_extractor(
             if author_match:
                 authors = author_match.group(1)
 
-            refs.append(Reference(
-                number=i,
-                raw=context,
-                title=name,
-                authors=authors,
-                year=year,
-                url=url,
-                source_text=context,
-            ))
+            refs.append(
+                Reference(
+                    number=i,
+                    raw=context,
+                    title=name,
+                    authors=authors,
+                    year=year,
+                    url=url,
+                    source_text=context,
+                )
+            )
         return refs
 
     return _extract  # type: ignore[return-value]
@@ -345,9 +352,13 @@ def _build_default_extractor() -> Extractor:
 # Register built-ins at import time
 register("standard", regex_extractor(whole_document_fallback=False))
 register("broad", regex_extractor(section_patterns=()))
-register("bold", regex_extractor(
-    section_patterns=(), entry_pattern=r"^\s*\*?\*?\[(\d+)\]",
-))
+register(
+    "bold",
+    regex_extractor(
+        section_patterns=(),
+        entry_pattern=r"^\s*\*?\*?\[(\d+)\]",
+    ),
+)
 register("markdown_links", markdown_link_extractor())
 register("default", _build_default_extractor())
 register("ai", ai_extractor)
@@ -356,6 +367,7 @@ register("ai", ai_extractor)
 # ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
+
 
 def extract_references(
     text: str,
@@ -399,6 +411,7 @@ def extract_references(
 # ---------------------------------------------------------------------------
 # Persistence (save/load regex-based extractors)
 # ---------------------------------------------------------------------------
+
 
 def save_extractors(
     path: str | Path,

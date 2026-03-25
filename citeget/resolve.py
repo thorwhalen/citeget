@@ -222,16 +222,12 @@ _DEFAULT_HEADERS = {
 }
 
 
-def _pdf_downloader(
-    url: str, filepath: Path, *, timeout: int = 30
-) -> bool:
+def _pdf_downloader(url: str, filepath: Path, *, timeout: int = 30) -> bool:
     """Download *url*, validate as PDF (``%PDF`` magic or content-type)."""
     import requests
 
     try:
-        resp = requests.get(
-            url, headers=_DEFAULT_HEADERS, timeout=timeout, stream=True
-        )
+        resp = requests.get(url, headers=_DEFAULT_HEADERS, timeout=timeout, stream=True)
         if resp.status_code != 200:
             return False
 
@@ -255,16 +251,12 @@ def _pdf_downloader(
         return False
 
 
-def _any_downloader(
-    url: str, filepath: Path, *, timeout: int = 30
-) -> bool:
+def _any_downloader(url: str, filepath: Path, *, timeout: int = 30) -> bool:
     """Download *url* without format validation (HTML, PDF, anything)."""
     import requests
 
     try:
-        resp = requests.get(
-            url, headers=_DEFAULT_HEADERS, timeout=timeout, stream=True
-        )
+        resp = requests.get(url, headers=_DEFAULT_HEADERS, timeout=timeout, stream=True)
         if resp.status_code != 200:
             return False
 
@@ -340,10 +332,7 @@ def _rewrite_ieee(url: str) -> str:
     """``ieeexplore.ieee.org/document/X`` → stamp PDF endpoint."""
     m = re.search(r"/document/(\d+)", url)
     if m:
-        return (
-            f"https://ieeexplore.ieee.org/stampPDF/"
-            f"getPDF.jsp?arnumber={m.group(1)}"
-        )
+        return f"https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?arnumber={m.group(1)}"
     return url
 
 
@@ -526,8 +515,7 @@ def arxiv_search_resolver() -> UrlResolver:
 
         query = "+AND+".join(query_parts)
         api_url = (
-            f"http://export.arxiv.org/api/query?"
-            f"search_query={query}&max_results=5"
+            f"http://export.arxiv.org/api/query?search_query={query}&max_results=5"
         )
 
         try:
@@ -543,9 +531,7 @@ def arxiv_search_resolver() -> UrlResolver:
                 title_el = entry.find("a:title", ns)
                 if title_el is None or not title_el.text:
                     continue
-                entry_words = set(
-                    re.findall(r"\w+", title_el.text.strip().lower())
-                )
+                entry_words = set(re.findall(r"\w+", title_el.text.strip().lower()))
                 if not ref_words or not entry_words:
                     continue
                 overlap = len(ref_words & entry_words) / max(len(ref_words), 1)
@@ -579,7 +565,11 @@ def semantic_scholar_resolver() -> UrlResolver:
             return []
 
         try:
-            params = {"query": ref.title[:200], "limit": "3", "fields": "openAccessPdf,title"}
+            params = {
+                "query": ref.title[:200],
+                "limit": "3",
+                "fields": "openAccessPdf,title",
+            }
             resp = requests.get(
                 "https://api.semanticscholar.org/graph/v1/paper/search",
                 params=params,
@@ -594,9 +584,7 @@ def semantic_scholar_resolver() -> UrlResolver:
                 paper_title = paper.get("title", "")
                 paper_words = set(re.findall(r"\w+", paper_title.lower()))
                 if ref_words and paper_words:
-                    overlap = len(ref_words & paper_words) / max(
-                        len(ref_words), 1
-                    )
+                    overlap = len(ref_words & paper_words) / max(len(ref_words), 1)
                     if overlap < 0.5:
                         continue
                 oa = paper.get("openAccessPdf")

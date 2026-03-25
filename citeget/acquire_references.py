@@ -54,9 +54,7 @@ def resolve_work_dir(
             # Full or home-relative path
             p = Path(work_dir).expanduser()
             if not p.parent.exists():
-                raise FileNotFoundError(
-                    f"Parent directory does not exist: {p.parent}"
-                )
+                raise FileNotFoundError(f"Parent directory does not exist: {p.parent}")
             p.mkdir(parents=True, exist_ok=True)
             return p
         elif work_dir:
@@ -536,9 +534,7 @@ def _try_libgen(
                 "num_results": len(results),
                 "matched": matched,
                 "best_score": round(best_score, 2),
-                "best_title": (
-                    best_result["title"][:80] if best_result else ""
-                ),
+                "best_title": (best_result["title"][:80] if best_result else ""),
                 "error": "",
             }
         )
@@ -669,8 +665,7 @@ def _try_scihub_via_doi(
 
     headers = {
         "User-Agent": (
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-            "AppleWebKit/537.36"
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
         )
     }
     timestamp = datetime.now().isoformat(timespec="seconds")
@@ -960,15 +955,11 @@ def acquire_all_references(
     to_acquire, already_have = check_existing_downloads(references, download_dir)
 
     if already_have and verbose:
-        print(
-            f"Skipping {len(already_have)} already-downloaded reference(s):"
-        )
+        print(f"Skipping {len(already_have)} already-downloaded reference(s):")
         for ref, fpath in already_have:
             print(f"  [{ref.number}] {ref.title[:60]}")
             print(f"        -> {Path(fpath).name}")
-        print(
-            "  (To re-download, rename or move the existing file.)\n"
-        )
+        print("  (To re-download, rename or move the existing file.)\n")
 
     # Record already-have as successes
     for ref, fpath in already_have:
@@ -984,8 +975,7 @@ def acquire_all_references(
     for i, ref in enumerate(to_acquire):
         if verbose:
             print(
-                f"\n[{i+1}/{len(to_acquire)}] Ref [{ref.number}]: "
-                f"{ref.title[:60]}..."
+                f"\n[{i + 1}/{len(to_acquire)}] Ref [{ref.number}]: {ref.title[:60]}..."
             )
 
         result = acquire_reference(
@@ -1087,9 +1077,7 @@ def write_missed_references_md(
     output_file = Path(output_file)
     with open(output_file, "w") as f:
         f.write("# Missed References\n\n")
-        f.write(
-            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-        )
+        f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write(f"Total missed: {len(failures)}\n\n")
         for result in sorted(failures, key=lambda r: r.reference.number):
             ref = result.reference

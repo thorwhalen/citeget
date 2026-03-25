@@ -121,8 +121,7 @@ def acquire(
     refs = result.references
     if not refs:
         print(
-            f"ERROR: Could not extract references "
-            f"(extractor: {result.extractor_name})."
+            f"ERROR: Could not extract references (extractor: {result.extractor_name})."
         )
         print("Try: --extractor broad  or  --extractor ai")
         return

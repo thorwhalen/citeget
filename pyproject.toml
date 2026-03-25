@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "citeget"
-version = "0.1.0"
+version = "0.1.1"
 description = "Find, acquire, and manage academic references — for AI agents and humans."
 readme = "README.md"
 requires-python = ">=3.10"
