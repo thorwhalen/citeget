@@ -24,6 +24,11 @@ from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
+
+def _ts():
+    """Return a bracketed timestamp string for progress messages."""
+    return datetime.now().strftime("[%H:%M:%S]")
+
 REFERENCES_SUBDIR = "references"
 
 
@@ -955,11 +960,12 @@ def acquire_all_references(
     to_acquire, already_have = check_existing_downloads(references, download_dir)
 
     if already_have and verbose:
-        print(f"Skipping {len(already_have)} already-downloaded reference(s):")
+        print(f"{_ts()} Skipping {len(already_have)} already-downloaded reference(s):")
         for ref, fpath in already_have:
             print(f"  [{ref.number}] {ref.title[:60]}")
             print(f"        -> {Path(fpath).name}")
         print("  (To re-download, rename or move the existing file.)\n")
+
 
     # Record already-have as successes
     for ref, fpath in already_have:
@@ -975,7 +981,7 @@ def acquire_all_references(
     for i, ref in enumerate(to_acquire):
         if verbose:
             print(
-                f"\n[{i + 1}/{len(to_acquire)}] Ref [{ref.number}]: {ref.title[:60]}..."
+                f"\n{_ts()} [{i + 1}/{len(to_acquire)}] Ref [{ref.number}]: {ref.title[:60]}..."
             )
 
         result = acquire_reference(
@@ -989,11 +995,11 @@ def acquire_all_references(
         if result.success:
             successes.append(result)
             if verbose:
-                print(f"  SUCCESS ({result.method}) -> {result.filepath}")
+                print(f"  {_ts()} SUCCESS ({result.method}) -> {result.filepath}")
         else:
             failures.append(result)
             if verbose:
-                print(f"  FAILED: {result.notes}")
+                print(f"  {_ts()} FAILED: {result.notes}")
 
         # Rate limit between libgen operations
         if i < len(to_acquire) - 1 and delay:

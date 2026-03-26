@@ -32,6 +32,20 @@ Topics (for libgen search):
     - "standards" or "s" — Standards
 """
 
+import logging as _logging
+
+# Configure a default handler with timestamps for citeget loggers.
+# Only adds a handler if the citeget logger has none, so user config takes precedence.
+_logger = _logging.getLogger(__name__)
+if not _logger.handlers:
+    _handler = _logging.StreamHandler()
+    _handler.setFormatter(
+        _logging.Formatter("[%(asctime)s] %(name)s %(levelname)s: %(message)s",
+                           datefmt="%H:%M:%S")
+    )
+    _logger.addHandler(_handler)
+    _logger.setLevel(_logging.WARNING)  # quiet by default; users can lower
+
 from citeget.core import (
     search,
     download_results,

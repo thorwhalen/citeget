@@ -5,6 +5,12 @@ Can be used standalone or dispatched via argh.
 """
 
 import argh
+from datetime import datetime
+
+
+def _ts():
+    """Return a bracketed timestamp string for progress messages."""
+    return datetime.now().strftime("[%H:%M:%S]")
 
 
 def search(
@@ -68,7 +74,7 @@ def download(
     )
 
     successes = sum(1 for _, f in downloaded if f)
-    print(f"\nDone: {successes}/{len(downloaded)} files downloaded to {download_dir}")
+    print(f"\n{_ts()} Done: {successes}/{len(downloaded)} files downloaded to {download_dir}")
 
 
 def acquire(
@@ -149,9 +155,9 @@ def acquire(
     )
     dl_dir = wd / "references"
 
-    print(f"Parsed {len(refs)} references")
-    print(f"Work dir: {wd}")
-    print(f"Download dir: {dl_dir}\n")
+    print(f"{_ts()} Parsed {len(refs)} references")
+    print(f"{_ts()} Work dir: {wd}")
+    print(f"{_ts()} Download dir: {dl_dir}\n")
 
     successes, failures, _ = acquire_all_references(
         refs,
@@ -165,8 +171,8 @@ def acquire(
     ts = datetime.now().strftime("%Y-%m-%d_%H%M")
     write_missed_references_md(failures, wd / f"{ts}_missed_references.md")
 
-    print(f"\nAcquired: {len(successes)}/{len(successes) + len(failures)}")
-    print(f"Output: {wd}")
+    print(f"\n{_ts()} Acquired: {len(successes)}/{len(successes) + len(failures)}")
+    print(f"{_ts()} Output: {wd}")
 
 
 def main():

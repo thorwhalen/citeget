@@ -15,8 +15,14 @@ The flow:
 import re
 import os
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+
+def _ts():
+    """Return a bracketed timestamp string for progress messages."""
+    return datetime.now().strftime("[%H:%M:%S]")
 
 BASE_URL = "https://libgen.vg"
 
@@ -432,7 +438,7 @@ def download_results(
             for i, result in enumerate(to_download):
                 if verbose:
                     title = result.get("title", "?")[:60]
-                    print(f"[{i + 1}/{len(to_download)}] {title}...")
+                    print(f"{_ts()} [{i + 1}/{len(to_download)}] {title}...")
 
                 filepath = download_one(
                     result,
@@ -446,9 +452,9 @@ def download_results(
                 if verbose:
                     if filepath:
                         size = Path(filepath).stat().st_size
-                        print(f"  -> saved ({size:,} bytes)")
+                        print(f"  {_ts()} -> saved ({size:,} bytes)")
                     else:
-                        print("  -> FAILED")
+                        print(f"  {_ts()} -> FAILED")
         finally:
             browser.close()
 
@@ -487,7 +493,7 @@ def search_and_download(
         List of (result_dict, filepath_or_None) tuples.
     """
     if verbose:
-        print(f"Searching libgen.vg for: {query!r} (topic={topic})...")
+        print(f"{_ts()} Searching libgen.vg for: {query!r} (topic={topic})...")
 
     results = search(
         query,
@@ -498,13 +504,13 @@ def search_and_download(
     )
 
     if verbose:
-        print(f"Found {len(results)} results.")
+        print(f"{_ts()} Found {len(results)} results.")
 
     if not results:
         return []
 
     if verbose and max_downloads > 0:
-        print(f"Downloading up to {max_downloads}...")
+        print(f"{_ts()} Downloading up to {max_downloads}...")
 
     return download_results(
         results,
