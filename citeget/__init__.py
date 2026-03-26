@@ -40,8 +40,9 @@ _logger = _logging.getLogger(__name__)
 if not _logger.handlers:
     _handler = _logging.StreamHandler()
     _handler.setFormatter(
-        _logging.Formatter("[%(asctime)s] %(name)s %(levelname)s: %(message)s",
-                           datefmt="%H:%M:%S")
+        _logging.Formatter(
+            "[%(asctime)s] %(name)s %(levelname)s: %(message)s", datefmt="%H:%M:%S"
+        )
     )
     _logger.addHandler(_handler)
     _logger.setLevel(_logging.WARNING)  # quiet by default; users can lower

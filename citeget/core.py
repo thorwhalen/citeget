@@ -24,6 +24,7 @@ def _ts():
     """Return a bracketed timestamp string for progress messages."""
     return datetime.now().strftime("[%H:%M:%S]")
 
+
 BASE_URL = "https://libgen.vg"
 
 TOPIC_ALIASES = {

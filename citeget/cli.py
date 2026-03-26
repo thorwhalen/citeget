@@ -74,7 +74,9 @@ def download(
     )
 
     successes = sum(1 for _, f in downloaded if f)
-    print(f"\n{_ts()} Done: {successes}/{len(downloaded)} files downloaded to {download_dir}")
+    print(
+        f"\n{_ts()} Done: {successes}/{len(downloaded)} files downloaded to {download_dir}"
+    )
 
 
 def acquire(

@@ -29,6 +29,7 @@ def _ts():
     """Return a bracketed timestamp string for progress messages."""
     return datetime.now().strftime("[%H:%M:%S]")
 
+
 REFERENCES_SUBDIR = "references"
 
 
@@ -965,7 +966,6 @@ def acquire_all_references(
             print(f"  [{ref.number}] {ref.title[:60]}")
             print(f"        -> {Path(fpath).name}")
         print("  (To re-download, rename or move the existing file.)\n")
-
 
     # Record already-have as successes
     for ref, fpath in already_have:
