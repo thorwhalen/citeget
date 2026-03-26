@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.extract &mdash; citeget 0.1.0 documentation</title>
+  <title>citeget.extract &mdash; citeget 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/documentation_options.js?v=a58bc63e"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -124,6 +124,7 @@
 <span class="c1"># Protocol &amp; result type</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
+
 <div class="viewcode-block" id="Extractor">
 <a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.Extractor">[docs]</a>
 <span class="nd">@runtime_checkable</span>
@@ -185,6 +186,7 @@
 <span class="c1"># AI-agent signal</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
+
 <div class="viewcode-block" id="AIExtractionRequested">
 <a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.AIExtractionRequested">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AIExtractionRequested</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
@@ -224,7 +226,7 @@
     <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">section_patterns</span><span class="p">:</span>
         <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-            <span class="n">rest</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">():]</span>
+            <span class="n">rest</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span> <span class="p">:]</span>
             <span class="k">if</span> <span class="n">stop_pattern</span><span class="p">:</span>
                 <span class="n">end_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">stop_pattern</span><span class="p">,</span> <span class="n">rest</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">end_match</span><span class="p">:</span>
@@ -278,6 +280,7 @@
 <span class="c1"># Regex extractor factory</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
+
 <div class="viewcode-block" id="regex_extractor">
 <a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.regex_extractor">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">regex_extractor</span><span class="p">(</span>
@@ -324,6 +327,7 @@
 <span class="c1"># Composition</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
+
 <div class="viewcode-block" id="chain">
 <a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.chain">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">chain</span><span class="p">(</span><span class="o">*</span><span class="n">extractors</span><span class="p">:</span> <span class="n">Extractor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Extractor</span><span class="p">:</span>
@@ -369,6 +373,7 @@
 <span class="c1"># Built-in extractors</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
+
 <div class="viewcode-block" id="markdown_link_extractor">
 <a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.markdown_link_extractor">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">markdown_link_extractor</span><span class="p">(</span>
@@ -413,7 +418,7 @@
             <span class="c1"># Heuristic for authors: look at text just before the link</span>
             <span class="c1"># on the same line for patterns like &quot;Author, Author, ...&quot;</span>
             <span class="n">authors</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-            <span class="n">pre_text</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="o">-</span> <span class="mi">300</span><span class="p">):</span> <span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span>
+            <span class="n">pre_text</span> <span class="o">=</span> <span class="n">text</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="o">-</span> <span class="mi">300</span><span class="p">)</span> <span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span>
             <span class="c1"># Take the last line fragment before the link</span>
             <span class="n">last_line</span> <span class="o">=</span> <span class="n">pre_text</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
             <span class="c1"># Strip leading markdown (bullets, bold, brackets)</span>
@@ -426,15 +431,17 @@
             <span class="k">if</span> <span class="n">author_match</span><span class="p">:</span>
                 <span class="n">authors</span> <span class="o">=</span> <span class="n">author_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
-            <span class="n">refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Reference</span><span class="p">(</span>
-                <span class="n">number</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
-                <span class="n">raw</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
-                <span class="n">title</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
-                <span class="n">authors</span><span class="o">=</span><span class="n">authors</span><span class="p">,</span>
-                <span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span>
-                <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
-                <span class="n">source_text</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
-            <span class="p">))</span>
+            <span class="n">refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">Reference</span><span class="p">(</span>
+                    <span class="n">number</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+                    <span class="n">raw</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                    <span class="n">title</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">authors</span><span class="o">=</span><span class="n">authors</span><span class="p">,</span>
+                    <span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span>
+                    <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+                    <span class="n">source_text</span><span class="o">=</span><span class="n">context</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">refs</span>
 
     <span class="k">return</span> <span class="n">_extract</span>  <span class="c1"># type: ignore[return-value]</span></div>
@@ -461,9 +468,13 @@
 <span class="c1"># Register built-ins at import time</span>
 <span class="n">register</span><span class="p">(</span><span class="s2">&quot;standard&quot;</span><span class="p">,</span> <span class="n">regex_extractor</span><span class="p">(</span><span class="n">whole_document_fallback</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
 <span class="n">register</span><span class="p">(</span><span class="s2">&quot;broad&quot;</span><span class="p">,</span> <span class="n">regex_extractor</span><span class="p">(</span><span class="n">section_patterns</span><span class="o">=</span><span class="p">()))</span>
-<span class="n">register</span><span class="p">(</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">regex_extractor</span><span class="p">(</span>
-    <span class="n">section_patterns</span><span class="o">=</span><span class="p">(),</span> <span class="n">entry_pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;^\s*\*?\*?\[(\d+)\]&quot;</span><span class="p">,</span>
-<span class="p">))</span>
+<span class="n">register</span><span class="p">(</span>
+    <span class="s2">&quot;bold&quot;</span><span class="p">,</span>
+    <span class="n">regex_extractor</span><span class="p">(</span>
+        <span class="n">section_patterns</span><span class="o">=</span><span class="p">(),</span>
+        <span class="n">entry_pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;^\s*\*?\*?\[(\d+)\]&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+<span class="p">)</span>
 <span class="n">register</span><span class="p">(</span><span class="s2">&quot;markdown_links&quot;</span><span class="p">,</span> <span class="n">markdown_link_extractor</span><span class="p">())</span>
 <span class="n">register</span><span class="p">(</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">_build_default_extractor</span><span class="p">())</span>
 <span class="n">register</span><span class="p">(</span><span class="s2">&quot;ai&quot;</span><span class="p">,</span> <span class="n">ai_extractor</span><span class="p">)</span>
@@ -472,6 +483,7 @@
 <span class="c1"># ---------------------------------------------------------------------------</span>
 <span class="c1"># Main entry point</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
+
 
 <div class="viewcode-block" id="extract_references">
 <a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.extract_references">[docs]</a>
@@ -518,6 +530,7 @@
 <span class="c1"># ---------------------------------------------------------------------------</span>
 <span class="c1"># Persistence (save/load regex-based extractors)</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
+
 
 <div class="viewcode-block" id="save_extractors">
 <a class="viewcode-back" href="../../module_docs/citeget/extract.html#citeget.save_extractors">[docs]</a>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.acquire_references &mdash; citeget 0.1.0 documentation</title>
+  <title>citeget.acquire_references &mdash; citeget 0.1.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/documentation_options.js?v=a58bc63e"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -107,6 +107,11 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ts</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a bracketed timestamp string for progress messages.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;[%H:%M:%S]&quot;</span><span class="p">)</span>
+
 <span class="n">REFERENCES_SUBDIR</span> <span class="o">=</span> <span class="s2">&quot;references&quot;</span>
 
 
@@ -139,9 +144,7 @@
             <span class="c1"># Full or home-relative path</span>
             <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Parent directory does not exist: </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">parent</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parent directory does not exist: </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">parent</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">p</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">p</span>
         <span class="k">elif</span> <span class="n">work_dir</span><span class="p">:</span>
@@ -640,9 +643,7 @@
                 <span class="s2">&quot;num_results&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">),</span>
                 <span class="s2">&quot;matched&quot;</span><span class="p">:</span> <span class="n">matched</span><span class="p">,</span>
                 <span class="s2">&quot;best_score&quot;</span><span class="p">:</span> <span class="nb">round</span><span class="p">(</span><span class="n">best_score</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
-                <span class="s2">&quot;best_title&quot;</span><span class="p">:</span> <span class="p">(</span>
-                    <span class="n">best_result</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">][:</span><span class="mi">80</span><span class="p">]</span> <span class="k">if</span> <span class="n">best_result</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
-                <span class="p">),</span>
+                <span class="s2">&quot;best_title&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">best_result</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">][:</span><span class="mi">80</span><span class="p">]</span> <span class="k">if</span> <span class="n">best_result</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
                 <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="p">)</span>
@@ -773,8 +774,7 @@
 
     <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="p">(</span>
-            <span class="s2">&quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) &quot;</span>
-            <span class="s2">&quot;AppleWebKit/537.36&quot;</span>
+            <span class="s2">&quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36&quot;</span>
         <span class="p">)</span>
     <span class="p">}</span>
     <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">)</span>
@@ -1069,15 +1069,12 @@
     <span class="n">to_acquire</span><span class="p">,</span> <span class="n">already_have</span> <span class="o">=</span> <span class="n">check_existing_downloads</span><span class="p">(</span><span class="n">references</span><span class="p">,</span> <span class="n">download_dir</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">already_have</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Skipping </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">already_have</span><span class="p">)</span><span class="si">}</span><span class="s2"> already-downloaded reference(s):&quot;</span>
-        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Skipping </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">already_have</span><span class="p">)</span><span class="si">}</span><span class="s2"> already-downloaded reference(s):&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">ref</span><span class="p">,</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="n">already_have</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  [</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;        -&gt; </span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="s2">&quot;  (To re-download, rename or move the existing file.)</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  (To re-download, rename or move the existing file.)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
 
     <span class="c1"># Record already-have as successes</span>
     <span class="k">for</span> <span class="n">ref</span><span class="p">,</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="n">already_have</span><span class="p">:</span>
@@ -1093,8 +1090,7 @@
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ref</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[</span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">)</span><span class="si">}</span><span class="s2">] Ref [</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">]: &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">...&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">)</span><span class="si">}</span><span class="s2">] Ref [</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">]: </span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">...&quot;</span>
             <span class="p">)</span>
 
         <span class="n">result</span> <span class="o">=</span> <span class="n">acquire_reference</span><span class="p">(</span>
@@ -1108,11 +1104,11 @@
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
             <span class="n">successes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  SUCCESS (</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2">) -&gt; </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">filepath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> SUCCESS (</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2">) -&gt; </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">filepath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">failures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  FAILED: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> FAILED: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="c1"># Rate limit between libgen operations</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">delay</span><span class="p">:</span>
@@ -1202,9 +1198,7 @@
     <span class="n">output_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;# Missed References</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Generated: </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generated: </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total missed: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">failures</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">failures</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
             <span class="n">ref</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">reference</span>
