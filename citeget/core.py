@@ -64,10 +64,19 @@ def _build_search_url(
     query: str,
     *,
     topic: str = "l",
+    topics: tuple | list | None = None,
     results_per_page: int = 25,
 ):
-    """Build the search URL for libgen.vg."""
-    from urllib.parse import urlencode, quote_plus
+    """Build the search URL for libgen.vg.
+
+    Args:
+        query: Search terms.
+        topic: Single topic code (used when ``topics`` is None).
+        topics: Multiple topic codes to search simultaneously
+            (e.g. ``("l", "f", "a")``).  Overrides ``topic``.
+        results_per_page: Results per page.
+    """
+    from urllib.parse import quote_plus
 
     # Build params manually because of repeated keys (columns[], objects[])
     parts = [f"req={quote_plus(query)}"]
@@ -75,7 +84,13 @@ def _build_search_url(
         parts.append(f"columns[]={col}")
     for obj in _DEFAULT_OBJECTS:
         parts.append(f"objects[]={obj}")
-    parts.append(f"topics[]={topic}")
+
+    if topics is not None:
+        for t in topics:
+            parts.append(f"topics[]={t}")
+    else:
+        parts.append(f"topics[]={topic}")
+
     parts.append(f"res={results_per_page}")
     parts.append("filesuns=all")
     return f"{BASE_URL}/index.php?{'&'.join(parts)}"
@@ -144,6 +159,15 @@ def _parse_results_table(table) -> list:
         size = _parse_size(cells[6].text_content())
         extension = cells[7].text_content().strip()
 
+        # Extract file_id from size cell link (e.g. /file.php?id=12345)
+        file_id = ""
+        size_link = cells[6].query_selector("a")
+        if size_link:
+            size_href = size_link.get_attribute("href") or ""
+            fid_match = re.search(r"id=(\d+)", size_href)
+            if fid_match:
+                file_id = fid_match.group(1)
+
         # Extract mirror links
         mirror_cell = cells[8]
         mirror_links = mirror_cell.query_selector_all("a")
@@ -176,6 +200,7 @@ def _parse_results_table(table) -> list:
                 "doi": doi,
                 "series": series,
                 "md5": md5,
+                "file_id": file_id,
                 "libgen_href": libgen_href,
                 "mirrors": mirrors,
             }
@@ -197,6 +222,7 @@ def search(
     query: str,
     *,
     topic: str = "books",
+    topics: tuple | list | None = None,
     results_per_page: int = 100,
     headless: bool = True,
     timeout: int = 20000,
@@ -206,7 +232,9 @@ def search(
     Args:
         query: Search terms.
         topic: What to search for — "books", "articles", "fiction", "comics",
-               "magazines", or "standards".
+               "magazines", or "standards".  Used when ``topics`` is None.
+        topics: Multiple topics to search simultaneously, e.g.
+               ``("books", "fiction", "articles")``.  Overrides ``topic``.
         results_per_page: How many results per page (25, 50, or 100).
         headless: Run browser in headless mode (default True).
         timeout: Page load timeout in ms.
@@ -217,8 +245,16 @@ def search(
     """
     from playwright.sync_api import sync_playwright
 
-    topic_code = _resolve_topic(topic)
-    url = _build_search_url(query, topic=topic_code, results_per_page=results_per_page)
+    if topics is not None:
+        topic_codes = tuple(_resolve_topic(t) for t in topics)
+        url = _build_search_url(
+            query, topics=topic_codes, results_per_page=results_per_page,
+        )
+    else:
+        topic_code = _resolve_topic(topic)
+        url = _build_search_url(
+            query, topic=topic_code, results_per_page=results_per_page,
+        )
 
     with sync_playwright() as p:
         browser, context = _create_browser_context(p, headless=headless)
@@ -318,6 +354,75 @@ def _make_filename(result: dict) -> str:
     return _sanitize_filename(name) + f".{ext}"
 
 
+def _try_libgen_download(pg, ads_url: str, filepath: Path, *, timeout: int, delay: float):
+    """Try the primary libgen download path: ads.php -> get.php.
+
+    Returns filepath on success, raises on failure with a descriptive message.
+    """
+    if delay:
+        time.sleep(delay)
+
+    get_url = _get_download_url(pg, ads_url, timeout=timeout)
+    if not get_url:
+        raise RuntimeError("No get.php link found on ads.php page")
+
+    try:
+        with pg.expect_download(timeout=timeout) as download_info:
+            pg.goto(get_url, timeout=timeout)
+        download = download_info.value
+        download.save_as(str(filepath))
+        if filepath.exists() and filepath.stat().st_size > 1000:
+            return str(filepath)
+        raise RuntimeError(
+            f"Downloaded file too small ({filepath.stat().st_size} bytes)"
+        )
+    except RuntimeError:
+        raise
+    except Exception as exc:
+        # Fallback: try direct request via page context
+        try:
+            response = pg.request.get(get_url, timeout=timeout)
+            if response.ok and len(response.body()) > 1000:
+                filepath.write_bytes(response.body())
+                return str(filepath)
+        except Exception:
+            pass
+        raise RuntimeError(f"Playwright download failed: {exc}")
+
+
+def _try_mirror_download(url: str, filepath: Path, *, timeout: int = 30):
+    """Try downloading from an external mirror URL via HTTP.
+
+    Works for mirrors that serve the file directly or via a simple
+    intermediate page (e.g. Anna's Archive, library.lol).
+    Returns filepath on success, raises on failure.
+    """
+    import requests
+
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+    }
+    resp = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
+    if resp.status_code != 200:
+        raise RuntimeError(f"HTTP {resp.status_code} from {url}")
+
+    content_type = resp.headers.get("Content-Type", "")
+    body = resp.content
+
+    # If it's a PDF/epub/etc, save directly
+    if b"%PDF" in body[:20] or "pdf" in content_type.lower() or len(body) > 100_000:
+        if len(body) < 1000:
+            raise RuntimeError(f"Response too small ({len(body)} bytes)")
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+        filepath.write_bytes(body)
+        return str(filepath)
+
+    raise RuntimeError(f"Response doesn't look like a file (type={content_type})")
+
+
 def download_one(
     result: dict,
     *,
@@ -325,8 +430,14 @@ def download_one(
     page=None,
     timeout: int = 60000,
     delay: float = 1.0,
+    try_mirrors: bool = True,
+    verbose: bool = False,
 ) -> Optional[str]:
     """Download a single result. Returns the saved file path, or None on failure.
+
+    Tries the primary libgen download path (ads.php -> get.php) first.
+    If that fails and ``try_mirrors`` is True, attempts external mirrors
+    (Anna's Archive, library.lol, etc.).
 
     If ``page`` is provided (a Playwright Page object), reuse it.
     Otherwise, creates a new browser session (slower but standalone).
@@ -337,6 +448,8 @@ def download_one(
         page: Optional Playwright page to reuse.
         timeout: Download timeout in ms.
         delay: Seconds to wait between page loads (rate limiting).
+        try_mirrors: Try external mirror URLs on primary failure.
+        verbose: Print diagnostic info on failures.
 
     Returns:
         Path to the downloaded file, or None if download failed.
@@ -344,7 +457,8 @@ def download_one(
     from playwright.sync_api import sync_playwright
 
     libgen_href = result.get("libgen_href", "")
-    if not libgen_href:
+    mirrors = result.get("mirrors", {})
+    if not libgen_href and not mirrors:
         return None
 
     download_dir = Path(download_dir).expanduser()
@@ -357,38 +471,41 @@ def download_one(
     if filepath.exists() and filepath.stat().st_size > 0:
         return str(filepath)
 
+    errors = []
+
     def _do_download(pg):
-        if delay:
-            time.sleep(delay)
-
-        get_url = _get_download_url(pg, libgen_href, timeout=timeout)
-        if not get_url:
-            return None
-
-        # Use Playwright's download handling
-        try:
-            with pg.expect_download(timeout=timeout) as download_info:
-                pg.goto(get_url, timeout=timeout)
-            download = download_info.value
-
-            # Use server-suggested filename if available, else our generated one
-            suggested = download.suggested_filename
-            if suggested and suggested != "download":
-                # Keep our naming but use suggested extension if different
-                pass
-
-            download.save_as(str(filepath))
-            return str(filepath)
-        except Exception:
-            # Fallback: try direct request via page context
+        # 1. Try primary libgen path
+        if libgen_href:
             try:
-                response = pg.request.get(get_url, timeout=timeout)
-                if response.ok:
-                    filepath.write_bytes(response.body())
-                    return str(filepath)
-            except Exception:
-                pass
-            return None
+                return _try_libgen_download(
+                    pg, libgen_href, filepath, timeout=timeout, delay=delay,
+                )
+            except Exception as exc:
+                errors.append(f"libgen primary: {exc}")
+                if verbose:
+                    print(f"    download_one: primary failed: {exc}")
+
+        # 2. Try external mirrors via HTTP (no browser needed)
+        if try_mirrors:
+            for name, url in mirrors.items():
+                if not url or "/ads.php" in url:
+                    continue  # skip the primary libgen mirror (already tried)
+                try:
+                    result_path = _try_mirror_download(
+                        url, filepath, timeout=timeout // 1000,
+                    )
+                    if result_path:
+                        if verbose:
+                            print(f"    download_one: succeeded via mirror {name!r}")
+                        return result_path
+                except Exception as exc:
+                    errors.append(f"mirror {name}: {exc}")
+                    if verbose:
+                        print(f"    download_one: mirror {name!r} failed: {exc}")
+
+        if verbose and errors:
+            print(f"    download_one: all attempts failed: {errors}")
+        return None
 
     if page is not None:
         return _do_download(page)

@@ -310,31 +310,38 @@ def generate_search_queries(ref: Reference) -> list:
     clean_title = _clean_title_for_query(ref.title)
     title_words = clean_title.split()
     surname = _first_author_surname(ref.authors)
+    apa = _apa7_authors(ref.authors) if ref.authors else ""
 
     if clean_title:
-        # 1. Full clean title (mid-specificity — good starting point)
+        # 1. APA-style: "Title (Author & Author)" — matches how humans search
+        if apa and apa != "Unknown":
+            queries.append(
+                (f"{clean_title} ({apa})", "title (APA authors)")
+            )
+
+        # 2. Full clean title (mid-specificity — good starting point)
         queries.append((clean_title, "full title"))
 
-        # 2. Title + first author (more specific)
+        # 3. Title + first author (more specific)
         if surname:
             queries.append((f"{clean_title} {surname}", "title + author"))
 
-        # 3. First 6 words of title (less specific)
+        # 4. First 6 words of title (less specific)
         if len(title_words) > 6:
             short_title = " ".join(title_words[:6])
             queries.append((short_title, "short title (6 words)"))
 
-        # 4. First 4 words + author (different balance)
+        # 5. First 4 words + author (different balance)
         if len(title_words) > 4 and surname:
             queries.append(
                 (" ".join(title_words[:4]) + " " + surname, "4 words + author")
             )
 
-        # 5. First 3 words only (very broad)
+        # 6. First 3 words only (very broad)
         if len(title_words) > 3:
             queries.append((" ".join(title_words[:3]), "3 words (broad)"))
 
-    # 6. Author + year (last resort, very broad)
+    # 7. Author + year (last resort, very broad)
     if surname and ref.year:
         queries.append((f"{surname} {ref.year}", "author + year"))
 
@@ -483,10 +490,22 @@ def _try_libgen(
     filepath: Path,
     *,
     topic: str = "articles",
+    topics: tuple | None = None,
     log_entries: list,
     timeout: int = 30000,
+    verbose: bool = False,
 ) -> Optional[str]:
     """Try to find and download the reference from libgen.
+
+    Args:
+        ref: Reference to search for.
+        filepath: Target file path for the download.
+        topic: Single topic to search (used when ``topics`` is None).
+        topics: Multiple topics to search simultaneously, e.g.
+            ``("books", "fiction", "articles")``.  Overrides ``topic``.
+        log_entries: Log list (mutated in place).
+        timeout: Browser timeout in ms.
+        verbose: Print diagnostic info.
 
     Returns filepath on success, None on failure.
     """
@@ -494,16 +513,20 @@ def _try_libgen(
 
     queries = generate_search_queries(ref)
 
+    # Build search kwargs for single vs multi-topic
+    search_kwargs = dict(results_per_page=25, timeout=timeout)
+    if topics is not None:
+        search_kwargs["topics"] = topics
+        topic_label = "+".join(topics)
+    else:
+        search_kwargs["topic"] = topic
+        topic_label = topic
+
     for query_text, query_desc in queries:
         timestamp = datetime.now().isoformat(timespec="seconds")
 
         try:
-            results = libgen_search(
-                query_text,
-                topic=topic,
-                results_per_page=25,
-                timeout=timeout,
-            )
+            results = libgen_search(query_text, **search_kwargs)
         except Exception as e:
             log_entries.append(
                 {
@@ -511,10 +534,10 @@ def _try_libgen(
                     "ref_number": ref.number,
                     "ref_title": ref.title[:80],
                     "query": query_text,
-                    "query_type": query_desc,
+                    "query_type": f"{query_desc} [{topic_label}]",
                     "num_results": -1,
                     "matched": False,
-                    "error": str(e)[:100],
+                    "error": str(e)[:200],
                 }
             )
             continue
@@ -530,28 +553,28 @@ def _try_libgen(
 
         matched = best_score >= 0.4 and best_result is not None
 
-        log_entries.append(
-            {
-                "timestamp": timestamp,
-                "ref_number": ref.number,
-                "ref_title": ref.title[:80],
-                "query": query_text,
-                "query_type": query_desc,
-                "num_results": len(results),
-                "matched": matched,
-                "best_score": round(best_score, 2),
-                "best_title": (best_result["title"][:80] if best_result else ""),
-                "error": "",
-            }
-        )
+        log_entry = {
+            "timestamp": timestamp,
+            "ref_number": ref.number,
+            "ref_title": ref.title[:80],
+            "query": query_text,
+            "query_type": f"{query_desc} [{topic_label}]",
+            "num_results": len(results),
+            "matched": matched,
+            "best_score": round(best_score, 2),
+            "best_title": (best_result["title"][:80] if best_result else ""),
+            "error": "",
+        }
+        log_entries.append(log_entry)
 
         if matched:
-            # Also try books topic if articles didn't yield PDF
             try:
                 downloaded = download_one(
                     best_result,
                     download_dir=str(filepath.parent),
                     timeout=60000,
+                    try_mirrors=True,
+                    verbose=verbose,
                 )
                 if downloaded:
                     # Rename to our standard name
@@ -561,12 +584,11 @@ def _try_libgen(
                             filepath.unlink()
                         dl_path.rename(filepath)
                     return str(filepath)
+                else:
+                    log_entry["error"] = "download returned None (all methods failed)"
             except Exception as e:
-                log_entries[-1]["error"] = f"download failed: {e}"
+                log_entry["error"] = f"download failed: {e}"
                 continue
-
-        # Strategy: if too many results and no match, queries will get more specific
-        # If no results, queries will get broader — the query list handles this
 
     return None
 
@@ -760,12 +782,16 @@ def acquire_reference(
     strategy=None,
     libgen_topics: tuple = ("articles", "books"),
     timeout: int = 30000,
+    verbose: bool = False,
 ) -> AcquisitionResult:
     """Try to acquire a single reference PDF.
 
     When *strategy* is given, delegates entirely to the composable
     strategy system in :mod:`citeget.resolve`.  Otherwise falls back to
     the legacy hard-coded chain for backward compatibility.
+
+    The legacy chain now searches all ``libgen_topics`` simultaneously
+    in a single request (multi-topic search), rather than sequentially.
 
     Args:
         ref: The reference to acquire.
@@ -774,8 +800,9 @@ def acquire_reference(
         strategy: An ``AcquisitionStrategy`` callable, a registered
             strategy name (``str``), or ``None`` for the legacy chain.
             Pass ``"default"`` to use the new composable default.
-        libgen_topics: Topics to try on libgen (legacy chain only).
+        libgen_topics: Topics to search on libgen (searched simultaneously).
         timeout: Timeout for browser operations (legacy chain only).
+        verbose: Print diagnostic info on download attempts.
     """
     download_dir = Path(download_dir)
     download_dir.mkdir(parents=True, exist_ok=True)
@@ -861,24 +888,23 @@ def acquire_reference(
                 }
             )
 
-    # 2. Try libgen with each topic
-    queries_tried = []
-    for topic in libgen_topics:
-        result_path = _try_libgen(
-            ref,
-            filepath,
-            topic=topic,
-            log_entries=log_entries,
-            timeout=timeout,
+    # 2. Try libgen — search all topics simultaneously
+    result_path = _try_libgen(
+        ref,
+        filepath,
+        topics=libgen_topics,
+        log_entries=log_entries,
+        timeout=timeout,
+        verbose=verbose,
+    )
+    if result_path:
+        topic_label = "+".join(libgen_topics)
+        return AcquisitionResult(
+            reference=ref,
+            success=True,
+            filepath=result_path,
+            method=f"libgen_{topic_label}",
         )
-        if result_path:
-            return AcquisitionResult(
-                reference=ref,
-                success=True,
-                filepath=result_path,
-                method=f"libgen_{topic}",
-                queries_tried=queries_tried,
-            )
 
     # 3. Try arxiv API search (finds preprints not caught by URL)
     arxiv_path = _try_arxiv_search(ref, filepath, log_entries=log_entries)
@@ -904,7 +930,6 @@ def acquire_reference(
         reference=ref,
         success=False,
         method="failed",
-        queries_tried=queries_tried,
         notes="All strategies exhausted",
     )
 
@@ -990,6 +1015,7 @@ def acquire_all_references(
             log_entries=log_entries,
             strategy=strategy,
             libgen_topics=libgen_topics,
+            verbose=verbose,
         )
 
         if result.success:

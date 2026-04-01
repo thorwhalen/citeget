@@ -105,6 +105,38 @@ Where authors_apa7 is: 1 author → "Smith", 2 → "Smith & Jones", 3+ → "Smit
 
 Example: `Retiming synchronous circuitry (Leiserson & Saxe, 1991).pdf`
 
+## Multi-topic search
+
+By default, `acquire_all_references` searches all `libgen_topics` simultaneously
+in a single request (e.g. books + articles + fiction at once), rather than
+searching each topic sequentially.  This matches how the libgen.vg web UI
+works and improves hit rates.
+
+```python
+# Default: searches books and articles together
+successes, failures, log = acquire_all_references(refs, download_dir)
+
+# For books specifically, search books + fiction + articles together
+successes, failures, log = acquire_all_references(
+    refs, download_dir,
+    libgen_topics=("books", "fiction", "articles"),
+)
+```
+
+## Query strategies
+
+Queries are tried from most to least specific.  The first query uses
+APA-style formatting (e.g. `Kodokan Judo (Kano)`) which matches how
+humans typically search.  If that fails, progressively broader queries
+are tried automatically.
+
+## Mirror fallbacks
+
+When the primary libgen download path (ads.php → get.php) fails,
+`download_one` automatically tries external mirrors (Anna's Archive,
+library.lol, etc.).  Download errors are now logged with diagnostic
+details so failures can be investigated.
+
 ## Tips
 
 - **Skip non-papers**: Exclude web pages (Math Genealogy, Wikipedia),
@@ -115,5 +147,9 @@ Example: `Retiming synchronous circuitry (Leiserson & Saxe, 1991).pdf`
   force re-download, the user must rename or move the existing file.
 - **Matching**: Results are scored on title word overlap (60%), author match
   (25%), and year match (15%). Threshold is 0.4.
-- **Topics**: Try "articles" first (for papers), then "books" (for books/
-  proceedings). Conference papers often appear under "articles".
+- **Topics**: Use multi-topic search for best coverage.  For books, use
+  ``libgen_topics=("books", "fiction", "articles")``.
+- **Download failures after match**: Check the acquisition log for error
+  details.  Common causes: timeout on ads.php, no get.php link found,
+  or file served in non-PDF format.  Mirror fallbacks handle most cases
+  automatically.
