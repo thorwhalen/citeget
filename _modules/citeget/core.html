@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.core &mdash; citeget 0.1.1 documentation</title>
+  <title>citeget.core &mdash; citeget 0.1.2 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=a58bc63e"></script>
+      <script src="../../_static/documentation_options.js?v=92734c54"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -107,6 +107,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a bracketed timestamp string for progress messages.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;[%H:%M:%S]&quot;</span><span class="p">)</span>
 
+
 <span class="n">BASE_URL</span> <span class="o">=</span> <span class="s2">&quot;https://libgen.vg&quot;</span>
 
 <span class="n">TOPIC_ALIASES</span> <span class="o">=</span> <span class="p">{</span>
@@ -146,10 +147,19 @@
     <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">topic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;l&quot;</span><span class="p">,</span>
+    <span class="n">topics</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">results_per_page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">25</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the search URL for libgen.vg.&quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlencode</span><span class="p">,</span> <span class="n">quote_plus</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the search URL for libgen.vg.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        query: Search terms.</span>
+<span class="sd">        topic: Single topic code (used when ``topics`` is None).</span>
+<span class="sd">        topics: Multiple topic codes to search simultaneously</span>
+<span class="sd">            (e.g. ``(&quot;l&quot;, &quot;f&quot;, &quot;a&quot;)``).  Overrides ``topic``.</span>
+<span class="sd">        results_per_page: Results per page.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">quote_plus</span>
 
     <span class="c1"># Build params manually because of repeated keys (columns[], objects[])</span>
     <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;req=</span><span class="si">{</span><span class="n">quote_plus</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
@@ -157,7 +167,13 @@
         <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;columns[]=</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">_DEFAULT_OBJECTS</span><span class="p">:</span>
         <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;objects[]=</span><span class="si">{</span><span class="n">obj</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;topics[]=</span><span class="si">{</span><span class="n">topic</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">topics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">topics</span><span class="p">:</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;topics[]=</span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;topics[]=</span><span class="si">{</span><span class="n">topic</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
     <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;res=</span><span class="si">{</span><span class="n">results_per_page</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;filesuns=all&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">BASE_URL</span><span class="si">}</span><span class="s2">/index.php?</span><span class="si">{</span><span class="s1">&#39;&amp;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -226,6 +242,15 @@
         <span class="n">size</span> <span class="o">=</span> <span class="n">_parse_size</span><span class="p">(</span><span class="n">cells</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">text_content</span><span class="p">())</span>
         <span class="n">extension</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span><span class="o">.</span><span class="n">text_content</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
+        <span class="c1"># Extract file_id from size cell link (e.g. /file.php?id=12345)</span>
+        <span class="n">file_id</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">size_link</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">query_selector</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">size_link</span><span class="p">:</span>
+            <span class="n">size_href</span> <span class="o">=</span> <span class="n">size_link</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="s2">&quot;href&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+            <span class="n">fid_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;id=(\d+)&quot;</span><span class="p">,</span> <span class="n">size_href</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fid_match</span><span class="p">:</span>
+                <span class="n">file_id</span> <span class="o">=</span> <span class="n">fid_match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
         <span class="c1"># Extract mirror links</span>
         <span class="n">mirror_cell</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span>
         <span class="n">mirror_links</span> <span class="o">=</span> <span class="n">mirror_cell</span><span class="o">.</span><span class="n">query_selector_all</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
@@ -258,6 +283,7 @@
                 <span class="s2">&quot;doi&quot;</span><span class="p">:</span> <span class="n">doi</span><span class="p">,</span>
                 <span class="s2">&quot;series&quot;</span><span class="p">:</span> <span class="n">series</span><span class="p">,</span>
                 <span class="s2">&quot;md5&quot;</span><span class="p">:</span> <span class="n">md5</span><span class="p">,</span>
+                <span class="s2">&quot;file_id&quot;</span><span class="p">:</span> <span class="n">file_id</span><span class="p">,</span>
                 <span class="s2">&quot;libgen_href&quot;</span><span class="p">:</span> <span class="n">libgen_href</span><span class="p">,</span>
                 <span class="s2">&quot;mirrors&quot;</span><span class="p">:</span> <span class="n">mirrors</span><span class="p">,</span>
             <span class="p">}</span>
@@ -281,6 +307,7 @@
     <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">topic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;books&quot;</span><span class="p">,</span>
+    <span class="n">topics</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">|</span> <span class="nb">list</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">results_per_page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
     <span class="n">headless</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20000</span><span class="p">,</span>
@@ -290,7 +317,9 @@
 <span class="sd">    Args:</span>
 <span class="sd">        query: Search terms.</span>
 <span class="sd">        topic: What to search for — &quot;books&quot;, &quot;articles&quot;, &quot;fiction&quot;, &quot;comics&quot;,</span>
-<span class="sd">               &quot;magazines&quot;, or &quot;standards&quot;.</span>
+<span class="sd">               &quot;magazines&quot;, or &quot;standards&quot;.  Used when ``topics`` is None.</span>
+<span class="sd">        topics: Multiple topics to search simultaneously, e.g.</span>
+<span class="sd">               ``(&quot;books&quot;, &quot;fiction&quot;, &quot;articles&quot;)``.  Overrides ``topic``.</span>
 <span class="sd">        results_per_page: How many results per page (25, 50, or 100).</span>
 <span class="sd">        headless: Run browser in headless mode (default True).</span>
 <span class="sd">        timeout: Page load timeout in ms.</span>
@@ -301,8 +330,16 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>
 
-    <span class="n">topic_code</span> <span class="o">=</span> <span class="n">_resolve_topic</span><span class="p">(</span><span class="n">topic</span><span class="p">)</span>
-    <span class="n">url</span> <span class="o">=</span> <span class="n">_build_search_url</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">topic</span><span class="o">=</span><span class="n">topic_code</span><span class="p">,</span> <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">topics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">topic_codes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_resolve_topic</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">topics</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">_build_search_url</span><span class="p">(</span>
+            <span class="n">query</span><span class="p">,</span> <span class="n">topics</span><span class="o">=</span><span class="n">topic_codes</span><span class="p">,</span> <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">topic_code</span> <span class="o">=</span> <span class="n">_resolve_topic</span><span class="p">(</span><span class="n">topic</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">_build_search_url</span><span class="p">(</span>
+            <span class="n">query</span><span class="p">,</span> <span class="n">topic</span><span class="o">=</span><span class="n">topic_code</span><span class="p">,</span> <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">with</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
         <span class="n">browser</span><span class="p">,</span> <span class="n">context</span> <span class="o">=</span> <span class="n">_create_browser_context</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">)</span>
@@ -403,6 +440,75 @@
     <span class="k">return</span> <span class="n">_sanitize_filename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_try_libgen_download</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">ads_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Try the primary libgen download path: ads.php -&gt; get.php.</span>
+
+<span class="sd">    Returns filepath on success, raises on failure with a descriptive message.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">delay</span><span class="p">:</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+
+    <span class="n">get_url</span> <span class="o">=</span> <span class="n">_get_download_url</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">ads_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">get_url</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No get.php link found on ads.php page&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">pg</span><span class="o">.</span><span class="n">expect_download</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span> <span class="k">as</span> <span class="n">download_info</span><span class="p">:</span>
+            <span class="n">pg</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">get_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="n">download</span> <span class="o">=</span> <span class="n">download_info</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">download</span><span class="o">.</span><span class="n">save_as</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">filepath</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Downloaded file too small (</span><span class="si">{</span><span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="si">}</span><span class="s2"> bytes)&quot;</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+        <span class="k">raise</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="c1"># Fallback: try direct request via page context</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">get_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">ok</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">body</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+                <span class="n">filepath</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">body</span><span class="p">())</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Playwright download failed: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_try_mirror_download</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Try downloading from an external mirror URL via HTTP.</span>
+
+<span class="sd">    Works for mirrors that serve the file directly or via a simple</span>
+<span class="sd">    intermediate page (e.g. Anna&#39;s Archive, library.lol).</span>
+<span class="sd">    Returns filepath on success, raises on failure.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="p">(</span>
+            <span class="s2">&quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) &quot;</span>
+            <span class="s2">&quot;AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36&quot;</span>
+        <span class="p">)</span>
+    <span class="p">}</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HTTP </span><span class="si">{</span><span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">content_type</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span>
+
+    <span class="c1"># If it&#39;s a PDF/epub/etc, save directly</span>
+    <span class="k">if</span> <span class="sa">b</span><span class="s2">&quot;%PDF&quot;</span> <span class="ow">in</span> <span class="n">body</span><span class="p">[:</span><span class="mi">20</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">&quot;pdf&quot;</span> <span class="ow">in</span> <span class="n">content_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">100_000</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Response too small (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="si">}</span><span class="s2"> bytes)&quot;</span><span class="p">)</span>
+        <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">filepath</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Response doesn&#39;t look like a file (type=</span><span class="si">{</span><span class="n">content_type</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="download_one">
 <a class="viewcode-back" href="../../module_docs/citeget/core.html#citeget.download_one">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">download_one</span><span class="p">(</span>
@@ -412,8 +518,14 @@
     <span class="n">page</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60000</span><span class="p">,</span>
     <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">try_mirrors</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Download a single result. Returns the saved file path, or None on failure.</span>
+
+<span class="sd">    Tries the primary libgen download path (ads.php -&gt; get.php) first.</span>
+<span class="sd">    If that fails and ``try_mirrors`` is True, attempts external mirrors</span>
+<span class="sd">    (Anna&#39;s Archive, library.lol, etc.).</span>
 
 <span class="sd">    If ``page`` is provided (a Playwright Page object), reuse it.</span>
 <span class="sd">    Otherwise, creates a new browser session (slower but standalone).</span>
@@ -424,6 +536,8 @@
 <span class="sd">        page: Optional Playwright page to reuse.</span>
 <span class="sd">        timeout: Download timeout in ms.</span>
 <span class="sd">        delay: Seconds to wait between page loads (rate limiting).</span>
+<span class="sd">        try_mirrors: Try external mirror URLs on primary failure.</span>
+<span class="sd">        verbose: Print diagnostic info on failures.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Path to the downloaded file, or None if download failed.</span>
@@ -431,7 +545,8 @@
     <span class="kn">from</span><span class="w"> </span><span class="nn">playwright.sync_api</span><span class="w"> </span><span class="kn">import</span> <span class="n">sync_playwright</span>
 
     <span class="n">libgen_href</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;libgen_href&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">libgen_href</span><span class="p">:</span>
+    <span class="n">mirrors</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;mirrors&quot;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">libgen_href</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">mirrors</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
@@ -444,38 +559,41 @@
     <span class="k">if</span> <span class="n">filepath</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
 
+    <span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_do_download</span><span class="p">(</span><span class="n">pg</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">delay</span><span class="p">:</span>
-            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
-
-        <span class="n">get_url</span> <span class="o">=</span> <span class="n">_get_download_url</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">libgen_href</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">get_url</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="c1"># Use Playwright&#39;s download handling</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">pg</span><span class="o">.</span><span class="n">expect_download</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span> <span class="k">as</span> <span class="n">download_info</span><span class="p">:</span>
-                <span class="n">pg</span><span class="o">.</span><span class="n">goto</span><span class="p">(</span><span class="n">get_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
-            <span class="n">download</span> <span class="o">=</span> <span class="n">download_info</span><span class="o">.</span><span class="n">value</span>
-
-            <span class="c1"># Use server-suggested filename if available, else our generated one</span>
-            <span class="n">suggested</span> <span class="o">=</span> <span class="n">download</span><span class="o">.</span><span class="n">suggested_filename</span>
-            <span class="k">if</span> <span class="n">suggested</span> <span class="ow">and</span> <span class="n">suggested</span> <span class="o">!=</span> <span class="s2">&quot;download&quot;</span><span class="p">:</span>
-                <span class="c1"># Keep our naming but use suggested extension if different</span>
-                <span class="k">pass</span>
-
-            <span class="n">download</span><span class="o">.</span><span class="n">save_as</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">))</span>
-            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-            <span class="c1"># Fallback: try direct request via page context</span>
+        <span class="c1"># 1. Try primary libgen path</span>
+        <span class="k">if</span> <span class="n">libgen_href</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">response</span> <span class="o">=</span> <span class="n">pg</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">get_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
-                    <span class="n">filepath</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">body</span><span class="p">())</span>
-                    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                <span class="k">pass</span>
-            <span class="k">return</span> <span class="kc">None</span>
+                <span class="k">return</span> <span class="n">_try_libgen_download</span><span class="p">(</span>
+                    <span class="n">pg</span><span class="p">,</span> <span class="n">libgen_href</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="n">delay</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;libgen primary: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    download_one: primary failed: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># 2. Try external mirrors via HTTP (no browser needed)</span>
+        <span class="k">if</span> <span class="n">try_mirrors</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">mirrors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span> <span class="ow">or</span> <span class="s2">&quot;/ads.php&quot;</span> <span class="ow">in</span> <span class="n">url</span><span class="p">:</span>
+                    <span class="k">continue</span>  <span class="c1"># skip the primary libgen mirror (already tried)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">result_path</span> <span class="o">=</span> <span class="n">_try_mirror_download</span><span class="p">(</span>
+                        <span class="n">url</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span> <span class="o">//</span> <span class="mi">1000</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="k">if</span> <span class="n">result_path</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    download_one: succeeded via mirror </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">result_path</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mirror </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    download_one: mirror </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> failed: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">errors</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    download_one: all attempts failed: </span><span class="si">{</span><span class="n">errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">if</span> <span class="n">page</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_do_download</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
