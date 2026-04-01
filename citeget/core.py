@@ -248,12 +248,16 @@ def search(
     if topics is not None:
         topic_codes = tuple(_resolve_topic(t) for t in topics)
         url = _build_search_url(
-            query, topics=topic_codes, results_per_page=results_per_page,
+            query,
+            topics=topic_codes,
+            results_per_page=results_per_page,
         )
     else:
         topic_code = _resolve_topic(topic)
         url = _build_search_url(
-            query, topic=topic_code, results_per_page=results_per_page,
+            query,
+            topic=topic_code,
+            results_per_page=results_per_page,
         )
 
     with sync_playwright() as p:
@@ -354,7 +358,9 @@ def _make_filename(result: dict) -> str:
     return _sanitize_filename(name) + f".{ext}"
 
 
-def _try_libgen_download(pg, ads_url: str, filepath: Path, *, timeout: int, delay: float):
+def _try_libgen_download(
+    pg, ads_url: str, filepath: Path, *, timeout: int, delay: float
+):
     """Try the primary libgen download path: ads.php -> get.php.
 
     Returns filepath on success, raises on failure with a descriptive message.
@@ -478,7 +484,11 @@ def download_one(
         if libgen_href:
             try:
                 return _try_libgen_download(
-                    pg, libgen_href, filepath, timeout=timeout, delay=delay,
+                    pg,
+                    libgen_href,
+                    filepath,
+                    timeout=timeout,
+                    delay=delay,
                 )
             except Exception as exc:
                 errors.append(f"libgen primary: {exc}")
@@ -492,7 +502,9 @@ def download_one(
                     continue  # skip the primary libgen mirror (already tried)
                 try:
                     result_path = _try_mirror_download(
-                        url, filepath, timeout=timeout // 1000,
+                        url,
+                        filepath,
+                        timeout=timeout // 1000,
                     )
                     if result_path:
                         if verbose:

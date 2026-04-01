@@ -315,9 +315,7 @@ def generate_search_queries(ref: Reference) -> list:
     if clean_title:
         # 1. APA-style: "Title (Author & Author)" — matches how humans search
         if apa and apa != "Unknown":
-            queries.append(
-                (f"{clean_title} ({apa})", "title (APA authors)")
-            )
+            queries.append((f"{clean_title} ({apa})", "title (APA authors)"))
 
         # 2. Full clean title (mid-specificity — good starting point)
         queries.append((clean_title, "full title"))
