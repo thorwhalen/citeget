@@ -429,7 +429,15 @@ def _try_direct_download(ref: Reference, filepath: Path) -> bool:
 # ``check_existing_downloads`` when looking up a previously-acquired file
 # whose actual extension may not be ``.pdf``.
 _KNOWN_EXTENSIONS = (
-    ".pdf", ".epub", ".mobi", ".azw", ".azw3", ".djvu", ".lit", ".rar", ".zip",
+    ".pdf",
+    ".epub",
+    ".mobi",
+    ".azw",
+    ".azw3",
+    ".djvu",
+    ".lit",
+    ".rar",
+    ".zip",
 )
 
 
@@ -977,7 +985,9 @@ def acquire_reference(
         """Finalize a freshly-downloaded file to its correct extension and
         return the AcquisitionResult — or a failure if the content was HTML."""
         final = _finalize_acquired_file(
-            Path(path), target_base=target_base, convert_to_pdf=convert_to_pdf,
+            Path(path),
+            target_base=target_base,
+            convert_to_pdf=convert_to_pdf,
         )
         if final is None:
             return AcquisitionResult(
@@ -987,7 +997,10 @@ def acquire_reference(
                 notes=f"{method}: response was HTML/unknown, not a book",
             )
         return AcquisitionResult(
-            reference=ref, success=True, filepath=str(final), method=method,
+            reference=ref,
+            success=True,
+            filepath=str(final),
+            method=method,
         )
 
     # --- New composable path ---
