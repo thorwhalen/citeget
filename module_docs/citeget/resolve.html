@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.resolve &mdash; citeget 0.1.2 documentation</title>
+  <title>citeget.resolve &mdash; citeget 0.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=92734c54"></script>
+      <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -56,6 +56,7 @@
 <li class="toctree-l1"><a class="reference internal" href="core.html">citeget.core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extract.html">citeget.extract</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">citeget.resolve</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#extension-semantics">Extension semantics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy"><code class="docutils literal notranslate"><span class="pre">AcquisitionStrategy</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.Downloader"><code class="docutils literal notranslate"><span class="pre">Downloader</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.UrlResolver"><code class="docutils literal notranslate"><span class="pre">UrlResolver</span></code></a></li>
@@ -120,6 +121,16 @@ content, save to disk.</p></li>
 unit that combines resolvers and downloaders (or does its own thing, like
 libgen’s playwright-based search+download).</p></li>
 </ul>
+<section id="extension-semantics">
+<h2>Extension semantics<a class="headerlink" href="#extension-semantics" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">filepath</span></code> argument to downloaders and strategies is <strong>advisory</strong>: it
+tells them where you intend the final file to live. They <em>may</em> write to a
+neighbouring path with a different extension when the downloaded content is
+not a PDF (e.g. EPUB, MOBI, DjVu). Callers should use the final path
+reported by the strategy rather than assuming the <code class="docutils literal notranslate"><span class="pre">.pdf</span></code> target was
+written. The higher-level <a class="reference internal" href="acquire_references.html#citeget.acquire_references.acquire_reference" title="citeget.acquire_references.acquire_reference"><code class="xref py py-func docutils literal notranslate"><span class="pre">citeget.acquire_references.acquire_reference()</span></code></a>
+function handles this finalisation — and the hard rule “no <code class="docutils literal notranslate"><span class="pre">.pdf</span></code> extension
+on non-PDF content” — automatically.</p>
 <p>The factory <a class="reference internal" href="#citeget.resolve.resolve_and_download" title="citeget.resolve.resolve_and_download"><code class="xref py py-func docutils literal notranslate"><span class="pre">resolve_and_download()</span></code></a> wires a resolver to a downloader.
 <a class="reference internal" href="#citeget.resolve.chain" title="citeget.resolve.chain"><code class="xref py py-func docutils literal notranslate"><span class="pre">chain()</span></code></a> composes strategies (try first, fall back to second).</p>
 <p>Usage:</p>
@@ -139,10 +150,13 @@ libgen’s playwright-based search+download).</p></li>
 <span class="n">register_resolver</span><span class="p">(</span><span class="s2">&quot;my_rewriter&quot;</span><span class="p">,</span> <span class="n">url_rewriter</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="n">rules</span><span class="p">))</span>
 </pre></div>
 </div>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="citeget.resolve.AcquisitionStrategy">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">AcquisitionStrategy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/resolve.html#AcquisitionStrategy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.AcquisitionStrategy" title="Link to this definition"></a></dt>
 <dd><p>Complete acquire-one-reference unit.</p>
+<p><code class="docutils literal notranslate"><span class="pre">filepath</span></code> is advisory — the returned path may differ in extension
+from what was passed in (see module docstring).</p>
 <p>Returns the filepath string on success, <code class="docutils literal notranslate"><span class="pre">None</span></code> on failure.</p>
 </dd></dl>
 
@@ -150,6 +164,8 @@ libgen’s playwright-based search+download).</p></li>
 <dt class="sig sig-object py" id="citeget.resolve.Downloader">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.resolve.</span></span><span class="sig-name descname"><span class="pre">Downloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/resolve.html#Downloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.resolve.Downloader" title="Link to this definition"></a></dt>
 <dd><p>Fetch <em>url</em>, validate content, save to <em>filepath</em>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">filepath</span></code> is advisory — the actual written path may have a different
+extension reflecting the real content format (see module docstring).</p>
 <p>Returns <code class="docutils literal notranslate"><span class="pre">True</span></code> on success.</p>
 </dd></dl>
 

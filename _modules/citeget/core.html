@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.core &mdash; citeget 0.1.2 documentation</title>
+  <title>citeget.core &mdash; citeget 0.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=92734c54"></script>
+      <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -333,12 +333,16 @@
     <span class="k">if</span> <span class="n">topics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">topic_codes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_resolve_topic</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">topics</span><span class="p">)</span>
         <span class="n">url</span> <span class="o">=</span> <span class="n">_build_search_url</span><span class="p">(</span>
-            <span class="n">query</span><span class="p">,</span> <span class="n">topics</span><span class="o">=</span><span class="n">topic_codes</span><span class="p">,</span> <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">,</span>
+            <span class="n">query</span><span class="p">,</span>
+            <span class="n">topics</span><span class="o">=</span><span class="n">topic_codes</span><span class="p">,</span>
+            <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">,</span>
         <span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">topic_code</span> <span class="o">=</span> <span class="n">_resolve_topic</span><span class="p">(</span><span class="n">topic</span><span class="p">)</span>
         <span class="n">url</span> <span class="o">=</span> <span class="n">_build_search_url</span><span class="p">(</span>
-            <span class="n">query</span><span class="p">,</span> <span class="n">topic</span><span class="o">=</span><span class="n">topic_code</span><span class="p">,</span> <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">,</span>
+            <span class="n">query</span><span class="p">,</span>
+            <span class="n">topic</span><span class="o">=</span><span class="n">topic_code</span><span class="p">,</span>
+            <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">with</span> <span class="n">sync_playwright</span><span class="p">()</span> <span class="k">as</span> <span class="n">p</span><span class="p">:</span>
@@ -440,7 +444,9 @@
     <span class="k">return</span> <span class="n">_sanitize_filename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;.</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_try_libgen_download</span><span class="p">(</span><span class="n">pg</span><span class="p">,</span> <span class="n">ads_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_try_libgen_download</span><span class="p">(</span>
+    <span class="n">pg</span><span class="p">,</span> <span class="n">ads_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Try the primary libgen download path: ads.php -&gt; get.php.</span>
 
 <span class="sd">    Returns filepath on success, raises on failure with a descriptive message.</span>
@@ -566,7 +572,11 @@
         <span class="k">if</span> <span class="n">libgen_href</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">_try_libgen_download</span><span class="p">(</span>
-                    <span class="n">pg</span><span class="p">,</span> <span class="n">libgen_href</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="n">delay</span><span class="p">,</span>
+                    <span class="n">pg</span><span class="p">,</span>
+                    <span class="n">libgen_href</span><span class="p">,</span>
+                    <span class="n">filepath</span><span class="p">,</span>
+                    <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+                    <span class="n">delay</span><span class="o">=</span><span class="n">delay</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
                 <span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;libgen primary: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -580,7 +590,9 @@
                     <span class="k">continue</span>  <span class="c1"># skip the primary libgen mirror (already tried)</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">result_path</span> <span class="o">=</span> <span class="n">_try_mirror_download</span><span class="p">(</span>
-                        <span class="n">url</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span> <span class="o">//</span> <span class="mi">1000</span><span class="p">,</span>
+                        <span class="n">url</span><span class="p">,</span>
+                        <span class="n">filepath</span><span class="p">,</span>
+                        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span> <span class="o">//</span> <span class="mi">1000</span><span class="p">,</span>
                     <span class="p">)</span>
                     <span class="k">if</span> <span class="n">result_path</span><span class="p">:</span>
                         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>

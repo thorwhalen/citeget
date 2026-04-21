@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.acquire_references &mdash; citeget 0.1.2 documentation</title>
+  <title>citeget.acquire_references &mdash; citeget 0.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=92734c54"></script>
+      <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -96,6 +96,7 @@
 <span class="sd">- If still no results: try author + key title words</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
@@ -190,10 +191,17 @@
     <span class="n">already_have</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">references</span><span class="p">:</span>
-        <span class="n">filename</span> <span class="o">=</span> <span class="n">_make_ref_filename</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
-        <span class="n">filepath</span> <span class="o">=</span> <span class="n">download_dir</span> <span class="o">/</span> <span class="n">filename</span>
-        <span class="k">if</span> <span class="n">filepath</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
-            <span class="n">already_have</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ref</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">)))</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">download_dir</span> <span class="o">/</span> <span class="n">_make_ref_basename</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
+        <span class="c1"># Accept any previously-acquired file that shares the base name,</span>
+        <span class="c1"># regardless of extension (citeget may have saved as .epub/.mobi/etc).</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">_KNOWN_EXTENSIONS</span><span class="p">:</span>
+            <span class="n">candidate</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">candidate</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">candidate</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+                <span class="n">found</span> <span class="o">=</span> <span class="n">candidate</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">already_have</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">ref</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">found</span><span class="p">)))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">to_acquire</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
 
@@ -418,9 +426,7 @@
     <span class="k">if</span> <span class="n">clean_title</span><span class="p">:</span>
         <span class="c1"># 1. APA-style: &quot;Title (Author &amp; Author)&quot; — matches how humans search</span>
         <span class="k">if</span> <span class="n">apa</span> <span class="ow">and</span> <span class="n">apa</span> <span class="o">!=</span> <span class="s2">&quot;Unknown&quot;</span><span class="p">:</span>
-            <span class="n">queries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-                <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">clean_title</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">apa</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="s2">&quot;title (APA authors)&quot;</span><span class="p">)</span>
-            <span class="p">)</span>
+            <span class="n">queries</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">clean_title</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">apa</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="s2">&quot;title (APA authors)&quot;</span><span class="p">))</span>
 
         <span class="c1"># 2. Full clean title (mid-specificity — good starting point)</span>
         <span class="n">queries</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">clean_title</span><span class="p">,</span> <span class="s2">&quot;full title&quot;</span><span class="p">))</span>
@@ -523,6 +529,138 @@
     <span class="k">return</span> <span class="n">_download_url</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
 
 
+<span class="c1"># Known ebook/document extensions citeget may produce. Used by</span>
+<span class="c1"># ``check_existing_downloads`` when looking up a previously-acquired file</span>
+<span class="c1"># whose actual extension may not be ``.pdf``.</span>
+<span class="n">_KNOWN_EXTENSIONS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span class="s2">&quot;.epub&quot;</span><span class="p">,</span> <span class="s2">&quot;.mobi&quot;</span><span class="p">,</span> <span class="s2">&quot;.azw&quot;</span><span class="p">,</span> <span class="s2">&quot;.azw3&quot;</span><span class="p">,</span> <span class="s2">&quot;.djvu&quot;</span><span class="p">,</span> <span class="s2">&quot;.lit&quot;</span><span class="p">,</span> <span class="s2">&quot;.rar&quot;</span><span class="p">,</span> <span class="s2">&quot;.zip&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_detect_real_extension</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the canonical extension for a file based on its magic bytes.</span>
+
+<span class="sd">    Returns ``None`` for HTML/unknown responses (typically error pages served</span>
+<span class="sd">    by the download mirror, not actual book files).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">head</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">head</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">head</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;%PDF&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;.pdf&quot;</span>
+    <span class="k">if</span> <span class="n">head</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;PK</span><span class="se">\x03\x04</span><span class="s2">&quot;</span><span class="p">):</span>
+        <span class="c1"># EPUB is a ZIP whose first stored entry is mimetype=application/epub+zip</span>
+        <span class="k">if</span> <span class="sa">b</span><span class="s2">&quot;application/epub+zip&quot;</span> <span class="ow">in</span> <span class="n">head</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;.epub&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;.zip&quot;</span>
+    <span class="k">if</span> <span class="n">head</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;Rar!&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;.rar&quot;</span>
+    <span class="k">if</span> <span class="n">head</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;CR</span><span class="se">\x07\x8a</span><span class="s2">&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">head</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;CR!&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;.djvu&quot;</span>
+    <span class="k">if</span> <span class="n">head</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;ITOL&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;.lit&quot;</span>
+    <span class="c1"># MOBI / AZW: PalmDB header — first 32 bytes are DB name, then creator at 60-68.</span>
+    <span class="n">creator</span> <span class="o">=</span> <span class="n">head</span><span class="p">[</span><span class="mi">60</span><span class="p">:</span><span class="mi">68</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">creator</span> <span class="o">==</span> <span class="sa">b</span><span class="s2">&quot;BOOKMOBI&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;.mobi&quot;</span>
+    <span class="k">if</span> <span class="n">creator</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;TPZ&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;.azw&quot;</span>
+    <span class="c1"># HTML error page</span>
+    <span class="n">lower</span> <span class="o">=</span> <span class="n">head</span><span class="p">[:</span><span class="mi">64</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">lower</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="sa">b</span><span class="s2">&quot;&lt;!doctype&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&lt;html&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&lt;?xml&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&lt;head&quot;</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_try_convert_to_pdf</span><span class="p">(</span><span class="n">src</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">target_pdf</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Best-effort convert *src* to a PDF at *target_pdf* using pdfdol.</span>
+
+<span class="sd">    Returns *target_pdf* on success, ``None`` if conversion isn&#39;t available</span>
+<span class="sd">    or fails. Does not delete *src* on success — the caller decides.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">pdfdol.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_format_converter</span>  <span class="c1"># type: ignore</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">converter</span> <span class="o">=</span> <span class="n">get_format_converter</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">suffix</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">converter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">pdf_bytes</span> <span class="o">=</span> <span class="n">converter</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">src</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;pdfdol conversion failed for </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pdf_bytes</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">pdf_bytes</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;%PDF&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">target_pdf</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">target_pdf</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">pdf_bytes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">target_pdf</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_finalize_acquired_file</span><span class="p">(</span>
+    <span class="n">written_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">target_base</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">convert_to_pdf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Move a just-downloaded file to its correct final path and extension.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        written_path: Where the downloader actually wrote the bytes.</span>
+<span class="sd">        target_base: Intended final path *without* extension. If ``None``,</span>
+<span class="sd">            uses ``written_path`` minus its extension — i.e. the rename</span>
+<span class="sd">            happens in-place.</span>
+<span class="sd">        convert_to_pdf: When ``True`` and the content isn&#39;t already a PDF,</span>
+<span class="sd">            attempt conversion via ``pdfdol.tools.get_format_converter``.</span>
+<span class="sd">            On success the PDF is written and the native source is removed.</span>
+<span class="sd">            On failure (converter unavailable, ``ebook-convert`` missing,</span>
+<span class="sd">            conversion error) the native file is kept with its real</span>
+<span class="sd">            extension — the hard rule &quot;no ``.pdf`` on non-PDFs&quot; is never</span>
+<span class="sd">            broken.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The final :class:`Path` on success, or ``None`` if the content was</span>
+<span class="sd">        an HTML error page (the file is deleted in that case).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">written_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">real_ext</span> <span class="o">=</span> <span class="n">_detect_real_extension</span><span class="p">(</span><span class="n">written_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">real_ext</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="ne">OSError</span><span class="p">):</span>
+            <span class="n">written_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">base</span> <span class="o">=</span> <span class="p">(</span><span class="n">target_base</span> <span class="ow">or</span> <span class="n">written_path</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Optional conversion to PDF.</span>
+    <span class="k">if</span> <span class="n">convert_to_pdf</span> <span class="ow">and</span> <span class="n">real_ext</span> <span class="o">!=</span> <span class="s2">&quot;.pdf&quot;</span><span class="p">:</span>
+        <span class="n">pdf_target</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.pdf&quot;</span><span class="p">)</span>
+        <span class="n">converted</span> <span class="o">=</span> <span class="n">_try_convert_to_pdf</span><span class="p">(</span><span class="n">written_path</span><span class="p">,</span> <span class="n">pdf_target</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">converted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Remove the native source, unless it happens to be the target</span>
+            <span class="c1"># path itself (e.g. in-place conversion of tempfoo.pdf → foo.pdf).</span>
+            <span class="k">if</span> <span class="n">written_path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span> <span class="o">!=</span> <span class="n">converted</span><span class="o">.</span><span class="n">resolve</span><span class="p">():</span>
+                <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="ne">OSError</span><span class="p">):</span>
+                    <span class="n">written_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">converted</span>
+        <span class="c1"># Fall through to native-format save if conversion didn&#39;t happen.</span>
+
+    <span class="n">final_path</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="n">real_ext</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">final_path</span> <span class="o">==</span> <span class="n">written_path</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">final_path</span>
+    <span class="c1"># Replace a stale file that might share the final path.</span>
+    <span class="k">if</span> <span class="n">final_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="ne">OSError</span><span class="p">):</span>
+            <span class="n">final_path</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+    <span class="n">final_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">written_path</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">final_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">final_path</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_sanitize_filename</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">max_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">150</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Make a string safe for use as a filename.&quot;&quot;&quot;</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[&lt;&gt;:&quot;/</span><span class="se">\\</span><span class="s1">|?*]&#39;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
@@ -532,12 +670,15 @@
     <span class="k">return</span> <span class="n">name</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_make_ref_filename</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a filename for a reference.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_make_ref_basename</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a base filename for a reference (without extension).</span>
 
-<span class="sd">    Format: ``{title} ({authors_apa7}, {year}).pdf``</span>
+<span class="sd">    Format: ``{title} ({authors_apa7}, {year})``</span>
 <span class="sd">    where authors_apa7 follows APA 7 citation style:</span>
 <span class="sd">    1 author -&gt; &quot;Smith&quot;, 2 -&gt; &quot;Smith &amp; Jones&quot;, 3+ -&gt; &quot;Smith et al.&quot;</span>
+
+<span class="sd">    The final extension is decided after download by</span>
+<span class="sd">    :func:`_finalize_acquired_file` based on the actual file content.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">title</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">120</span><span class="p">]</span> <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;ref_</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">apa</span> <span class="o">=</span> <span class="n">_apa7_authors</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">authors</span><span class="p">)</span> <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">authors</span> <span class="k">else</span> <span class="s2">&quot;Unknown&quot;</span>
@@ -553,7 +694,7 @@
         <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">apa</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">year</span><span class="si">}</span><span class="s2">)&quot;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">apa</span><span class="si">}</span><span class="s2">)&quot;</span>
-    <span class="k">return</span> <span class="n">_sanitize_filename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.pdf&quot;</span>
+    <span class="k">return</span> <span class="n">_sanitize_filename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_match_result_to_ref</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -889,8 +1030,9 @@
     <span class="n">libgen_topics</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;articles&quot;</span><span class="p">,</span> <span class="s2">&quot;books&quot;</span><span class="p">),</span>
     <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30000</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">convert_to_pdf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AcquisitionResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Try to acquire a single reference PDF.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Try to acquire a single reference.</span>
 
 <span class="sd">    When *strategy* is given, delegates entirely to the composable</span>
 <span class="sd">    strategy system in :mod:`citeget.resolve`.  Otherwise falls back to</span>
@@ -901,7 +1043,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        ref: The reference to acquire.</span>
-<span class="sd">        download_dir: Where to save the PDF.</span>
+<span class="sd">        download_dir: Where to save the file.</span>
 <span class="sd">        log_entries: List to append log dicts to (mutated in place).</span>
 <span class="sd">        strategy: An ``AcquisitionStrategy`` callable, a registered</span>
 <span class="sd">            strategy name (``str``), or ``None`` for the legacy chain.</span>
@@ -909,19 +1051,49 @@
 <span class="sd">        libgen_topics: Topics to search on libgen (searched simultaneously).</span>
 <span class="sd">        timeout: Timeout for browser operations (legacy chain only).</span>
 <span class="sd">        verbose: Print diagnostic info on download attempts.</span>
+<span class="sd">        convert_to_pdf: When ``True``, non-PDF downloads (EPUB, MOBI,</span>
+<span class="sd">            DjVu, ...) are converted to PDF via ``pdfdol`` (Calibre&#39;s</span>
+<span class="sd">            ``ebook-convert`` under the hood) when available. On</span>
+<span class="sd">            conversion failure or when the converter is missing, the</span>
+<span class="sd">            native format is kept — a non-PDF is never renamed to</span>
+<span class="sd">            ``.pdf``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
     <span class="n">download_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">filename</span> <span class="o">=</span> <span class="n">_make_ref_filename</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
-    <span class="n">filepath</span> <span class="o">=</span> <span class="n">download_dir</span> <span class="o">/</span> <span class="n">filename</span>
+    <span class="n">target_base</span> <span class="o">=</span> <span class="n">download_dir</span> <span class="o">/</span> <span class="n">_make_ref_basename</span><span class="p">(</span><span class="n">ref</span><span class="p">)</span>
 
-    <span class="c1"># Skip if already exists</span>
-    <span class="k">if</span> <span class="n">filepath</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+    <span class="c1"># Skip if already exists (under any known extension)</span>
+    <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="n">_KNOWN_EXTENSIONS</span><span class="p">:</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">target_base</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="n">ext</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">candidate</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="ow">and</span> <span class="n">candidate</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+                <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+                <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">filepath</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">candidate</span><span class="p">),</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;already_exists&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Strategies/downloaders write to this tentative ``filepath`` (``.pdf``</span>
+    <span class="c1"># extension). After a successful download the finalizer below moves it</span>
+    <span class="c1"># to target_base.with_suffix(&lt;detected_ext&gt;) — or (if convert_to_pdf)</span>
+    <span class="c1"># converts it to a real PDF at that name.</span>
+    <span class="n">filepath</span> <span class="o">=</span> <span class="n">target_base</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.pdf&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_success</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AcquisitionResult</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Finalize a freshly-downloaded file to its correct extension and</span>
+<span class="sd">        return the AcquisitionResult — or a failure if the content was HTML.&quot;&quot;&quot;</span>
+        <span class="n">final</span> <span class="o">=</span> <span class="n">_finalize_acquired_file</span><span class="p">(</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">target_base</span><span class="o">=</span><span class="n">target_base</span><span class="p">,</span> <span class="n">convert_to_pdf</span><span class="o">=</span><span class="n">convert_to_pdf</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">final</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+                <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+                <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span>
+                <span class="n">notes</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">: response was HTML/unknown, not a book&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
-            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
-            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">filepath</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">),</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;already_exists&quot;</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span> <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filepath</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">final</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="c1"># --- New composable path ---</span>
@@ -939,12 +1111,7 @@
         <span class="n">result_path</span> <span class="o">=</span> <span class="n">resolve_reference</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">strat</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">result_path</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
-                <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
-                <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">filepath</span><span class="o">=</span><span class="n">result_path</span><span class="p">,</span>
-                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;resolved&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">_success</span><span class="p">(</span><span class="n">result_path</span><span class="p">,</span> <span class="s2">&quot;resolved&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
             <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
             <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -972,12 +1139,7 @@
                     <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
                 <span class="p">}</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
-                <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
-                <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">filepath</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">filepath</span><span class="p">),</span>
-                <span class="n">method</span><span class="o">=</span><span class="s2">&quot;direct_url&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">_success</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;direct_url&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">log_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="p">{</span>
@@ -1005,32 +1167,17 @@
     <span class="p">)</span>
     <span class="k">if</span> <span class="n">result_path</span><span class="p">:</span>
         <span class="n">topic_label</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">libgen_topics</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
-            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
-            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">filepath</span><span class="o">=</span><span class="n">result_path</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;libgen_</span><span class="si">{</span><span class="n">topic_label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_success</span><span class="p">(</span><span class="n">result_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;libgen_</span><span class="si">{</span><span class="n">topic_label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="c1"># 3. Try arxiv API search (finds preprints not caught by URL)</span>
     <span class="n">arxiv_path</span> <span class="o">=</span> <span class="n">_try_arxiv_search</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">arxiv_path</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
-            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
-            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">filepath</span><span class="o">=</span><span class="n">arxiv_path</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;arxiv_search&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_success</span><span class="p">(</span><span class="n">arxiv_path</span><span class="p">,</span> <span class="s2">&quot;arxiv_search&quot;</span><span class="p">)</span>
 
     <span class="c1"># 4. Try Sci-Hub via DOI lookup (Crossref → Sci-Hub)</span>
     <span class="n">scihub_path</span> <span class="o">=</span> <span class="n">_try_scihub_via_doi</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">scihub_path</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
-            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
-            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">filepath</span><span class="o">=</span><span class="n">scihub_path</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;scihub_doi&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_success</span><span class="p">(</span><span class="n">scihub_path</span><span class="p">,</span> <span class="s2">&quot;scihub_doi&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
         <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
@@ -1053,16 +1200,21 @@
     <span class="n">libgen_topics</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;articles&quot;</span><span class="p">,</span> <span class="s2">&quot;books&quot;</span><span class="p">),</span>
     <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">convert_to_pdf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Acquire PDFs for a list of references.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Acquire files for a list of references.</span>
 
 <span class="sd">    Checks for already-downloaded files first and skips them, reporting</span>
 <span class="sd">    which references are being skipped so the user can re-download by</span>
 <span class="sd">    renaming or removing the existing file.</span>
 
+<span class="sd">    Each downloaded file is saved with an extension that matches its</span>
+<span class="sd">    actual content (``.pdf``, ``.epub``, ``.mobi``, ``.djvu``, ...). A</span>
+<span class="sd">    non-PDF is never renamed to ``.pdf``.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        references: List of Reference objects.</span>
-<span class="sd">        download_dir: Where to save PDFs (the ``references/`` subdirectory</span>
+<span class="sd">        download_dir: Where to save files (the ``references/`` subdirectory</span>
 <span class="sd">            inside the work_dir, or a standalone directory).</span>
 <span class="sd">        work_dir: Optional work directory — if given, ``log_file`` defaults</span>
 <span class="sd">            to ``{work_dir}/{datetime}__acquisition_log.txt``.</span>
@@ -1074,6 +1226,10 @@
 <span class="sd">        libgen_topics: Libgen topics to try (legacy chain only).</span>
 <span class="sd">        delay: Seconds between operations (rate limiting).</span>
 <span class="sd">        verbose: Print progress.</span>
+<span class="sd">        convert_to_pdf: When ``True``, convert non-PDF downloads to PDF</span>
+<span class="sd">            via ``pdfdol`` (Calibre&#39;s ``ebook-convert``) when available.</span>
+<span class="sd">            Prints a hint if the flag is on but the converter isn&#39;t</span>
+<span class="sd">            available. Defaults to ``False`` — native formats preserved.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (successes, failures, log_entries) where successes and failures</span>
@@ -1090,6 +1246,25 @@
     <span class="n">log_entries</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">successes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">failures</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">convert_to_pdf</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">pdfdol.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_ebook_convert</span>  <span class="c1"># type: ignore</span>
+
+            <span class="k">if</span> <span class="n">find_ebook_convert</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Note: convert_to_pdf=True but Calibre&#39;s &quot;</span>
+                    <span class="s2">&quot;&#39;ebook-convert&#39; was not found. Install Calibre &quot;</span>
+                    <span class="s2">&quot;(https://calibre-ebook.com/download) to enable &quot;</span>
+                    <span class="s2">&quot;EPUB/MOBI/DjVu→PDF conversion. Native formats will be &quot;</span>
+                    <span class="s2">&quot;kept as-is.&quot;</span>
+                <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Note: convert_to_pdf=True but pdfdol is not &quot;</span>
+                <span class="s2">&quot;available. Install it (`pip install pdfdol`) to enable &quot;</span>
+                <span class="s2">&quot;conversion. Native formats will be kept as-is.&quot;</span>
+            <span class="p">)</span>
 
     <span class="c1"># (C) Check for already-downloaded files</span>
     <span class="n">to_acquire</span><span class="p">,</span> <span class="n">already_have</span> <span class="o">=</span> <span class="n">check_existing_downloads</span><span class="p">(</span><span class="n">references</span><span class="p">,</span> <span class="n">download_dir</span><span class="p">)</span>
@@ -1125,6 +1300,7 @@
             <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span>
             <span class="n">libgen_topics</span><span class="o">=</span><span class="n">libgen_topics</span><span class="p">,</span>
             <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+            <span class="n">convert_to_pdf</span><span class="o">=</span><span class="n">convert_to_pdf</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>

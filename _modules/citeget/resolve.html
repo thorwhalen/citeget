@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.resolve &mdash; citeget 0.1.2 documentation</title>
+  <title>citeget.resolve &mdash; citeget 0.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=92734c54"></script>
+      <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -93,6 +93,17 @@
 <span class="sd">  unit that combines resolvers and downloaders (or does its own thing, like</span>
 <span class="sd">  libgen&#39;s playwright-based search+download).</span>
 
+<span class="sd">Extension semantics</span>
+<span class="sd">-------------------</span>
+<span class="sd">The ``filepath`` argument to downloaders and strategies is **advisory**: it</span>
+<span class="sd">tells them where you intend the final file to live. They *may* write to a</span>
+<span class="sd">neighbouring path with a different extension when the downloaded content is</span>
+<span class="sd">not a PDF (e.g. EPUB, MOBI, DjVu). Callers should use the final path</span>
+<span class="sd">reported by the strategy rather than assuming the ``.pdf`` target was</span>
+<span class="sd">written. The higher-level :func:`citeget.acquire_references.acquire_reference`</span>
+<span class="sd">function handles this finalisation — and the hard rule &quot;no ``.pdf`` extension</span>
+<span class="sd">on non-PDF content&quot; — automatically.</span>
+
 <span class="sd">The factory :func:`resolve_and_download` wires a resolver to a downloader.</span>
 <span class="sd">:func:`chain` composes strategies (try first, fall back to second).</span>
 
@@ -146,6 +157,9 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">Downloader</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fetch *url*, validate content, save to *filepath*.</span>
 
+<span class="sd">    ``filepath`` is advisory — the actual written path may have a different</span>
+<span class="sd">    extension reflecting the real content format (see module docstring).</span>
+
 <span class="sd">    Returns ``True`` on success.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -158,6 +172,9 @@
 <span class="nd">@runtime_checkable</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">AcquisitionStrategy</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Complete acquire-one-reference unit.</span>
+
+<span class="sd">    ``filepath`` is advisory — the returned path may differ in extension</span>
+<span class="sd">    from what was passed in (see module docstring).</span>
 
 <span class="sd">    Returns the filepath string on success, ``None`` on failure.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
