@@ -13,6 +13,7 @@ The query strategy for libgen searches:
 - If still no results: try author + key title words
 """
 
+import contextlib
 import re
 import os
 import time
@@ -102,10 +103,17 @@ def check_existing_downloads(
     already_have = []
 
     for ref in references:
-        filename = _make_ref_filename(ref)
-        filepath = download_dir / filename
-        if filepath.exists() and filepath.stat().st_size > 1000:
-            already_have.append((ref, str(filepath)))
+        base = download_dir / _make_ref_basename(ref)
+        # Accept any previously-acquired file that shares the base name,
+        # regardless of extension (citeget may have saved as .epub/.mobi/etc).
+        found = None
+        for ext in _KNOWN_EXTENSIONS:
+            candidate = base.with_suffix(ext)
+            if candidate.exists() and candidate.stat().st_size > 1000:
+                found = candidate
+                break
+        if found is not None:
+            already_have.append((ref, str(found)))
         else:
             to_acquire.append(ref)
 
@@ -417,6 +425,138 @@ def _try_direct_download(ref: Reference, filepath: Path) -> bool:
     return _download_url(url, filepath)
 
 
+# Known ebook/document extensions citeget may produce. Used by
+# ``check_existing_downloads`` when looking up a previously-acquired file
+# whose actual extension may not be ``.pdf``.
+_KNOWN_EXTENSIONS = (
+    ".pdf", ".epub", ".mobi", ".azw", ".azw3", ".djvu", ".lit", ".rar", ".zip",
+)
+
+
+def _detect_real_extension(path: Path) -> Optional[str]:
+    """Return the canonical extension for a file based on its magic bytes.
+
+    Returns ``None`` for HTML/unknown responses (typically error pages served
+    by the download mirror, not actual book files).
+    """
+    try:
+        with open(path, "rb") as f:
+            head = f.read(1024)
+    except OSError:
+        return None
+    if not head:
+        return None
+    if head.startswith(b"%PDF"):
+        return ".pdf"
+    if head.startswith(b"PK\x03\x04"):
+        # EPUB is a ZIP whose first stored entry is mimetype=application/epub+zip
+        if b"application/epub+zip" in head:
+            return ".epub"
+        return ".zip"
+    if head.startswith(b"Rar!"):
+        return ".rar"
+    if head.startswith(b"CR\x07\x8a") or head.startswith(b"CR!"):
+        return ".djvu"
+    if head.startswith(b"ITOL"):
+        return ".lit"
+    # MOBI / AZW: PalmDB header — first 32 bytes are DB name, then creator at 60-68.
+    creator = head[60:68]
+    if creator == b"BOOKMOBI":
+        return ".mobi"
+    if creator.startswith(b"TPZ"):
+        return ".azw"
+    # HTML error page
+    lower = head[:64].lstrip().lower()
+    if lower.startswith((b"<!doctype", b"<html", b"<?xml", b"<head")):
+        return None
+    return None
+
+
+def _try_convert_to_pdf(src: Path, target_pdf: Path) -> Optional[Path]:
+    """Best-effort convert *src* to a PDF at *target_pdf* using pdfdol.
+
+    Returns *target_pdf* on success, ``None`` if conversion isn't available
+    or fails. Does not delete *src* on success — the caller decides.
+    """
+    try:
+        from pdfdol.tools import get_format_converter  # type: ignore
+    except Exception:
+        return None
+    converter = get_format_converter(src.suffix)
+    if converter is None:
+        return None
+    try:
+        pdf_bytes = converter(str(src))
+    except Exception as e:
+        logger.debug("pdfdol conversion failed for %s: %s", src.name, e)
+        return None
+    if not pdf_bytes or not pdf_bytes.startswith(b"%PDF"):
+        return None
+    target_pdf.parent.mkdir(parents=True, exist_ok=True)
+    target_pdf.write_bytes(pdf_bytes)
+    return target_pdf
+
+
+def _finalize_acquired_file(
+    written_path: Path,
+    *,
+    target_base: Optional[Path] = None,
+    convert_to_pdf: bool = False,
+) -> Optional[Path]:
+    """Move a just-downloaded file to its correct final path and extension.
+
+    Args:
+        written_path: Where the downloader actually wrote the bytes.
+        target_base: Intended final path *without* extension. If ``None``,
+            uses ``written_path`` minus its extension — i.e. the rename
+            happens in-place.
+        convert_to_pdf: When ``True`` and the content isn't already a PDF,
+            attempt conversion via ``pdfdol.tools.get_format_converter``.
+            On success the PDF is written and the native source is removed.
+            On failure (converter unavailable, ``ebook-convert`` missing,
+            conversion error) the native file is kept with its real
+            extension — the hard rule "no ``.pdf`` on non-PDFs" is never
+            broken.
+
+    Returns:
+        The final :class:`Path` on success, or ``None`` if the content was
+        an HTML error page (the file is deleted in that case).
+    """
+    if not written_path.exists():
+        return None
+    real_ext = _detect_real_extension(written_path)
+    if real_ext is None:
+        with contextlib.suppress(OSError):
+            written_path.unlink()
+        return None
+
+    base = (target_base or written_path).with_suffix("")
+
+    # Optional conversion to PDF.
+    if convert_to_pdf and real_ext != ".pdf":
+        pdf_target = base.with_suffix(".pdf")
+        converted = _try_convert_to_pdf(written_path, pdf_target)
+        if converted is not None:
+            # Remove the native source, unless it happens to be the target
+            # path itself (e.g. in-place conversion of tempfoo.pdf → foo.pdf).
+            if written_path.resolve() != converted.resolve():
+                with contextlib.suppress(OSError):
+                    written_path.unlink()
+            return converted
+        # Fall through to native-format save if conversion didn't happen.
+
+    final_path = base.with_suffix(real_ext)
+    if final_path == written_path:
+        return final_path
+    # Replace a stale file that might share the final path.
+    if final_path.exists():
+        with contextlib.suppress(OSError):
+            final_path.unlink()
+    final_path.parent.mkdir(parents=True, exist_ok=True)
+    written_path.rename(final_path)
+    return final_path
+
+
 def _sanitize_filename(name: str, max_length: int = 150) -> str:
     """Make a string safe for use as a filename."""
     name = re.sub(r'[<>:"/\\|?*]', "_", name)
@@ -426,12 +566,15 @@ def _sanitize_filename(name: str, max_length: int = 150) -> str:
     return name
 
 
-def _make_ref_filename(ref: Reference) -> str:
-    """Generate a filename for a reference.
+def _make_ref_basename(ref: Reference) -> str:
+    """Generate a base filename for a reference (without extension).
 
-    Format: ``{title} ({authors_apa7}, {year}).pdf``
+    Format: ``{title} ({authors_apa7}, {year})``
     where authors_apa7 follows APA 7 citation style:
     1 author -> "Smith", 2 -> "Smith & Jones", 3+ -> "Smith et al."
+
+    The final extension is decided after download by
+    :func:`_finalize_acquired_file` based on the actual file content.
     """
     title = ref.title[:120] if ref.title else f"ref_{ref.number}"
     apa = _apa7_authors(ref.authors) if ref.authors else "Unknown"
@@ -447,7 +590,7 @@ def _make_ref_filename(ref: Reference) -> str:
         name = f"{title} ({apa}, {year})"
     else:
         name = f"{title} ({apa})"
-    return _sanitize_filename(name) + ".pdf"
+    return _sanitize_filename(name)
 
 
 def _match_result_to_ref(result: dict, ref: Reference) -> float:
@@ -781,8 +924,9 @@ def acquire_reference(
     libgen_topics: tuple = ("articles", "books"),
     timeout: int = 30000,
     verbose: bool = False,
+    convert_to_pdf: bool = False,
 ) -> AcquisitionResult:
-    """Try to acquire a single reference PDF.
+    """Try to acquire a single reference.
 
     When *strategy* is given, delegates entirely to the composable
     strategy system in :mod:`citeget.resolve`.  Otherwise falls back to
@@ -793,7 +937,7 @@ def acquire_reference(
 
     Args:
         ref: The reference to acquire.
-        download_dir: Where to save the PDF.
+        download_dir: Where to save the file.
         log_entries: List to append log dicts to (mutated in place).
         strategy: An ``AcquisitionStrategy`` callable, a registered
             strategy name (``str``), or ``None`` for the legacy chain.
@@ -801,19 +945,49 @@ def acquire_reference(
         libgen_topics: Topics to search on libgen (searched simultaneously).
         timeout: Timeout for browser operations (legacy chain only).
         verbose: Print diagnostic info on download attempts.
+        convert_to_pdf: When ``True``, non-PDF downloads (EPUB, MOBI,
+            DjVu, ...) are converted to PDF via ``pdfdol`` (Calibre's
+            ``ebook-convert`` under the hood) when available. On
+            conversion failure or when the converter is missing, the
+            native format is kept — a non-PDF is never renamed to
+            ``.pdf``.
     """
     download_dir = Path(download_dir)
     download_dir.mkdir(parents=True, exist_ok=True)
-    filename = _make_ref_filename(ref)
-    filepath = download_dir / filename
+    target_base = download_dir / _make_ref_basename(ref)
 
-    # Skip if already exists
-    if filepath.exists() and filepath.stat().st_size > 1000:
+    # Skip if already exists (under any known extension)
+    for ext in _KNOWN_EXTENSIONS:
+        candidate = target_base.with_suffix(ext)
+        if candidate.exists() and candidate.stat().st_size > 1000:
+            return AcquisitionResult(
+                reference=ref,
+                success=True,
+                filepath=str(candidate),
+                method="already_exists",
+            )
+
+    # Strategies/downloaders write to this tentative ``filepath`` (``.pdf``
+    # extension). After a successful download the finalizer below moves it
+    # to target_base.with_suffix(<detected_ext>) — or (if convert_to_pdf)
+    # converts it to a real PDF at that name.
+    filepath = target_base.with_suffix(".pdf")
+
+    def _success(path: str | Path, method: str) -> AcquisitionResult:
+        """Finalize a freshly-downloaded file to its correct extension and
+        return the AcquisitionResult — or a failure if the content was HTML."""
+        final = _finalize_acquired_file(
+            Path(path), target_base=target_base, convert_to_pdf=convert_to_pdf,
+        )
+        if final is None:
+            return AcquisitionResult(
+                reference=ref,
+                success=False,
+                method="failed",
+                notes=f"{method}: response was HTML/unknown, not a book",
+            )
         return AcquisitionResult(
-            reference=ref,
-            success=True,
-            filepath=str(filepath),
-            method="already_exists",
+            reference=ref, success=True, filepath=str(final), method=method,
         )
 
     # --- New composable path ---
@@ -831,12 +1005,7 @@ def acquire_reference(
         result_path = resolve_reference(ref, filepath, strategy=strat)
 
         if result_path:
-            return AcquisitionResult(
-                reference=ref,
-                success=True,
-                filepath=result_path,
-                method="resolved",
-            )
+            return _success(result_path, "resolved")
         return AcquisitionResult(
             reference=ref,
             success=False,
@@ -864,12 +1033,7 @@ def acquire_reference(
                     "error": "",
                 }
             )
-            return AcquisitionResult(
-                reference=ref,
-                success=True,
-                filepath=str(filepath),
-                method="direct_url",
-            )
+            return _success(filepath, "direct_url")
         else:
             log_entries.append(
                 {
@@ -897,32 +1061,17 @@ def acquire_reference(
     )
     if result_path:
         topic_label = "+".join(libgen_topics)
-        return AcquisitionResult(
-            reference=ref,
-            success=True,
-            filepath=result_path,
-            method=f"libgen_{topic_label}",
-        )
+        return _success(result_path, f"libgen_{topic_label}")
 
     # 3. Try arxiv API search (finds preprints not caught by URL)
     arxiv_path = _try_arxiv_search(ref, filepath, log_entries=log_entries)
     if arxiv_path:
-        return AcquisitionResult(
-            reference=ref,
-            success=True,
-            filepath=arxiv_path,
-            method="arxiv_search",
-        )
+        return _success(arxiv_path, "arxiv_search")
 
     # 4. Try Sci-Hub via DOI lookup (Crossref → Sci-Hub)
     scihub_path = _try_scihub_via_doi(ref, filepath, log_entries=log_entries)
     if scihub_path:
-        return AcquisitionResult(
-            reference=ref,
-            success=True,
-            filepath=scihub_path,
-            method="scihub_doi",
-        )
+        return _success(scihub_path, "scihub_doi")
 
     return AcquisitionResult(
         reference=ref,
@@ -942,16 +1091,21 @@ def acquire_all_references(
     libgen_topics: tuple = ("articles", "books"),
     delay: float = 2.0,
     verbose: bool = True,
+    convert_to_pdf: bool = False,
 ) -> tuple:
-    """Acquire PDFs for a list of references.
+    """Acquire files for a list of references.
 
     Checks for already-downloaded files first and skips them, reporting
     which references are being skipped so the user can re-download by
     renaming or removing the existing file.
 
+    Each downloaded file is saved with an extension that matches its
+    actual content (``.pdf``, ``.epub``, ``.mobi``, ``.djvu``, ...). A
+    non-PDF is never renamed to ``.pdf``.
+
     Args:
         references: List of Reference objects.
-        download_dir: Where to save PDFs (the ``references/`` subdirectory
+        download_dir: Where to save files (the ``references/`` subdirectory
             inside the work_dir, or a standalone directory).
         work_dir: Optional work directory — if given, ``log_file`` defaults
             to ``{work_dir}/{datetime}__acquisition_log.txt``.
@@ -963,6 +1117,10 @@ def acquire_all_references(
         libgen_topics: Libgen topics to try (legacy chain only).
         delay: Seconds between operations (rate limiting).
         verbose: Print progress.
+        convert_to_pdf: When ``True``, convert non-PDF downloads to PDF
+            via ``pdfdol`` (Calibre's ``ebook-convert``) when available.
+            Prints a hint if the flag is on but the converter isn't
+            available. Defaults to ``False`` — native formats preserved.
 
     Returns:
         (successes, failures, log_entries) where successes and failures
@@ -979,6 +1137,25 @@ def acquire_all_references(
     log_entries = []
     successes = []
     failures = []
+
+    if convert_to_pdf and verbose:
+        try:
+            from pdfdol.tools import find_ebook_convert  # type: ignore
+
+            if find_ebook_convert() is None:
+                print(
+                    f"{_ts()} Note: convert_to_pdf=True but Calibre's "
+                    "'ebook-convert' was not found. Install Calibre "
+                    "(https://calibre-ebook.com/download) to enable "
+                    "EPUB/MOBI/DjVu→PDF conversion. Native formats will be "
+                    "kept as-is."
+                )
+        except Exception:
+            print(
+                f"{_ts()} Note: convert_to_pdf=True but pdfdol is not "
+                "available. Install it (`pip install pdfdol`) to enable "
+                "conversion. Native formats will be kept as-is."
+            )
 
     # (C) Check for already-downloaded files
     to_acquire, already_have = check_existing_downloads(references, download_dir)
@@ -1014,6 +1191,7 @@ def acquire_all_references(
             strategy=strategy,
             libgen_topics=libgen_topics,
             verbose=verbose,
+            convert_to_pdf=convert_to_pdf,
         )
 
         if result.success:

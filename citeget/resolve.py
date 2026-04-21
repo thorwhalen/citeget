@@ -10,6 +10,17 @@ The acquisition pipeline has three layers:
   unit that combines resolvers and downloaders (or does its own thing, like
   libgen's playwright-based search+download).
 
+Extension semantics
+-------------------
+The ``filepath`` argument to downloaders and strategies is **advisory**: it
+tells them where you intend the final file to live. They *may* write to a
+neighbouring path with a different extension when the downloaded content is
+not a PDF (e.g. EPUB, MOBI, DjVu). Callers should use the final path
+reported by the strategy rather than assuming the ``.pdf`` target was
+written. The higher-level :func:`citeget.acquire_references.acquire_reference`
+function handles this finalisation — and the hard rule "no ``.pdf`` extension
+on non-PDF content" — automatically.
+
 The factory :func:`resolve_and_download` wires a resolver to a downloader.
 :func:`chain` composes strategies (try first, fall back to second).
 
@@ -58,6 +69,9 @@ class UrlResolver(Protocol):
 class Downloader(Protocol):
     """Fetch *url*, validate content, save to *filepath*.
 
+    ``filepath`` is advisory — the actual written path may have a different
+    extension reflecting the real content format (see module docstring).
+
     Returns ``True`` on success.
     """
 
@@ -67,6 +81,9 @@ class Downloader(Protocol):
 @runtime_checkable
 class AcquisitionStrategy(Protocol):
     """Complete acquire-one-reference unit.
+
+    ``filepath`` is advisory — the returned path may differ in extension
+    from what was passed in (see module docstring).
 
     Returns the filepath string on success, ``None`` on failure.
     """
