@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.fetch &mdash; citeget 0.2.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=37f418d5"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="citeget.resolve" href="resolve.html" />
+    <link rel="prev" title="citeget.extract" href="extract.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extract.html">citeget.extract</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">citeget.fetch</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.FetchResult"><code class="docutils literal notranslate"><span class="pre">FetchResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#citeget.fetch.FetchResult.ok"><code class="docutils literal notranslate"><span class="pre">FetchResult.ok</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.UrlEntry"><code class="docutils literal notranslate"><span class="pre">UrlEntry</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.extract_urls_from_text"><code class="docutils literal notranslate"><span class="pre">extract_urls_from_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.fetch"><code class="docutils literal notranslate"><span class="pre">fetch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.fetch_one"><code class="docutils literal notranslate"><span class="pre">fetch_one()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.html_to_markdown"><code class="docutils literal notranslate"><span class="pre">html_to_markdown()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.html_to_pdf"><code class="docutils literal notranslate"><span class="pre">html_to_pdf()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.infer_filename"><code class="docutils literal notranslate"><span class="pre">infer_filename()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.slugify"><code class="docutils literal notranslate"><span class="pre">slugify()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="resolve.html">citeget.resolve</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">citeget.fetch</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/citeget/fetch.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-citeget.fetch">
+<span id="citeget-fetch"></span><h1>citeget.fetch<a class="headerlink" href="#module-citeget.fetch" title="Link to this heading"></a></h1>
+<p>General-purpose URL → file fetching with format routing.</p>
+<p>Where <a class="reference internal" href="resolve.html#module-citeget.resolve" title="citeget.resolve"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citeget.resolve</span></code></a> is specialized for <em>academic references</em>
+(structured <code class="docutils literal notranslate"><span class="pre">Reference</span></code> objects, libgen / arxiv / sci-hub strategies, PDF
+output), this module handles the <em>general</em> case: arbitrary URLs (blog posts,
+docs, specs, web pages) saved as Markdown (default), PDF, or original bytes.</p>
+<p>Pipeline per URL:</p>
+<ol class="arabic simple">
+<li><p>Fetch the URL (httpx, follows redirects).</p></li>
+<li><p>If the response is a PDF and the user wants <code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;original&quot;</span></code>,
+save it directly.</p></li>
+<li><p>If the response is HTML and the user wants <code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code>, scan for an
+embedded direct-PDF link (arxiv <code class="docutils literal notranslate"><span class="pre">/pdf/</span></code>, GitHub <code class="docutils literal notranslate"><span class="pre">.pdf</span></code> assets, ACM
+<code class="docutils literal notranslate"><span class="pre">/doi/pdf/</span></code>, etc.) and try that first; otherwise convert HTML→PDF via
+<code class="docutils literal notranslate"><span class="pre">pdfkit</span></code> (requires <code class="docutils literal notranslate"><span class="pre">wkhtmltopdf</span></code>).</p></li>
+<li><p>Otherwise convert HTML→Markdown via <code class="docutils literal notranslate"><span class="pre">html2text</span></code>.</p></li>
+<li><p>If the requested format fails, fall back to Markdown.</p></li>
+</ol>
+<p>Public API:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#citeget.fetch.fetch" title="citeget.fetch.fetch"><code class="xref py py-func docutils literal notranslate"><span class="pre">fetch()</span></code></a> — main entry point. Accepts a URL, list of URLs, file path,
+or text containing URLs. Returns a list of <a class="reference internal" href="#citeget.fetch.FetchResult" title="citeget.fetch.FetchResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">FetchResult</span></code></a>.</p></li>
+<li><p><a class="reference internal" href="#citeget.fetch.fetch_one" title="citeget.fetch.fetch_one"><code class="xref py py-func docutils literal notranslate"><span class="pre">fetch_one()</span></code></a> — single-URL convenience.</p></li>
+<li><p><a class="reference internal" href="#citeget.fetch.extract_urls_from_text" title="citeget.fetch.extract_urls_from_text"><code class="xref py py-func docutils literal notranslate"><span class="pre">extract_urls_from_text()</span></code></a> — parse URLs from prose / markdown /
+reference-style citations, preserving anchor text and citation numbers.</p></li>
+<li><p><a class="reference internal" href="#citeget.fetch.infer_filename" title="citeget.fetch.infer_filename"><code class="xref py py-func docutils literal notranslate"><span class="pre">infer_filename()</span></code></a> — derive a slug from anchor / citation / URL path.</p></li>
+</ul>
+<p>The HTML→PDF converter is registered as a citeget downloader under the name
+<code class="docutils literal notranslate"><span class="pre">&quot;html_to_pdf&quot;</span></code>, and HTML→Markdown as <code class="docutils literal notranslate"><span class="pre">&quot;html_to_md&quot;</span></code>, so they compose
+with the existing <a class="reference internal" href="resolve.html#module-citeget.resolve" title="citeget.resolve"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citeget.resolve</span></code></a> registry.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.fetch.FetchResult">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">FetchResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ok'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'skipped'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'failed'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/fetch.html#FetchResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.fetch.FetchResult" title="Link to this definition"></a></dt>
+<dd><p>Outcome of a single URL fetch.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="citeget.fetch.FetchResult.ok">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ok</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#citeget.fetch.FetchResult.ok" title="Link to this definition"></a></dt>
+<dd><p>True if file was written or already existed (status in {ok, skipped}).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.fetch.UrlEntry">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">UrlEntry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/fetch.html#UrlEntry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.fetch.UrlEntry" title="Link to this definition"></a></dt>
+<dd><p>A URL with optional context preserved for filename inference.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.fetch.extract_urls_from_text">
+<span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">extract_urls_from_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#citeget.fetch.UrlEntry" title="citeget.fetch.UrlEntry"><span class="pre">UrlEntry</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/citeget/fetch.html#extract_urls_from_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.fetch.extract_urls_from_text" title="Link to this definition"></a></dt>
+<dd><p>Parse URLs from prose / markdown / reference-style citations.</p>
+<p>Recognized forms (each URL deduped, first match wins):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[anchor](https://url)</span></code>                    → markdown link</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[1]</span> <span class="pre">Some</span> <span class="pre">citation.</span> <span class="pre">https://url</span></code>           → reference-style</p></li>
+<li><p>bare <code class="docutils literal notranslate"><span class="pre">https://url</span></code>                          → fallback</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.fetch.fetch">
+<span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">fetch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'~/Downloads'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'md'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'pdf'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'original'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'md'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_existing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">on_result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#citeget.fetch.FetchResult" title="citeget.fetch.FetchResult"><span class="pre">FetchResult</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/citeget/fetch.html#fetch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.fetch.fetch" title="Link to this definition"></a></dt>
+<dd><p>Fetch one or many URLs from a flexible <em>source</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> – A URL, list of URLs, path to a file containing URLs, or
+a string of prose / markdown / reference-style text.</p></li>
+<li><p><strong>output_dir</strong> – Where to save files (created if missing).</p></li>
+<li><p><strong>prefer</strong> – <code class="docutils literal notranslate"><span class="pre">&quot;md&quot;</span></code> (default), <code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;original&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code>.
+See <a class="reference internal" href="#citeget.fetch.fetch_one" title="citeget.fetch.fetch_one"><code class="xref py py-func docutils literal notranslate"><span class="pre">fetch_one()</span></code></a> for details.</p></li>
+<li><p><strong>timeout</strong> – HTTP timeout per request.</p></li>
+<li><p><strong>skip_existing</strong> – Skip URLs whose inferred output file exists.</p></li>
+<li><p><strong>on_result</strong> – Optional callback <code class="docutils literal notranslate"><span class="pre">(index,</span> <span class="pre">total,</span> <span class="pre">FetchResult)</span> <span class="pre">-&gt;</span> <span class="pre">None</span></code>
+invoked after each fetch (for progress reporting).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of <a class="reference internal" href="#citeget.fetch.FetchResult" title="citeget.fetch.FetchResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">FetchResult</span></code></a>, one per unique URL.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.fetch.fetch_one">
+<span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">fetch_one</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#citeget.fetch.UrlEntry" title="citeget.fetch.UrlEntry"><span class="pre">UrlEntry</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'md'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'pdf'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'original'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'auto'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'md'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_existing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.fetch.FetchResult" title="citeget.fetch.FetchResult"><span class="pre">FetchResult</span></a></span></span><a class="reference internal" href="../../_modules/citeget/fetch.html#fetch_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.fetch.fetch_one" title="Link to this definition"></a></dt>
+<dd><p>Fetch a single URL and save it under <em>output_dir</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> – A URL string or a <a class="reference internal" href="#citeget.fetch.UrlEntry" title="citeget.fetch.UrlEntry"><code class="xref py py-class docutils literal notranslate"><span class="pre">UrlEntry</span></code></a> (carries title/ref context).</p></li>
+<li><p><strong>output_dir</strong> – Directory to write into (created if missing).</p></li>
+<li><p><strong>prefer</strong> – Output format. <code class="docutils literal notranslate"><span class="pre">&quot;md&quot;</span></code> (default) converts HTML to Markdown;
+PDFs are saved as-is. <code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code> tries to keep/produce a PDF
+(requires <code class="docutils literal notranslate"><span class="pre">pdfkit</span></code> for HTML→PDF). <code class="docutils literal notranslate"><span class="pre">&quot;original&quot;</span></code> saves whatever
+content-type the server returned. <code class="docutils literal notranslate"><span class="pre">&quot;auto&quot;</span></code> is like <code class="docutils literal notranslate"><span class="pre">&quot;md&quot;</span></code>
+for HTML and saves PDFs as PDFs.</p></li>
+<li><p><strong>timeout</strong> – HTTP timeout in seconds.</p></li>
+<li><p><strong>skip_existing</strong> – If True (default), skip when the inferred output
+file already exists.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <a class="reference internal" href="#citeget.fetch.FetchResult" title="citeget.fetch.FetchResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">FetchResult</span></code></a> describing what happened.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.fetch.html_to_markdown">
+<span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">html_to_markdown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">html</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/citeget/fetch.html#html_to_markdown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.fetch.html_to_markdown" title="Link to this definition"></a></dt>
+<dd><p>Convert <em>html</em> to clean Markdown via html2text.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.fetch.html_to_pdf">
+<span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">html_to_pdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">html</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/citeget/fetch.html#html_to_pdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.fetch.html_to_pdf" title="Link to this definition"></a></dt>
+<dd><p>Render <em>url</em> (or <em>html</em> fallback) to PDF bytes via pdfkit/wkhtmltopdf.</p>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">None</span></code> if pdfkit / wkhtmltopdf is unavailable or rendering fails.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.fetch.infer_filename">
+<span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">infer_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.fetch.UrlEntry" title="citeget.fetch.UrlEntry"><span class="pre">UrlEntry</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ext</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/citeget/fetch.html#infer_filename"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.fetch.infer_filename" title="Link to this definition"></a></dt>
+<dd><p>Infer a filename for <em>entry</em>, ending in <code class="docutils literal notranslate"><span class="pre">.{ext}</span></code>.</p>
+<p>Strategy (first non-empty wins):
+1. anchor text / citation title (slugified)
+2. URL’s last meaningful path segment
+3. domain + short hash</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.fetch.slugify">
+<span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">slugify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">80</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/citeget/fetch.html#slugify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.fetch.slugify" title="Link to this definition"></a></dt>
+<dd><p>Return a filesystem-safe slug for <em>text</em> (lowercase, hyphenated).</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="extract.html" class="btn btn-neutral float-left" title="citeget.extract" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="resolve.html" class="btn btn-neutral float-right" title="citeget.resolve" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright NO COPYRIGHT.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.cli &mdash; citeget 0.2.0 documentation</title>
+  <title>citeget.cli &mdash; citeget 0.2.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+      <script src="../../_static/documentation_options.js?v=37f418d5"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -56,12 +56,14 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">citeget.cli</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.cli.acquire"><code class="docutils literal notranslate"><span class="pre">acquire()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.cli.download"><code class="docutils literal notranslate"><span class="pre">download()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.cli.fetch"><code class="docutils literal notranslate"><span class="pre">fetch()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.cli.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.cli.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="core.html">citeget.core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fetch.html">citeget.fetch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resolve.html">citeget.resolve</a></li>
 </ul>
 
@@ -129,6 +131,29 @@ semantic_scholar, libgen, scihub). Empty uses legacy chain.</p></li>
 <li><p><strong>download_dir</strong> – Directory to save files into.</p></li>
 <li><p><strong>max_downloads</strong> – Max number of files to download (0 = all).</p></li>
 <li><p><strong>delay</strong> – Seconds between downloads (rate limiting).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.cli.fetch">
+<span class="sig-prename descclassname"><span class="pre">citeget.cli.</span></span><span class="sig-name descname"><span class="pre">fetch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'~/Downloads'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'md'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_existing</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">manifest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/cli.html#fetch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.cli.fetch" title="Link to this definition"></a></dt>
+<dd><p>Fetch URLs and save them as Markdown (default), PDF, or original.</p>
+<p><em>source</em> may be a URL, a file path containing URLs, or a string with
+prose / markdown / reference-style citations. Multiple URLs are extracted
+automatically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> – A URL, file path, or text containing URLs.</p></li>
+<li><p><strong>output_dir</strong> – Where to save files (default: ~/Downloads).</p></li>
+<li><p><strong>prefer</strong> – “md” (default), “pdf”, “original”, or “auto”.
+PDF requires the <cite>[fetch]</cite> extra (<cite>pip install citeget[fetch]</cite>)
+and a <cite>wkhtmltopdf</cite> system binary for HTML→PDF conversion.</p></li>
+<li><p><strong>timeout</strong> – HTTP timeout per request, in seconds.</p></li>
+<li><p><strong>skip_existing</strong> – If true (default), skip URLs whose output exists.</p></li>
+<li><p><strong>manifest</strong> – Optional path to write a JSON manifest of results.</p></li>
 </ul>
 </dd>
 </dl>

@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.acquire_references &mdash; citeget 0.2.0 documentation</title>
+  <title>citeget.acquire_references &mdash; citeget 0.2.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=938c9ccc"></script>
+      <script src="../../_static/documentation_options.js?v=37f418d5"></script>
       <script src="../../_static/doctools.js?v=9bcbadda"></script>
       <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -53,6 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/cli.html">citeget.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/core.html">citeget.core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/fetch.html">citeget.fetch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/resolve.html">citeget.resolve</a></li>
 </ul>
 
@@ -533,7 +534,15 @@
 <span class="c1"># ``check_existing_downloads`` when looking up a previously-acquired file</span>
 <span class="c1"># whose actual extension may not be ``.pdf``.</span>
 <span class="n">_KNOWN_EXTENSIONS</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span class="s2">&quot;.epub&quot;</span><span class="p">,</span> <span class="s2">&quot;.mobi&quot;</span><span class="p">,</span> <span class="s2">&quot;.azw&quot;</span><span class="p">,</span> <span class="s2">&quot;.azw3&quot;</span><span class="p">,</span> <span class="s2">&quot;.djvu&quot;</span><span class="p">,</span> <span class="s2">&quot;.lit&quot;</span><span class="p">,</span> <span class="s2">&quot;.rar&quot;</span><span class="p">,</span> <span class="s2">&quot;.zip&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;.pdf&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;.epub&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;.mobi&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;.azw&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;.azw3&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;.djvu&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;.lit&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;.rar&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;.zip&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 
 
@@ -1019,6 +1028,95 @@
     <span class="k">return</span> <span class="kc">None</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_try_fetch_fallback</span><span class="p">(</span>
+    <span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">,</span>
+    <span class="n">download_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AcquisitionResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Last-resort fallback: fetch ``ref.url`` as Markdown via :mod:`citeget.fetch`.</span>
+
+<span class="sd">    Used when academic strategies (libgen / arxiv / sci-hub) fail and the</span>
+<span class="sd">    reference is actually a web page (blog post, docs, product page, spec).</span>
+
+<span class="sd">    Returns a successful :class:`AcquisitionResult` on success, or a failed</span>
+<span class="sd">    one (``method=&quot;failed&quot;``) on failure or when *enabled* is False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">enabled</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+            <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;All strategies exhausted&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.fetch</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch_one</span><span class="p">,</span> <span class="n">UrlEntry</span>
+
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">UrlEntry</span><span class="p">(</span>
+            <span class="n">url</span><span class="o">=</span><span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">ref</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">)</span> <span class="k">if</span> <span class="n">ref</span><span class="o">.</span><span class="n">number</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">fetch_one</span><span class="p">(</span>
+            <span class="n">entry</span><span class="p">,</span>
+            <span class="n">output_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">),</span>
+            <span class="n">prefer</span><span class="o">=</span><span class="s2">&quot;md&quot;</span><span class="p">,</span>
+            <span class="n">skip_existing</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">log_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;ref_number&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">,</span>
+                <span class="s2">&quot;ref_title&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">80</span><span class="p">],</span>
+                <span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+                <span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="s2">&quot;fetch_md&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;num_results&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s2">&quot;matched&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="s2">&quot;best_score&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s2">&quot;best_title&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;fetch error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+            <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span>
+            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;All strategies exhausted&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">log_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">&quot;seconds&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;ref_number&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="p">,</span>
+            <span class="s2">&quot;ref_title&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">80</span><span class="p">],</span>
+            <span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">ref</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+            <span class="s2">&quot;query_type&quot;</span><span class="p">:</span> <span class="s2">&quot;fetch_md&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;num_results&quot;</span><span class="p">:</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">ok</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s2">&quot;matched&quot;</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">ok</span><span class="p">,</span>
+            <span class="s2">&quot;best_score&quot;</span><span class="p">:</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">ok</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+            <span class="s2">&quot;best_title&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">ok</span> <span class="k">else</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">error</span> <span class="ow">or</span> <span class="s2">&quot;fetch failed&quot;</span><span class="p">),</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">ok</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">output_file</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">filepath</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">output_file</span><span class="p">),</span>
+            <span class="n">method</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;fetch_</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">format</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
+        <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+        <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span>
+        <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;All strategies exhausted&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
 <div class="viewcode-block" id="acquire_reference">
 <a class="viewcode-back" href="../../module_docs/citeget/acquire_references.html#citeget.acquire_reference">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">acquire_reference</span><span class="p">(</span>
@@ -1031,6 +1129,7 @@
     <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30000</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">convert_to_pdf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">fetch_fallback</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AcquisitionResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Try to acquire a single reference.</span>
 
@@ -1040,6 +1139,11 @@
 
 <span class="sd">    The legacy chain now searches all ``libgen_topics`` simultaneously</span>
 <span class="sd">    in a single request (multi-topic search), rather than sequentially.</span>
+
+<span class="sd">    If all academic strategies fail and *fetch_fallback* is ``True`` (the</span>
+<span class="sd">    default), and the reference has a URL, the page is fetched as Markdown</span>
+<span class="sd">    via :func:`citeget.fetch.fetch_one`. This catches non-paper references</span>
+<span class="sd">    (blog posts, docs, product pages) that won&#39;t appear in libgen/arxiv.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        ref: The reference to acquire.</span>
@@ -1057,6 +1161,8 @@
 <span class="sd">            conversion failure or when the converter is missing, the</span>
 <span class="sd">            native format is kept — a non-PDF is never renamed to</span>
 <span class="sd">            ``.pdf``.</span>
+<span class="sd">        fetch_fallback: If True (default), fall back to fetching ``ref.url``</span>
+<span class="sd">            as Markdown when all academic strategies fail.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
     <span class="n">download_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -1083,7 +1189,9 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Finalize a freshly-downloaded file to its correct extension and</span>
 <span class="sd">        return the AcquisitionResult — or a failure if the content was HTML.&quot;&quot;&quot;</span>
         <span class="n">final</span> <span class="o">=</span> <span class="n">_finalize_acquired_file</span><span class="p">(</span>
-            <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">target_base</span><span class="o">=</span><span class="n">target_base</span><span class="p">,</span> <span class="n">convert_to_pdf</span><span class="o">=</span><span class="n">convert_to_pdf</span><span class="p">,</span>
+            <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">),</span>
+            <span class="n">target_base</span><span class="o">=</span><span class="n">target_base</span><span class="p">,</span>
+            <span class="n">convert_to_pdf</span><span class="o">=</span><span class="n">convert_to_pdf</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">final</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
@@ -1093,7 +1201,10 @@
                 <span class="n">notes</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2">: response was HTML/unknown, not a book&quot;</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
-            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span> <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">filepath</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">final</span><span class="p">),</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
+            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+            <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">filepath</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">final</span><span class="p">),</span>
+            <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="c1"># --- New composable path ---</span>
@@ -1112,11 +1223,8 @@
 
         <span class="k">if</span> <span class="n">result_path</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">_success</span><span class="p">(</span><span class="n">result_path</span><span class="p">,</span> <span class="s2">&quot;resolved&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
-            <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
-            <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span>
-            <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;All strategies exhausted&quot;</span><span class="p">,</span>
+        <span class="k">return</span> <span class="n">_try_fetch_fallback</span><span class="p">(</span>
+            <span class="n">ref</span><span class="p">,</span> <span class="n">download_dir</span><span class="p">,</span> <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="n">fetch_fallback</span>
         <span class="p">)</span>
 
     <span class="c1"># --- Legacy hard-coded chain (backward compatible) ---</span>
@@ -1179,11 +1287,9 @@
     <span class="k">if</span> <span class="n">scihub_path</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_success</span><span class="p">(</span><span class="n">scihub_path</span><span class="p">,</span> <span class="s2">&quot;scihub_doi&quot;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">AcquisitionResult</span><span class="p">(</span>
-        <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
-        <span class="n">success</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">method</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span>
-        <span class="n">notes</span><span class="o">=</span><span class="s2">&quot;All strategies exhausted&quot;</span><span class="p">,</span>
+    <span class="c1"># 5. Last-resort: fetch the reference URL as Markdown (non-paper sources)</span>
+    <span class="k">return</span> <span class="n">_try_fetch_fallback</span><span class="p">(</span>
+        <span class="n">ref</span><span class="p">,</span> <span class="n">download_dir</span><span class="p">,</span> <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="n">fetch_fallback</span>
     <span class="p">)</span></div>
 
 
@@ -1201,6 +1307,7 @@
     <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
     <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">convert_to_pdf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">fetch_fallback</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Acquire files for a list of references.</span>
 
@@ -1230,6 +1337,9 @@
 <span class="sd">            via ``pdfdol`` (Calibre&#39;s ``ebook-convert``) when available.</span>
 <span class="sd">            Prints a hint if the flag is on but the converter isn&#39;t</span>
 <span class="sd">            available. Defaults to ``False`` — native formats preserved.</span>
+<span class="sd">        fetch_fallback: If True (default), fall back to fetching ``ref.url``</span>
+<span class="sd">            as Markdown when all academic strategies fail (catches non-paper</span>
+<span class="sd">            references like blog posts, docs, product pages).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (successes, failures, log_entries) where successes and failures</span>
@@ -1301,6 +1411,7 @@
             <span class="n">libgen_topics</span><span class="o">=</span><span class="n">libgen_topics</span><span class="p">,</span>
             <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
             <span class="n">convert_to_pdf</span><span class="o">=</span><span class="n">convert_to_pdf</span><span class="p">,</span>
+            <span class="n">fetch_fallback</span><span class="o">=</span><span class="n">fetch_fallback</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>

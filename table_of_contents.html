@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>&lt;no title&gt; &mdash; citeget 0.2.0 documentation</title>
+  <title>&lt;no title&gt; &mdash; citeget 0.2.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=938c9ccc"></script>
+      <script src="_static/documentation_options.js?v=37f418d5"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -54,6 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/cli.html">citeget.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/core.html">citeget.core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/fetch.html">citeget.fetch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/resolve.html">citeget.resolve</a></li>
 </ul>
 
@@ -87,7 +88,9 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget.html">citeget</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.AcquisitionResult"><code class="docutils literal notranslate"><span class="pre">AcquisitionResult</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.ExtractionResult"><code class="docutils literal notranslate"><span class="pre">ExtractionResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.FetchResult"><code class="docutils literal notranslate"><span class="pre">FetchResult</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.Reference"><code class="docutils literal notranslate"><span class="pre">Reference</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.UrlEntry"><code class="docutils literal notranslate"><span class="pre">UrlEntry</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.acquire_all_references"><code class="docutils literal notranslate"><span class="pre">acquire_all_references()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.acquire_reference"><code class="docutils literal notranslate"><span class="pre">acquire_reference()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.chain_extractors"><code class="docutils literal notranslate"><span class="pre">chain_extractors()</span></code></a></li>
@@ -97,7 +100,13 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.download_one"><code class="docutils literal notranslate"><span class="pre">download_one()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.download_results"><code class="docutils literal notranslate"><span class="pre">download_results()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.extract_references"><code class="docutils literal notranslate"><span class="pre">extract_references()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.extract_urls_from_text"><code class="docutils literal notranslate"><span class="pre">extract_urls_from_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.fetch"><code class="docutils literal notranslate"><span class="pre">fetch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.fetch_one"><code class="docutils literal notranslate"><span class="pre">fetch_one()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.generate_search_queries"><code class="docutils literal notranslate"><span class="pre">generate_search_queries()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.html_to_markdown"><code class="docutils literal notranslate"><span class="pre">html_to_markdown()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.html_to_pdf"><code class="docutils literal notranslate"><span class="pre">html_to_pdf()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.infer_filename"><code class="docutils literal notranslate"><span class="pre">infer_filename()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.list_downloaders"><code class="docutils literal notranslate"><span class="pre">list_downloaders()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.list_extractors"><code class="docutils literal notranslate"><span class="pre">list_extractors()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.list_resolvers"><code class="docutils literal notranslate"><span class="pre">list_resolvers()</span></code></a></li>
@@ -139,6 +148,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/cli.html">citeget.cli</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/cli.html#citeget.cli.acquire"><code class="docutils literal notranslate"><span class="pre">acquire()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/cli.html#citeget.cli.download"><code class="docutils literal notranslate"><span class="pre">download()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/cli.html#citeget.cli.fetch"><code class="docutils literal notranslate"><span class="pre">fetch()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/cli.html#citeget.cli.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/cli.html#citeget.cli.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
 </ul>
@@ -165,6 +175,18 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/extract.html#citeget.extract.regex_extractor"><code class="docutils literal notranslate"><span class="pre">regex_extractor()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/extract.html#citeget.extract.register"><code class="docutils literal notranslate"><span class="pre">register()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/extract.html#citeget.extract.save_extractors"><code class="docutils literal notranslate"><span class="pre">save_extractors()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/fetch.html">citeget.fetch</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/fetch.html#citeget.fetch.FetchResult"><code class="docutils literal notranslate"><span class="pre">FetchResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/fetch.html#citeget.fetch.UrlEntry"><code class="docutils literal notranslate"><span class="pre">UrlEntry</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/fetch.html#citeget.fetch.extract_urls_from_text"><code class="docutils literal notranslate"><span class="pre">extract_urls_from_text()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/fetch.html#citeget.fetch.fetch"><code class="docutils literal notranslate"><span class="pre">fetch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/fetch.html#citeget.fetch.fetch_one"><code class="docutils literal notranslate"><span class="pre">fetch_one()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/fetch.html#citeget.fetch.html_to_markdown"><code class="docutils literal notranslate"><span class="pre">html_to_markdown()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/fetch.html#citeget.fetch.html_to_pdf"><code class="docutils literal notranslate"><span class="pre">html_to_pdf()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/fetch.html#citeget.fetch.infer_filename"><code class="docutils literal notranslate"><span class="pre">infer_filename()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/fetch.html#citeget.fetch.slugify"><code class="docutils literal notranslate"><span class="pre">slugify()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/resolve.html">citeget.resolve</a><ul>

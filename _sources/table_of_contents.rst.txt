@@ -9,4 +9,5 @@
    module_docs/citeget/cli
    module_docs/citeget/core
    module_docs/citeget/extract
+   module_docs/citeget/fetch
    module_docs/citeget/resolve

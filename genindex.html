@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; citeget 0.2.0 documentation</title>
+  <title>Index &mdash; citeget 0.2.1 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=938c9ccc"></script>
+      <script src="_static/documentation_options.js?v=37f418d5"></script>
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -53,6 +53,7 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/cli.html">citeget.cli</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/core.html">citeget.core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/fetch.html">citeget.fetch</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/resolve.html">citeget.resolve</a></li>
 </ul>
 
@@ -87,9 +88,13 @@
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
@@ -172,8 +177,6 @@
         <li><a href="module_docs/citeget/__main__.html#module-citeget.__main__">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     citeget.acquire_references
 
@@ -181,6 +184,8 @@
         <li><a href="module_docs/citeget/acquire_references.html#module-citeget.acquire_references">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     citeget.article_pub
 
@@ -207,6 +212,13 @@
 
       <ul>
         <li><a href="module_docs/citeget/extract.html#module-citeget.extract">module</a>
+</li>
+      </ul></li>
+      <li>
+    citeget.fetch
+
+      <ul>
+        <li><a href="module_docs/citeget/fetch.html#module-citeget.fetch">module</a>
 </li>
       </ul></li>
       <li>
@@ -254,6 +266,12 @@
         <li><a href="module_docs/citeget/extract.html#citeget.extract.extract_references">(in module citeget.extract)</a>
 </li>
       </ul></li>
+      <li><a href="module_docs/citeget.html#citeget.extract_urls_from_text">extract_urls_from_text() (in module citeget)</a>
+
+      <ul>
+        <li><a href="module_docs/citeget/fetch.html#citeget.fetch.extract_urls_from_text">(in module citeget.fetch)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="module_docs/citeget.html#citeget.ExtractionResult">ExtractionResult (class in citeget)</a>
@@ -264,6 +282,34 @@
       </ul></li>
       <li><a href="module_docs/citeget/extract.html#citeget.extract.Extractor">Extractor (class in citeget.extract)</a>
 </li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/citeget.html#citeget.fetch">fetch() (in module citeget)</a>
+
+      <ul>
+        <li><a href="module_docs/citeget/cli.html#citeget.cli.fetch">(in module citeget.cli)</a>
+</li>
+        <li><a href="module_docs/citeget/fetch.html#citeget.fetch.fetch">(in module citeget.fetch)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/citeget.html#citeget.fetch_one">fetch_one() (in module citeget)</a>
+
+      <ul>
+        <li><a href="module_docs/citeget/fetch.html#citeget.fetch.fetch_one">(in module citeget.fetch)</a>
+</li>
+      </ul></li>
+      <li><a href="module_docs/citeget.html#citeget.FetchResult">FetchResult (class in citeget)</a>
+
+      <ul>
+        <li><a href="module_docs/citeget/fetch.html#citeget.fetch.FetchResult">(class in citeget.fetch)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -286,6 +332,38 @@
 </li>
       <li><a href="module_docs/citeget/resolve.html#citeget.resolve.get_strategy">get_strategy() (in module citeget.resolve)</a>
 </li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/citeget.html#citeget.html_to_markdown">html_to_markdown() (in module citeget)</a>
+
+      <ul>
+        <li><a href="module_docs/citeget/fetch.html#citeget.fetch.html_to_markdown">(in module citeget.fetch)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/citeget.html#citeget.html_to_pdf">html_to_pdf() (in module citeget)</a>
+
+      <ul>
+        <li><a href="module_docs/citeget/fetch.html#citeget.fetch.html_to_pdf">(in module citeget.fetch)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/citeget.html#citeget.infer_filename">infer_filename() (in module citeget)</a>
+
+      <ul>
+        <li><a href="module_docs/citeget/fetch.html#citeget.fetch.infer_filename">(in module citeget.fetch)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -354,7 +432,21 @@
 </li>
         <li><a href="module_docs/citeget/extract.html#module-citeget.extract">citeget.extract</a>
 </li>
+        <li><a href="module_docs/citeget/fetch.html#module-citeget.fetch">citeget.fetch</a>
+</li>
         <li><a href="module_docs/citeget/resolve.html#module-citeget.resolve">citeget.resolve</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/citeget/fetch.html#citeget.fetch.FetchResult.ok">ok (citeget.fetch.FetchResult property)</a>
+
+      <ul>
+        <li><a href="module_docs/citeget.html#citeget.FetchResult.ok">(citeget.FetchResult property)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -465,6 +557,8 @@
       </ul></li>
       <li><a href="module_docs/citeget/resolve.html#citeget.resolve.semantic_scholar_resolver">semantic_scholar_resolver() (in module citeget.resolve)</a>
 </li>
+      <li><a href="module_docs/citeget/fetch.html#citeget.fetch.slugify">slugify() (in module citeget.fetch)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -479,6 +573,12 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="module_docs/citeget.html#citeget.UrlEntry">UrlEntry (class in citeget)</a>
+
+      <ul>
+        <li><a href="module_docs/citeget/fetch.html#citeget.fetch.UrlEntry">(class in citeget.fetch)</a>
+</li>
+      </ul></li>
       <li><a href="module_docs/citeget/resolve.html#citeget.resolve.UrlResolver">UrlResolver (class in citeget.resolve)</a>
 </li>
   </ul></td>
