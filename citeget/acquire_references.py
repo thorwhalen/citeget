@@ -772,6 +772,95 @@ def _try_scihub_via_doi(
     return None
 
 
+def _try_fetch_fallback(
+    ref: Reference,
+    download_dir: Path,
+    *,
+    log_entries: list,
+    enabled: bool = True,
+) -> AcquisitionResult:
+    """Last-resort fallback: fetch ``ref.url`` as Markdown via :mod:`citeget.fetch`.
+
+    Used when academic strategies (libgen / arxiv / sci-hub) fail and the
+    reference is actually a web page (blog post, docs, product page, spec).
+
+    Returns a successful :class:`AcquisitionResult` on success, or a failed
+    one (``method="failed"``) on failure or when *enabled* is False.
+    """
+    if not enabled or not ref.url:
+        return AcquisitionResult(
+            reference=ref,
+            success=False,
+            method="failed",
+            notes="All strategies exhausted",
+        )
+
+    try:
+        from citeget.fetch import fetch_one, UrlEntry
+
+        entry = UrlEntry(
+            url=ref.url,
+            title=ref.title or None,
+            ref=str(ref.number) if ref.number else None,
+        )
+        result = fetch_one(
+            entry,
+            output_dir=Path(download_dir),
+            prefer="md",
+            skip_existing=True,
+        )
+    except Exception as e:
+        log_entries.append(
+            {
+                "timestamp": datetime.now().isoformat(timespec="seconds"),
+                "ref_number": ref.number,
+                "ref_title": ref.title[:80],
+                "query": ref.url,
+                "query_type": "fetch_md",
+                "num_results": 0,
+                "matched": False,
+                "best_score": 0,
+                "best_title": "",
+                "error": f"fetch error: {e}",
+            }
+        )
+        return AcquisitionResult(
+            reference=ref,
+            success=False,
+            method="failed",
+            notes="All strategies exhausted",
+        )
+
+    log_entries.append(
+        {
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "ref_number": ref.number,
+            "ref_title": ref.title[:80],
+            "query": ref.url,
+            "query_type": "fetch_md",
+            "num_results": 1 if result.ok else 0,
+            "matched": result.ok,
+            "best_score": 1.0 if result.ok else 0.0,
+            "best_title": "",
+            "error": "" if result.ok else (result.error or "fetch failed"),
+        }
+    )
+
+    if result.ok and result.output_file:
+        return AcquisitionResult(
+            reference=ref,
+            success=True,
+            filepath=str(result.output_file),
+            method=f"fetch_{result.format}",
+        )
+    return AcquisitionResult(
+        reference=ref,
+        success=False,
+        method="failed",
+        notes="All strategies exhausted",
+    )
+
+
 def acquire_reference(
     ref: Reference,
     download_dir: str | Path,
@@ -781,6 +870,7 @@ def acquire_reference(
     libgen_topics: tuple = ("articles", "books"),
     timeout: int = 30000,
     verbose: bool = False,
+    fetch_fallback: bool = True,
 ) -> AcquisitionResult:
     """Try to acquire a single reference PDF.
 
@@ -790,6 +880,11 @@ def acquire_reference(
 
     The legacy chain now searches all ``libgen_topics`` simultaneously
     in a single request (multi-topic search), rather than sequentially.
+
+    If all academic strategies fail and *fetch_fallback* is ``True`` (the
+    default), and the reference has a URL, the page is fetched as Markdown
+    via :func:`citeget.fetch.fetch_one`. This catches non-paper references
+    (blog posts, docs, product pages) that won't appear in libgen/arxiv.
 
     Args:
         ref: The reference to acquire.
@@ -801,6 +896,8 @@ def acquire_reference(
         libgen_topics: Topics to search on libgen (searched simultaneously).
         timeout: Timeout for browser operations (legacy chain only).
         verbose: Print diagnostic info on download attempts.
+        fetch_fallback: If True (default), fall back to fetching ``ref.url``
+            as Markdown when all academic strategies fail.
     """
     download_dir = Path(download_dir)
     download_dir.mkdir(parents=True, exist_ok=True)
@@ -837,11 +934,8 @@ def acquire_reference(
                 filepath=result_path,
                 method="resolved",
             )
-        return AcquisitionResult(
-            reference=ref,
-            success=False,
-            method="failed",
-            notes="All strategies exhausted",
+        return _try_fetch_fallback(
+            ref, download_dir, log_entries=log_entries, enabled=fetch_fallback
         )
 
     # --- Legacy hard-coded chain (backward compatible) ---
@@ -924,11 +1018,9 @@ def acquire_reference(
             method="scihub_doi",
         )
 
-    return AcquisitionResult(
-        reference=ref,
-        success=False,
-        method="failed",
-        notes="All strategies exhausted",
+    # 5. Last-resort: fetch the reference URL as Markdown (non-paper sources)
+    return _try_fetch_fallback(
+        ref, download_dir, log_entries=log_entries, enabled=fetch_fallback
     )
 
 
@@ -942,6 +1034,7 @@ def acquire_all_references(
     libgen_topics: tuple = ("articles", "books"),
     delay: float = 2.0,
     verbose: bool = True,
+    fetch_fallback: bool = True,
 ) -> tuple:
     """Acquire PDFs for a list of references.
 
@@ -1014,6 +1107,7 @@ def acquire_all_references(
             strategy=strategy,
             libgen_topics=libgen_topics,
             verbose=verbose,
+            fetch_fallback=fetch_fallback,
         )
 
         if result.success:

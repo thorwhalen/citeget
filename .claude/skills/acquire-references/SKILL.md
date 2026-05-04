@@ -9,7 +9,13 @@ allowed-tools: Bash, Read, Write, Grep, Glob, Agent
 
 Download PDFs for all references cited in an academic document. Uses a
 multi-strategy approach: direct URL → arxiv → libgen search (with
-progressively adjusted query specificity).
+progressively adjusted query specificity) → optional fetch fallback (saves
+the reference URL as Markdown when no PDF is reachable).
+
+**For non-academic URL lists** (blog posts, product pages, docs, specs)
+prefer the more general `/fetch-resources` skill — this skill is tuned for
+finding paper PDFs in libgen / arxiv / sci-hub, which won't help for web
+content.
 
 ## Working directory resolution
 
@@ -137,10 +143,29 @@ When the primary libgen download path (ads.php → get.php) fails,
 library.lol, etc.).  Download errors are now logged with diagnostic
 details so failures can be investigated.
 
+## Fetch fallback (for non-paper URLs)
+
+When all academic strategies fail and the reference has a URL,
+`acquire_reference()` falls back to fetching that URL as Markdown via
+`citeget.fetch.fetch_one`. This catches references that point at web pages
+(blogs, product pages, specs, docs) instead of papers — the resulting `.md`
+goes into the same download dir as the PDFs.
+
+To disable, pass `fetch_fallback=False`:
+
+```python
+acquire_all_references(refs, download_dir, fetch_fallback=False)
+```
+
+When the entire reference list is non-papers, skip this skill and use
+`/fetch-resources` directly — it's faster (no libgen / arxiv attempts) and
+the API is designed for the bulk-URL case.
+
 ## Tips
 
-- **Skip non-papers**: Exclude web pages (Math Genealogy, Wikipedia),
-  unpublished preprints with no PDF, and similar non-acquirable items
+- **Skip non-papers**: For lists that are *all* web pages (Wikipedia,
+  blogs), use `/fetch-resources` instead — this skill burns time trying
+  libgen/arxiv/sci-hub on URLs that will never resolve there.
 - **Rate limiting**: The default 2s delay between operations is respectful.
   Don't decrease it.
 - **Re-downloading**: Already-downloaded files are reported and skipped. To

@@ -98,6 +98,17 @@ from citeget.resolve import (
     BUILTIN_URL_RULES,
 )
 
+from citeget.fetch import (
+    fetch,
+    fetch_one,
+    extract_urls_from_text,
+    infer_filename,
+    html_to_markdown,
+    html_to_pdf,
+    FetchResult,
+    UrlEntry,
+)
+
 __all__ = [
     # Core search/download
     "search",
@@ -143,4 +154,13 @@ __all__ = [
     "write_missed_references_md",
     "Reference",
     "AcquisitionResult",
+    # General-purpose fetch (any URL → md/pdf)
+    "fetch",
+    "fetch_one",
+    "extract_urls_from_text",
+    "infer_filename",
+    "html_to_markdown",
+    "html_to_pdf",
+    "FetchResult",
+    "UrlEntry",
 ]

@@ -5,11 +5,15 @@
 A toolkit for finding, acquiring, and managing academic references. Designed
 for AI agents (Claude Code skills) and humans (CLI + Python API).
 
-**Two main capabilities:**
+**Three main capabilities:**
 
-1. **Reference acquisition** — given a document with citations, automatically
-   download PDFs via direct URL, arxiv, libgen, or sci-hub.
-2. **Article publication** — journal profiling, pre-submission checking,
+1. **General fetch** — any URL(s) saved as Markdown (default), PDF, or
+   original bytes. Standalone or as a fallback when academic strategies
+   miss. See `citeget/fetch.py`.
+2. **Reference acquisition** — given a document with academic citations,
+   download PDFs via direct URL, arxiv, libgen, or sci-hub. Falls back to
+   the general `fetch` for non-paper URLs.
+3. **Article publication** — journal profiling, pre-submission checking,
    formatting, and submission preparation (via Claude skills).
 
 ## Package structure
@@ -17,10 +21,13 @@ for AI agents (Claude Code skills) and humans (CLI + Python API).
 ```
 citeget/
 ├── __init__.py              # Public API
-├── cli.py                   # CLI entry points (search, download, acquire)
+├── cli.py                   # CLI entry points (search, download, acquire, fetch)
 ├── __main__.py              # python -m citeget
 ├── core.py                  # Libgen search & download (requires playwright)
-├── acquire_references.py    # Multi-strategy reference acquisition
+├── acquire_references.py    # Multi-strategy academic-reference acquisition
+├── resolve.py               # Composable resolver/downloader/strategy registries
+├── fetch.py                 # General URL → file (md/pdf/original) routing
+├── extract.py               # Reference-text parsers
 ├── data/                    # Reference docs
 └── article_pub/             # Article publication toolkit
     ├── data/journal_profiles.json
@@ -31,7 +38,9 @@ citeget/
 
 - `playwright` — headless browser for libgen (JS-rendered pages)
 - `requests` + `beautifulsoup4` — direct downloads, sci-hub
+- `httpx` + `html2text` — general fetch (HTML→Markdown)
 - `argh` — CLI dispatch
+- `pdfkit` (optional, `[fetch]` extra) + `wkhtmltopdf` system binary — HTML→PDF
 
 Install playwright browsers: `python -m playwright install chromium`
 
@@ -39,7 +48,8 @@ Install playwright browsers: `python -m playwright install chromium`
 
 | Skill | Purpose |
 |-------|---------|
-| `acquire-references` | Bulk-acquire PDFs for all references in a document |
+| `fetch-resources` | Download arbitrary URLs as Markdown / PDF (general) |
+| `acquire-references` | Bulk-acquire PDFs for academic references in a document |
 | `research-topic` | Deep literature research for article writing |
 | `review-article` | Expert peer-review style critique |
 | `check-submission-fit` | Journal venue recommendation |

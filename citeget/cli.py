@@ -177,9 +177,92 @@ def acquire(
     print(f"{_ts()} Output: {wd}")
 
 
+def fetch(
+    source: str,
+    *,
+    output_dir: str = "~/Downloads",
+    prefer: str = "md",
+    timeout: int = 30,
+    skip_existing: bool = True,
+    manifest: str = "",
+):
+    """Fetch URLs and save them as Markdown (default), PDF, or original.
+
+    *source* may be a URL, a file path containing URLs, or a string with
+    prose / markdown / reference-style citations. Multiple URLs are extracted
+    automatically.
+
+    Args:
+        source: A URL, file path, or text containing URLs.
+        output_dir: Where to save files (default: ~/Downloads).
+        prefer: "md" (default), "pdf", "original", or "auto".
+            PDF requires the `[fetch]` extra (`pip install citeget[fetch]`)
+            and a `wkhtmltopdf` system binary for HTML→PDF conversion.
+        timeout: HTTP timeout per request, in seconds.
+        skip_existing: If true (default), skip URLs whose output exists.
+        manifest: Optional path to write a JSON manifest of results.
+    """
+    import json
+    from pathlib import Path
+    from citeget import fetch as do_fetch
+
+    def _on_result(i, total, result):
+        title = f" — {result.title[:60]}" if result.title else ""
+        ref = f"[{result.ref}] " if result.ref else ""
+        if result.status == "ok":
+            print(
+                f"{_ts()} [{i}/{total}] OK   {ref}{result.url}{title}\n"
+                f"           -> {result.output_file.name} ({result.format})"
+            )
+        elif result.status == "skipped":
+            print(f"{_ts()} [{i}/{total}] SKIP {ref}{result.url} (exists)")
+        else:
+            print(
+                f"{_ts()} [{i}/{total}] FAIL {ref}{result.url}: "
+                f"{result.error or 'unknown'}"
+            )
+
+    results = do_fetch(
+        source,
+        output_dir=output_dir,
+        prefer=prefer,
+        timeout=timeout,
+        skip_existing=skip_existing,
+        on_result=_on_result,
+    )
+
+    ok = sum(1 for r in results if r.status == "ok")
+    skipped = sum(1 for r in results if r.status == "skipped")
+    failed = sum(1 for r in results if r.status == "failed")
+    print(f"\n{_ts()} Done: {ok} fetched, {skipped} skipped, {failed} failed")
+
+    if manifest:
+        manifest_path = Path(manifest).expanduser()
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(
+            json.dumps(
+                [
+                    {
+                        "url": r.url,
+                        "status": r.status,
+                        "output_file": str(r.output_file) if r.output_file else None,
+                        "format": r.format,
+                        "title": r.title,
+                        "ref": r.ref,
+                        "error": r.error,
+                    }
+                    for r in results
+                ],
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        print(f"{_ts()} Manifest: {manifest_path}")
+
+
 def main():
     """CLI dispatcher."""
-    argh.dispatch_commands([search, download, acquire])
+    argh.dispatch_commands([search, download, acquire, fetch])
 
 
 if __name__ == "__main__":
