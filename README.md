@@ -7,6 +7,11 @@ papers. Point it at a document with a references section, and it will try
 every available source — direct URLs, arxiv, Library Genesis, Sci-Hub — to
 download each one.
 
+It also handles the more general case: any list of URLs (blog posts, docs,
+specs, product pages) saved as Markdown or PDF — useful when references
+aren't peer-reviewed papers. See [`citeget fetch`](#general-purpose-fetch)
+below.
+
 ## Install
 
 ```bash
@@ -25,8 +30,12 @@ citeget search "graph theory" --topic articles
 # Download top results
 citeget download "python programming" --download-dir ~/papers --max-downloads 3
 
-# Acquire all references from a document
+# Acquire all references from a document (academic mode)
 citeget acquire my_paper.md
+
+# Fetch arbitrary URLs — markdown by default, pdf if you ask for it
+citeget fetch "https://example.com/article" --output-dir ~/Downloads/refs
+citeget fetch refs.md --prefer md   # accepts a file with URLs in any form
 ```
 
 The `acquire` command reads the references section, resolves a working
@@ -130,7 +139,8 @@ Available skills:
 
 | Skill | What it does |
 |-------|-------------|
-| `/acquire-references` | Download PDFs for every reference in a document |
+| `/fetch-resources` | Download arbitrary URLs as Markdown / PDF (general) |
+| `/acquire-references` | Download PDFs for every reference in an academic document |
 | `/research-topic` | Deep literature survey with structured research brief |
 | `/review-article` | Peer-review style critique with scored dimensions |
 | `/check-submission-fit` | Journal venue recommendation with fit scores |
@@ -147,10 +157,46 @@ For each reference, `citeget` tries these sources in order:
    specificity (full title → title + author → short title → author + year).
 3. **Arxiv API** — structured search by author + title keywords.
 4. **Sci-Hub** — DOI lookup via Crossref, then Sci-Hub download.
+5. **Fetch fallback** — if no PDF is reachable but the reference has a URL,
+   the page is fetched and saved as Markdown. Catches non-paper references
+   (blog posts, docs, product pages). Disable with `fetch_fallback=False`.
 
 Files are named in APA 7 citation style:
 `{title} ({authors_apa7}, {year}).pdf` — e.g.,
 `Retiming synchronous circuitry (Leiserson & Saxe, 1991).pdf`
+
+## General-purpose fetch
+
+Not all "references" are papers. For lists of arbitrary web URLs, use
+`citeget fetch` (or `citeget.fetch()`) — it accepts a URL, a list, a file
+of URLs, or prose with embedded URLs, and saves each one as Markdown
+(default), PDF, or original bytes.
+
+```python
+from citeget import fetch
+
+# Pass anything — citeget figures out what URLs are in there
+results = fetch(
+    "/path/to/links.md",
+    output_dir="~/Downloads/refs",
+    prefer="md",  # "md" (default), "pdf", "original", or "auto"
+)
+for r in results:
+    print(r.status, r.format, r.output_file)
+```
+
+URL parsing recognizes markdown links `[anchor](url)`, reference-style
+`[1] ... https://url` citations, and bare URLs in prose. Filenames are
+inferred from anchor text → URL path → domain hash.
+
+PDF rendering is opt-in (HTML→PDF needs `wkhtmltopdf`):
+
+```bash
+pip install 'citeget[fetch]'
+brew install wkhtmltopdf      # or apt-get install wkhtmltopdf
+```
+
+Without it, `--prefer pdf` quietly falls back to Markdown.
 
 ## Article publication toolkit
 

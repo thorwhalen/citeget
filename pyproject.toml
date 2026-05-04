@@ -26,6 +26,8 @@ dependencies = [
     "playwright",
     "requests",
     "beautifulsoup4",
+    "httpx",
+    "html2text",
     "argh",
 ]
 
@@ -48,6 +50,9 @@ dev = [
 docs = [
     "sphinx>=6.0",
     "sphinx-rtd-theme>=1.0",
+]
+fetch = [
+    "pdfkit",
 ]
 
 [tool.ruff]
