@@ -336,7 +336,9 @@ def fetch_one(
     output_dir = Path(output_dir).expanduser()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    result = FetchResult(url=entry.url, status="failed", title=entry.title, ref=entry.ref)
+    result = FetchResult(
+        url=entry.url, status="failed", title=entry.title, ref=entry.ref
+    )
 
     resp = _http_get(entry.url, timeout=timeout)
     if resp is None:
@@ -348,8 +350,13 @@ def fetch_one(
         # If user wants md, we still save it as pdf (can't convert PDF→md here);
         # for any other choice, save as pdf.
         return _save_bytes(
-            entry, output_dir, resp.content, ext="pdf",
-            fmt="pdf", skip_existing=skip_existing, result=result,
+            entry,
+            output_dir,
+            resp.content,
+            ext="pdf",
+            fmt="pdf",
+            skip_existing=skip_existing,
+            result=result,
         )
 
     html = resp.text
@@ -362,15 +369,25 @@ def fetch_one(
             pdf_resp = _http_get(pdf_url, timeout=timeout)
             if pdf_resp is not None and _is_pdf_response(pdf_resp):
                 return _save_bytes(
-                    entry, output_dir, pdf_resp.content, ext="pdf",
-                    fmt="pdf", skip_existing=skip_existing, result=result,
+                    entry,
+                    output_dir,
+                    pdf_resp.content,
+                    ext="pdf",
+                    fmt="pdf",
+                    skip_existing=skip_existing,
+                    result=result,
                 )
 
         pdf_bytes = html_to_pdf(entry.url, html=html)
         if pdf_bytes:
             return _save_bytes(
-                entry, output_dir, pdf_bytes, ext="pdf",
-                fmt="pdf", skip_existing=skip_existing, result=result,
+                entry,
+                output_dir,
+                pdf_bytes,
+                ext="pdf",
+                fmt="pdf",
+                skip_existing=skip_existing,
+                result=result,
             )
         logger.info("HTML→PDF unavailable; falling back to Markdown for %s", entry.url)
 
@@ -379,15 +396,25 @@ def fetch_one(
         ct = resp.headers.get("content-type", "").lower()
         ext = "html" if "html" in ct or "xml" in ct else "bin"
         return _save_bytes(
-            entry, output_dir, resp.content, ext=ext,
-            fmt="original", skip_existing=skip_existing, result=result,
+            entry,
+            output_dir,
+            resp.content,
+            ext=ext,
+            fmt="original",
+            skip_existing=skip_existing,
+            result=result,
         )
 
     # --- Default: Markdown -------------------------------------------------
     md = html_to_markdown(html, source_url=entry.url)
     return _save_text(
-        entry, output_dir, md, ext="md", fmt="md",
-        skip_existing=skip_existing, result=result,
+        entry,
+        output_dir,
+        md,
+        ext="md",
+        fmt="md",
+        skip_existing=skip_existing,
+        result=result,
     )
 
 
