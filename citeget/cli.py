@@ -18,17 +18,33 @@ def search(
     *,
     topic: str = "books",
     results_per_page: int = 100,
+    base_url: str = "",
+    mirrors: str = "",
 ):
-    """Search libgen.vg and print results as a numbered table.
+    """Search libgen and print results as a numbered table.
 
     Args:
         query: Search terms.
         topic: "books", "articles", "fiction", "comics", "magazines", "standards".
         results_per_page: Results per page (25, 50, or 100).
+        base_url: Force a single mirror (e.g. https://libgen.vg).
+        mirrors: Comma-separated ordered list of mirror base URLs to try.
     """
-    from citeget import search as do_search
+    from citeget import search as do_search, MirrorUnreachableError
 
-    results = do_search(query, topic=topic, results_per_page=results_per_page)
+    mirror_list = [m.strip() for m in mirrors.split(",") if m.strip()] or None
+
+    try:
+        results = do_search(
+            query,
+            topic=topic,
+            results_per_page=results_per_page,
+            base_url=base_url or None,
+            mirrors=mirror_list,
+        )
+    except MirrorUnreachableError as exc:
+        print(f"ERROR: {exc}")
+        return
 
     if not results:
         print("No results found.")
@@ -53,8 +69,10 @@ def download(
     download_dir: str = ".",
     max_downloads: int = 5,
     delay: float = 2.0,
+    base_url: str = "",
+    mirrors: str = "",
 ):
-    """Search libgen.vg and download top results.
+    """Search libgen and download top results.
 
     Args:
         query: Search terms.
@@ -62,16 +80,26 @@ def download(
         download_dir: Directory to save files into.
         max_downloads: Max number of files to download (0 = all).
         delay: Seconds between downloads (rate limiting).
+        base_url: Force a single mirror (e.g. https://libgen.vg).
+        mirrors: Comma-separated ordered list of mirror base URLs to try.
     """
-    from citeget import search_and_download
+    from citeget import search_and_download, MirrorUnreachableError
 
-    downloaded = search_and_download(
-        query,
-        topic=topic,
-        download_dir=download_dir,
-        max_downloads=max_downloads,
-        delay=delay,
-    )
+    mirror_list = [m.strip() for m in mirrors.split(",") if m.strip()] or None
+
+    try:
+        downloaded = search_and_download(
+            query,
+            topic=topic,
+            download_dir=download_dir,
+            max_downloads=max_downloads,
+            delay=delay,
+            base_url=base_url or None,
+            mirrors=mirror_list,
+        )
+    except MirrorUnreachableError as exc:
+        print(f"ERROR: {exc}")
+        return
 
     successes = sum(1 for _, f in downloaded if f)
     print(
