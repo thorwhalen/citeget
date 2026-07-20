@@ -53,6 +53,8 @@ from citeget.core import (
     download_one,
     search_and_download,
     TOPIC_ALIASES,
+    DEFAULT_LIBGEN_MIRRORS,
+    MirrorUnreachableError,
 )
 
 from citeget.acquire_references import (
@@ -116,6 +118,8 @@ __all__ = [
     "download_one",
     "search_and_download",
     "TOPIC_ALIASES",
+    "DEFAULT_LIBGEN_MIRRORS",
+    "MirrorUnreachableError",
     # Reference parsing (low-level)
     "parse_reference",
     "parse_references_section",

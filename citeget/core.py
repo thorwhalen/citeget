@@ -1,4 +1,4 @@
-"""Core search and download logic for libgen.vg.
+"""Core search and download logic for libgen (libgen.vg-family mirrors).
 
 Requires: playwright (with chromium browser installed).
 Install browsers: ``python -m playwright install chromium``
@@ -10,6 +10,22 @@ The flow:
 4. For each result to download:
    a. Visit /ads.php to get session key
    b. Download file from /get.php
+
+Mirror configuration
+--------------------
+Libgen mirrors rotate domains often, and a mirror can also be unreachable
+because the local network/DNS blocks it (e.g. resolving it to 127.0.0.1).
+``search()`` therefore tries several mirrors in order and raises
+:class:`MirrorUnreachableError` with an actionable message if none respond.
+
+Override the mirror list without editing code:
+
+- ``CITEGET_LIBGEN_MIRRORS`` — comma-separated base URLs (highest precedence)
+- ``CITEGET_LIBGEN_BASE_URL`` — a single base URL
+- or pass ``base_url=`` / ``mirrors=`` to ``search()`` / ``search_and_download()``
+
+Only libgen.vg-family mirrors (JS ``#tablelibgen`` layout) are compatible with
+this parser; the older libgen.is/.rs/.st forks use different HTML.
 """
 
 import re
@@ -25,7 +41,119 @@ def _ts():
     return datetime.now().strftime("[%H:%M:%S]")
 
 
-BASE_URL = "https://libgen.vg"
+# Known libgen mirrors that share the libgen.vg-family page structure
+# (JS-rendered ``#tablelibgen`` table, ``/ads.php`` -> ``/get.php`` download flow).
+# The older libgen.is/.rs/.st forks use a different HTML layout and are NOT
+# drop-in compatible with this parser, so they are intentionally excluded.
+# Mirrors rotate domains frequently; override at runtime without editing code
+# via the ``CITEGET_LIBGEN_MIRRORS`` / ``CITEGET_LIBGEN_BASE_URL`` env vars, or
+# by passing ``base_url=``/``mirrors=`` to ``search()``.
+DEFAULT_LIBGEN_MIRRORS = (
+    "https://libgen.vg",
+    "https://libgen.gs",
+    "https://libgen.la",
+)
+
+# Default single base URL (first mirror). Kept for backwards compatibility with
+# callers/tests that import ``BASE_URL`` directly.
+BASE_URL = DEFAULT_LIBGEN_MIRRORS[0]
+
+# Substrings that mark a browser-level "could not connect" failure, as opposed
+# to a page that loaded but simply had no results. Used to decide whether to
+# fail over to the next mirror.
+_UNREACHABLE_MARKERS = (
+    "ERR_CONNECTION_REFUSED",
+    "ERR_NAME_NOT_RESOLVED",
+    "ERR_CONNECTION_TIMED_OUT",
+    "ERR_CONNECTION_RESET",
+    "ERR_CONNECTION_CLOSED",
+    "ERR_ADDRESS_UNREACHABLE",
+    "ERR_INTERNET_DISCONNECTED",
+    "ERR_SOCKET_NOT_CONNECTED",
+    "ERR_TIMED_OUT",
+    "ERR_EMPTY_RESPONSE",
+    "net::ERR",
+    "Timeout",
+)
+
+
+class MirrorUnreachableError(RuntimeError):
+    """Raised when no libgen mirror could be reached.
+
+    Distinct from an empty result set: this means every candidate mirror
+    failed to connect (down, moved, or blocked by local DNS/network), so the
+    caller gets an actionable message instead of a raw Playwright stack trace.
+    """
+
+
+def _looks_like_unreachable(exc: Exception) -> bool:
+    """True if *exc* looks like a connection failure (vs. a parsing/page issue)."""
+    text = str(exc)
+    return any(marker in text for marker in _UNREACHABLE_MARKERS)
+
+
+def _env_mirrors() -> tuple | None:
+    """Read mirror overrides from the environment, or None if unset.
+
+    ``CITEGET_LIBGEN_MIRRORS`` (comma-separated) takes precedence over
+    ``CITEGET_LIBGEN_BASE_URL`` (single). Returns a normalized tuple or None.
+    """
+    multi = os.environ.get("CITEGET_LIBGEN_MIRRORS")
+    if multi:
+        mirrors = tuple(m.strip().rstrip("/") for m in multi.split(",") if m.strip())
+        if mirrors:
+            return mirrors
+    single = os.environ.get("CITEGET_LIBGEN_BASE_URL")
+    if single and single.strip():
+        return (single.strip().rstrip("/"),)
+    return None
+
+
+def _resolve_mirrors(
+    base_url: str | None = None, mirrors: tuple | list | None = None
+) -> tuple:
+    """Resolve the ordered list of mirror base URLs to try.
+
+    Precedence: explicit ``mirrors`` > explicit ``base_url`` > env vars >
+    ``DEFAULT_LIBGEN_MIRRORS``. This is the single source of truth for which
+    mirrors ``search()`` attempts.
+    """
+    if mirrors:
+        return tuple(m.rstrip("/") for m in mirrors)
+    if base_url:
+        return (base_url.rstrip("/"),)
+    env = _env_mirrors()
+    if env:
+        return env
+    return DEFAULT_LIBGEN_MIRRORS
+
+
+def _format_unreachable_message(query: str, attempts: list) -> str:
+    """Build an actionable error message listing the mirrors tried and why each failed."""
+    tried = ", ".join(base for base, _ in attempts) or "(none)"
+    lines = [
+        f"Could not reach any libgen mirror for query {query!r}.",
+        f"Tried: {tried}.",
+        "",
+        "Common causes:",
+        "  - the mirror(s) are temporarily down or have moved to a new domain",
+        "  - your network/DNS is blocking these domains (e.g. resolving them",
+        "    to 127.0.0.1, which yields ERR_CONNECTION_REFUSED almost instantly)",
+        "",
+        "Fixes:",
+        "  - point citeget at a working mirror without editing code:",
+        "      export CITEGET_LIBGEN_MIRRORS='https://libgen.xyz,https://libgen.gs'",
+        "      (or CITEGET_LIBGEN_BASE_URL for a single mirror)",
+        "  - or pass base_url=/mirrors= to search()",
+        "  - if a specific domain resolves to 127.0.0.1, check your DNS/VPN filter",
+        "",
+        "Last error per mirror:",
+    ]
+    for base, exc in attempts:
+        first_line = str(exc).splitlines()[0] if str(exc) else repr(exc)
+        lines.append(f"  {base}: {first_line}")
+    return "\n".join(lines)
+
 
 TOPIC_ALIASES = {
     "books": "l",
@@ -63,14 +191,16 @@ def _resolve_topic(topic: str) -> str:
 def _build_search_url(
     query: str,
     *,
+    base_url: str = BASE_URL,
     topic: str = "l",
     topics: tuple | list | None = None,
     results_per_page: int = 25,
 ):
-    """Build the search URL for libgen.vg.
+    """Build the search URL for a libgen mirror.
 
     Args:
         query: Search terms.
+        base_url: Mirror base URL (e.g. ``https://libgen.vg``).
         topic: Single topic code (used when ``topics`` is None).
         topics: Multiple topic codes to search simultaneously
             (e.g. ``("l", "f", "a")``).  Overrides ``topic``.
@@ -93,7 +223,7 @@ def _build_search_url(
 
     parts.append(f"res={results_per_page}")
     parts.append("filesuns=all")
-    return f"{BASE_URL}/index.php?{'&'.join(parts)}"
+    return f"{base_url.rstrip('/')}/index.php?{'&'.join(parts)}"
 
 
 def _parse_title_cell(cell):
@@ -226,8 +356,16 @@ def search(
     results_per_page: int = 100,
     headless: bool = True,
     timeout: int = 20000,
+    base_url: str | None = None,
+    mirrors: tuple | list | None = None,
 ) -> list:
-    """Search libgen.vg and return a list of result dicts.
+    """Search a libgen mirror and return a list of result dicts.
+
+    Tries each candidate mirror in order and uses the first one that is
+    reachable. If every mirror fails to connect, raises
+    :class:`MirrorUnreachableError` with an actionable message rather than a
+    raw browser stack trace. A mirror that loads but has no matching table is
+    treated as an authoritative "no results" (returns ``[]``), not a failure.
 
     Args:
         query: Search terms.
@@ -238,53 +376,79 @@ def search(
         results_per_page: How many results per page (25, 50, or 100).
         headless: Run browser in headless mode (default True).
         timeout: Page load timeout in ms.
+        base_url: Force a single mirror (e.g. ``https://libgen.vg``). Overrides
+            env vars and the default list.
+        mirrors: Explicit ordered list of mirror base URLs to try. Overrides
+            ``base_url``, env vars, and the default list.
 
     Returns:
         List of dicts with keys: title, authors, publisher, year, language,
-        pages, size, extension, doi, series, md5, libgen_href, mirrors.
+        pages, size, extension, doi, series, md5, file_id, libgen_href,
+        mirrors, and ``base_url`` (the mirror the result came from, so the
+        download step can resolve the same mirror's relative links).
+
+    Raises:
+        MirrorUnreachableError: if no candidate mirror could be reached.
     """
     from playwright.sync_api import sync_playwright
 
+    candidates = _resolve_mirrors(base_url, mirrors)
+
     if topics is not None:
         topic_codes = tuple(_resolve_topic(t) for t in topics)
-        url = _build_search_url(
-            query,
-            topics=topic_codes,
-            results_per_page=results_per_page,
-        )
+        build_kwargs = dict(topics=topic_codes, results_per_page=results_per_page)
     else:
         topic_code = _resolve_topic(topic)
-        url = _build_search_url(
-            query,
-            topic=topic_code,
-            results_per_page=results_per_page,
-        )
+        build_kwargs = dict(topic=topic_code, results_per_page=results_per_page)
 
+    attempts = []
     with sync_playwright() as p:
         browser, context = _create_browser_context(p, headless=headless)
         try:
             page = context.new_page()
-            page.goto(url, wait_until="networkidle", timeout=timeout)
+            for base in candidates:
+                url = _build_search_url(query, base_url=base, **build_kwargs)
+                try:
+                    page.goto(url, wait_until="networkidle", timeout=timeout)
+                except Exception as exc:
+                    attempts.append((base, exc))
+                    if _looks_like_unreachable(exc):
+                        continue  # dead/blocked mirror — try the next one
+                    continue  # other load errors: also move on to next mirror
 
-            table = page.query_selector("#tablelibgen")
-            if not table:
-                return []
+                # Mirror is reachable — treat its response as authoritative.
+                table = page.query_selector("#tablelibgen")
+                if not table:
+                    return []
+                results = _parse_results_table(table)
+                for r in results:
+                    r["base_url"] = base
+                return results
 
-            return _parse_results_table(table)
+            raise MirrorUnreachableError(
+                _format_unreachable_message(query, attempts)
+            )
         finally:
             browser.close()
 
 
-def _get_download_url(page, ads_url: str, *, timeout: int = 15000) -> Optional[str]:
-    """Navigate to ads.php and extract the get.php download URL."""
-    full_url = f"{BASE_URL}{ads_url}" if ads_url.startswith("/") else ads_url
+def _get_download_url(
+    page, ads_url: str, *, base_url: str = BASE_URL, timeout: int = 15000
+) -> Optional[str]:
+    """Navigate to ads.php and extract the get.php download URL.
+
+    Relative links are resolved against *base_url* (the mirror the result came
+    from), so downloads stay on the same mirror the search succeeded on.
+    """
+    base = base_url.rstrip("/")
+    full_url = f"{base}{ads_url}" if ads_url.startswith("/") else ads_url
     page.goto(full_url, wait_until="networkidle", timeout=timeout)
 
     get_link = page.query_selector('a[href*="get.php"]')
     if get_link:
         href = get_link.get_attribute("href")
         if href and not href.startswith("http"):
-            href = f"{BASE_URL}/{href}"
+            href = f"{base}/{href.lstrip('/')}"
         return href
     return None
 
@@ -359,16 +523,23 @@ def _make_filename(result: dict) -> str:
 
 
 def _try_libgen_download(
-    pg, ads_url: str, filepath: Path, *, timeout: int, delay: float
+    pg,
+    ads_url: str,
+    filepath: Path,
+    *,
+    base_url: str = BASE_URL,
+    timeout: int,
+    delay: float,
 ):
     """Try the primary libgen download path: ads.php -> get.php.
 
     Returns filepath on success, raises on failure with a descriptive message.
+    Relative links are resolved against *base_url* (the result's mirror).
     """
     if delay:
         time.sleep(delay)
 
-    get_url = _get_download_url(pg, ads_url, timeout=timeout)
+    get_url = _get_download_url(pg, ads_url, base_url=base_url, timeout=timeout)
     if not get_url:
         raise RuntimeError("No get.php link found on ads.php page")
 
@@ -464,6 +635,7 @@ def download_one(
 
     libgen_href = result.get("libgen_href", "")
     mirrors = result.get("mirrors", {})
+    base_url = result.get("base_url") or BASE_URL
     if not libgen_href and not mirrors:
         return None
 
@@ -487,6 +659,7 @@ def download_one(
                     pg,
                     libgen_href,
                     filepath,
+                    base_url=base_url,
                     timeout=timeout,
                     delay=delay,
                 )
@@ -602,6 +775,8 @@ def search_and_download(
     headless: bool = True,
     timeout: int = 30000,
     verbose: bool = True,
+    base_url: str | None = None,
+    mirrors: tuple | list | None = None,
 ) -> list:
     """Search libgen and download matching results in one shot.
 
@@ -618,12 +793,17 @@ def search_and_download(
         headless: Headless browser mode.
         timeout: Timeout in ms for page loads.
         verbose: Print progress.
+        base_url: Force a single mirror. Overrides env vars and the default list.
+        mirrors: Explicit ordered list of mirror base URLs to try.
 
     Returns:
         List of (result_dict, filepath_or_None) tuples.
+
+    Raises:
+        MirrorUnreachableError: if no candidate mirror could be reached.
     """
     if verbose:
-        print(f"{_ts()} Searching libgen.vg for: {query!r} (topic={topic})...")
+        print(f"{_ts()} Searching libgen for: {query!r} (topic={topic})...")
 
     results = search(
         query,
@@ -631,6 +811,8 @@ def search_and_download(
         results_per_page=results_per_page,
         headless=headless,
         timeout=timeout,
+        base_url=base_url,
+        mirrors=mirrors,
     )
 
     if verbose:
