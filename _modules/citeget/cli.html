@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.cli &mdash; citeget 0.2.3 documentation</title>
+  <title>citeget.cli &mdash; citeget 0.2.4 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=a47416a6"></script>
+      <script src="../../_static/documentation_options.js?v=6ffd866b"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -104,17 +104,33 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">topic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;books&quot;</span><span class="p">,</span>
     <span class="n">results_per_page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">mirrors</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Search libgen.vg and print results as a numbered table.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Search libgen and print results as a numbered table.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        query: Search terms.</span>
 <span class="sd">        topic: &quot;books&quot;, &quot;articles&quot;, &quot;fiction&quot;, &quot;comics&quot;, &quot;magazines&quot;, &quot;standards&quot;.</span>
 <span class="sd">        results_per_page: Results per page (25, 50, or 100).</span>
+<span class="sd">        base_url: Force a single mirror (e.g. https://libgen.vg).</span>
+<span class="sd">        mirrors: Comma-separated ordered list of mirror base URLs to try.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">search</span> <span class="k">as</span> <span class="n">do_search</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">search</span> <span class="k">as</span> <span class="n">do_search</span><span class="p">,</span> <span class="n">MirrorUnreachableError</span>
 
-    <span class="n">results</span> <span class="o">=</span> <span class="n">do_search</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span> <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">)</span>
+    <span class="n">mirror_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mirrors</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="ow">or</span> <span class="kc">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">do_search</span><span class="p">(</span>
+            <span class="n">query</span><span class="p">,</span>
+            <span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span>
+            <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">,</span>
+            <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">mirrors</span><span class="o">=</span><span class="n">mirror_list</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">MirrorUnreachableError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ERROR: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">results</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No results found.&quot;</span><span class="p">)</span>
@@ -142,8 +158,10 @@
     <span class="n">download_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
     <span class="n">max_downloads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
     <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+    <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">mirrors</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Search libgen.vg and download top results.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Search libgen and download top results.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        query: Search terms.</span>
@@ -151,16 +169,26 @@
 <span class="sd">        download_dir: Directory to save files into.</span>
 <span class="sd">        max_downloads: Max number of files to download (0 = all).</span>
 <span class="sd">        delay: Seconds between downloads (rate limiting).</span>
+<span class="sd">        base_url: Force a single mirror (e.g. https://libgen.vg).</span>
+<span class="sd">        mirrors: Comma-separated ordered list of mirror base URLs to try.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">search_and_download</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">search_and_download</span><span class="p">,</span> <span class="n">MirrorUnreachableError</span>
 
-    <span class="n">downloaded</span> <span class="o">=</span> <span class="n">search_and_download</span><span class="p">(</span>
-        <span class="n">query</span><span class="p">,</span>
-        <span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span>
-        <span class="n">download_dir</span><span class="o">=</span><span class="n">download_dir</span><span class="p">,</span>
-        <span class="n">max_downloads</span><span class="o">=</span><span class="n">max_downloads</span><span class="p">,</span>
-        <span class="n">delay</span><span class="o">=</span><span class="n">delay</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">mirror_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mirrors</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="ow">or</span> <span class="kc">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">downloaded</span> <span class="o">=</span> <span class="n">search_and_download</span><span class="p">(</span>
+            <span class="n">query</span><span class="p">,</span>
+            <span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span>
+            <span class="n">download_dir</span><span class="o">=</span><span class="n">download_dir</span><span class="p">,</span>
+            <span class="n">max_downloads</span><span class="o">=</span><span class="n">max_downloads</span><span class="p">,</span>
+            <span class="n">delay</span><span class="o">=</span><span class="n">delay</span><span class="p">,</span>
+            <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">mirrors</span><span class="o">=</span><span class="n">mirror_list</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="n">MirrorUnreachableError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ERROR: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
 
     <span class="n">successes</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">downloaded</span> <span class="k">if</span> <span class="n">f</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span>
@@ -375,7 +403,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright NO COPYRIGHT.</p>
+    <p></p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
