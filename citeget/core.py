@@ -425,9 +425,7 @@ def search(
                     r["base_url"] = base
                 return results
 
-            raise MirrorUnreachableError(
-                _format_unreachable_message(query, attempts)
-            )
+            raise MirrorUnreachableError(_format_unreachable_message(query, attempts))
         finally:
             browser.close()
 
