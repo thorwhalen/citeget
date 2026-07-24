@@ -83,7 +83,7 @@ refs = parse_references_section(refs_text)
 successes, failures, log_entries = acquire_all_references(
     refs,
     download_dir=download_dir,
-    work_dir=work_dir,   # enables auto log naming
+    work_dir=work_dir,  # enables auto log naming
 )
 # Log written to: {work_dir}/{datetime}__acquisition_log.txt
 
@@ -124,7 +124,8 @@ successes, failures, log = acquire_all_references(refs, download_dir)
 
 # For books specifically, search books + fiction + articles together
 successes, failures, log = acquire_all_references(
-    refs, download_dir,
+    refs,
+    download_dir,
     libgen_topics=("books", "fiction", "articles"),
 )
 ```

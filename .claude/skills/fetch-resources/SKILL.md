@@ -140,6 +140,7 @@ citeget fetch /path/to/article.md \
 
 ```python
 from citeget import fetch
+
 results = fetch(
     [
         "https://en.wikipedia.org/wiki/Script_supervisor",

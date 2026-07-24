@@ -175,12 +175,16 @@ The page loads ad scripts from `inopportunefable.com`. These inject iframes and 
 Column 0 is the trickiest to parse. It contains multiple links. The article title is the link whose `href` starts with `edition.php` and whose text content does **not** match a date/volume pattern (like "2001-mar vol. 37 iss. 2") and does **not** start with "DOI:". A reliable approach:
 
 ```python
-title_cell = row.query_selector('td:nth-child(1)')
-links = title_cell.query_selector_all('a')
+title_cell = row.query_selector("td:nth-child(1)")
+links = title_cell.query_selector_all("a")
 for link in links:
-    href = link.get_attribute('href') or ''
+    href = link.get_attribute("href") or ""
     text = link.text_content().strip()
-    if href.startswith('edition.php') and not text.startswith('DOI:') and not re.match(r'\d{4}-', text):
+    if (
+        href.startswith("edition.php")
+        and not text.startswith("DOI:")
+        and not re.match(r"\d{4}-", text)
+    ):
         article_title = text
         break
 ```

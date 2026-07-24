@@ -251,6 +251,7 @@ citeget is usable. In Claude Code, run:
 ```python
 try:
     import citeget
+
     _CITEGET = True
 except ImportError:
     _CITEGET = False
@@ -274,6 +275,7 @@ scanning for gaps:
 
 ```python
 from citeget import extract_references
+
 result = extract_references(document_text)
 existing_refs = result.references  # list of Reference objects
 ```
@@ -290,6 +292,7 @@ and web search hasn't surfaced the right paper, use citeget's libgen search:
 
 ```python
 from citeget import search
+
 results = search("cognitive behavioral therapy meta-analysis", topic="articles")
 # Returns list of dicts: title, authors, year, doi, etc.
 ```
