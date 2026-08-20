@@ -25,8 +25,9 @@ can check that what arrived is that book. The others cannot.
 ```python
 from citeget import get_book
 
-path = get_book("Crossing the Chasm", authors="Geoffrey A. Moore",
-                download_dir="~/books")
+path = get_book(
+    "Crossing the Chasm", authors="Geoffrey A. Moore", download_dir="~/books"
+)
 ```
 
 Or `citeget get-book "Crossing the Chasm" --authors "Geoffrey A. Moore"`.
@@ -106,8 +107,11 @@ that. Even so:
    title plus the author's surname.
 
 ```python
-get_book("The Design of Everyday Things", authors="Donald A. Norman",
-         query="Design of Everyday Things Norman")   # override the search string
+get_book(
+    "The Design of Everyday Things",
+    authors="Donald A. Norman",
+    query="Design of Everyday Things Norman",
+)  # override the search string
 ```
 
 ## What "validated" means, and when to relax it
@@ -137,7 +141,7 @@ from dataclasses import replace
 from citeget import get_book, BOOK_POLICY, DEFAULT_POLICY
 
 get_book(title, policy=replace(BOOK_POLICY, min_pages=30))  # short works
-get_book(title, policy=DEFAULT_POLICY)                      # integrity only
+get_book(title, policy=DEFAULT_POLICY)  # integrity only
 ```
 
 `validate=False` disables checking entirely. Don't reach for it to make a
@@ -151,8 +155,8 @@ A path is not proof. Cheap, no extra network:
 ```python
 from citeget.validate import pdf_page_count, epub_markup_bytes
 
-pdf_page_count(path)        # None if not a readable PDF
-epub_markup_bytes(path)     # total xhtml/html bytes inside the epub
+pdf_page_count(path)  # None if not a readable PDF
+epub_markup_bytes(path)  # total xhtml/html bytes inside the epub
 ```
 
 Reporting page counts alongside filenames is the single most useful thing you
@@ -161,10 +165,13 @@ can give the user, because it is what distinguishes a book from an excerpt.
 ## Preferences worth passing on
 
 ```python
-get_book(title, authors=authors,
-         format_preference=("epub", "pdf"),   # e-reader workflow
-         max_candidates=8,                    # try harder before giving up
-         topic="fiction")                     # novels
+get_book(
+    title,
+    authors=authors,
+    format_preference=("epub", "pdf"),  # e-reader workflow
+    max_candidates=8,  # try harder before giving up
+    topic="fiction",
+)  # novels
 ```
 
 `topic` defaults to `"books"`. Use `"fiction"` for novels and `"articles"` for
