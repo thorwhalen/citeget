@@ -62,6 +62,42 @@ def test_compound_initials_still_match_by_surname():
 
 
 @pytest.mark.parametrize(
+    "authors",
+    [
+        # All four forms libgen actually returns for the same two authors.
+        "Brian Christian, Tom Griffiths",
+        "Christian, Brian; Griffiths, Tom",
+        "Christian, Brian;Griffiths, Tom",
+        "Brian Christian; Tom Griffiths",
+    ],
+)
+def test_every_libgen_convention_for_the_same_pair_agrees(authors):
+    """A comma is usually intra-name, but libgen does use it between full
+    names too, which produced 'Algorithms to Live By (Brian Christian, 2016)'."""
+    assert apa7_authors(authors) == "Christian & Griffiths"
+    assert candidate_surnames(authors) == {"christian", "griffiths"}
+
+
+@pytest.mark.parametrize(
+    "authors, expected",
+    [
+        # A comma after a lone token is intra-name...
+        ("Moore, Geoffrey A.", "Moore"),
+        ("Hu, Tung-Hui", "Hu"),
+        # ...as is one after a particle-glued surname.
+        ("van der Linden, Sander", "van der Linden"),
+        ("St. John, Mary", "St. John"),
+        # A trailing suffix segment is not an author.
+        ("Sammy Davis, Jr.", "Davis"),
+        # Three full names separated by commas.
+        ("Alice Smith, Bob Jones, Carol Brown", "Smith et al."),
+    ],
+)
+def test_comma_disambiguation(authors, expected):
+    assert apa7_authors(authors) == expected
+
+
+@pytest.mark.parametrize(
     "authors, expected",
     [
         ("", "Unknown"),

@@ -9,14 +9,17 @@ parsing so the two never drift apart.
 The conventions this handles::
 
     "Moore, Geoffrey A."                              surname first, comma inside one name
+    "Moore G.A."                                      surname first, joined initials
     "Edward R. Tufte"                                 surname last
     "Chris Voss & Tahl Raz"                           '&' between authors
     "Tufte, Edward R. (author);Krasny, Dmitry (author)"   ';' between, role markers
+    "Brian Christian, Tom Griffiths"                  comma between authors
 
-The key rule, and the one that is easy to get wrong: **in libgen data a comma
-separates the surname from the given name inside a single author**, it does not
-separate one author from the next. Authors are separated by ``;``, ``&`` or
-``and``.
+The rule that is easy to get wrong: **a comma usually separates the surname
+from the given name inside a single author**, not one author from the next —
+authors are separated by ``;``, ``&`` or ``and``. Libgen does occasionally put
+a comma between full names too, so what a comma means is decided by whether the
+text before it reads as a surname on its own (see :func:`_reads_as_one_surname`).
 
 Basic use::
 
@@ -64,6 +67,13 @@ _TRAILING_PUNCT_RE = re.compile(r"^[\s,;:&-]+|[\s,;:&-]+$")
 # Generational and honorific suffixes that are never the surname.
 _NAME_SUFFIXES = frozenset("jr sr ii iii iv v phd md dphil llb llm esq".split())
 
+# Particles that glue a multi-word surname together, so "van der Linden" reads
+# as one name rather than as three.
+_NAME_PARTICLES = frozenset(
+    "van von der den de del della di da dos du la le el al bin ibn st saint "
+    "mac mc o abu ter ten".split()
+)
+
 
 def normalize_name(text: str) -> str:
     """Fold *text* to lowercase ASCII alphanumerics plus spaces, for matching.
@@ -101,6 +111,36 @@ def _is_suffix(token: str) -> bool:
     return token.strip(".,").lower() in _NAME_SUFFIXES
 
 
+def _reads_as_one_surname(text: str) -> bool:
+    """True if *text* — the part before a comma — is a single surname.
+
+    This is what decides whether a comma separates surname from given name
+    inside one author, or separates one author from the next. Libgen writes
+    both: ``"Moore, Geoffrey A."`` is one person, ``"Brian Christian, Tom
+    Griffiths"`` is two. A lone token is a surname; several tokens are only a
+    surname when a particle glues them together.
+    """
+    tokens = text.split()
+    if len(tokens) <= 1:
+        return True
+    return any(t.strip(".").lower() in _NAME_PARTICLES for t in tokens)
+
+
+def _split_on_commas_if_between_authors(chunk: str) -> list:
+    """Split *chunk* on commas when they separate authors rather than names."""
+    if "," not in chunk:
+        return [chunk]
+    head = chunk.partition(",")[0].strip()
+    if _reads_as_one_surname(head):
+        return [chunk]  # "Surname, Given" — the comma belongs inside the name
+    # A trailing "Jr." segment is a suffix of the previous name, not an author.
+    return [
+        part
+        for part in (segment.strip() for segment in chunk.split(","))
+        if part and not all(_is_suffix(token) for token in part.split())
+    ]
+
+
 def split_author_chunks(authors: str) -> list:
     """Split an authors string into one chunk per author, cleaned of role markers.
 
@@ -108,13 +148,15 @@ def split_author_chunks(authors: str) -> list:
     ['Tufte, Edward R.', 'Krasny, Dmitry']
     >>> split_author_chunks("Chris Voss & Tahl Raz")
     ['Chris Voss', 'Tahl Raz']
+    >>> split_author_chunks("Brian Christian, Tom Griffiths")
+    ['Brian Christian', 'Tom Griffiths']
     """
     chunks = []
     for raw in _AUTHOR_SEPARATOR_RE.split(authors or ""):
         cleaned = _TRAILING_PUNCT_RE.sub("", _ROLE_MARKER_RE.sub(" ", raw))
         cleaned = re.sub(r"\s+", " ", cleaned).strip()
         if cleaned:
-            chunks.append(cleaned)
+            chunks.extend(_split_on_commas_if_between_authors(cleaned))
     return chunks
 
 
