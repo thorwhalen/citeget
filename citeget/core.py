@@ -975,7 +975,14 @@ def download_one(
                 "    download_one: discarding unusable cached file "
                 f"({verdict.reason})"
             )
-        filepath.unlink()
+        try:
+            filepath.unlink()
+        except OSError as exc:
+            # Can't clear it, so we can't replace it either — report the reason
+            # rather than raising out of a function documented to return None.
+            if verbose:
+                print(f"    download_one: could not remove {filepath}: {exc}")
+            return None
 
     errors = []
 
