@@ -97,8 +97,9 @@ download-spam listings. When you want *one copy of one book*, use `get_book`:
 ```python
 from citeget import get_book
 
-path = get_book("Crossing the Chasm", authors="Geoffrey A. Moore",
-                download_dir="~/books")
+path = get_book(
+    "Crossing the Chasm", authors="Geoffrey A. Moore", download_dir="~/books"
+)
 ```
 
 It ranks every result against the title and author you asked for, downloads the
@@ -109,12 +110,15 @@ to the next candidate if it isn't. The pieces are usable on their own:
 from citeget import search, rank_results, download_best, validate_download
 
 results = search("Crossing the Chasm Moore")
-ranked = rank_results(results, title="Crossing the Chasm",
-                      authors="Geoffrey A. Moore")
+ranked = rank_results(results, title="Crossing the Chasm", authors="Geoffrey A. Moore")
 ranked[0].score, ranked[0].is_decoy, ranked[0].title_match
 
-path = download_best(results, title="Crossing the Chasm",
-                     authors="Geoffrey A. Moore", download_dir="~/books")
+path = download_best(
+    results,
+    title="Crossing the Chasm",
+    authors="Geoffrey A. Moore",
+    download_dir="~/books",
+)
 ```
 
 Every knob is a keyword argument with a sensible default — format preference,
@@ -123,9 +127,12 @@ language, scoring weights, size bounds, the decoy pattern:
 ```python
 from citeget import get_book, ScoreWeights
 
-get_book("Some Book", authors="A. Author",
-         format_preference=("epub", "pdf"),        # e-reader workflow
-         weights=ScoreWeights(author=5.0))          # trust the author field more
+get_book(
+    "Some Book",
+    authors="A. Author",
+    format_preference=("epub", "pdf"),  # e-reader workflow
+    weights=ScoreWeights(author=5.0),
+)  # trust the author field more
 ```
 
 ### Download validation
@@ -145,7 +152,7 @@ PDF magic bytes, several megabytes in size, and 17 pages long:
 from citeget import download_one, validate_download, BOOK_POLICY
 
 download_one(result, download_dir="~/books", policy=BOOK_POLICY)  # page-count check on
-validate_download("suspect.pdf", policy=BOOK_POLICY)              # check one by hand
+validate_download("suspect.pdf", policy=BOOK_POLICY)  # check one by hand
 ```
 
 `BOOK_POLICY` is opt-in rather than the default because an 80-page floor is

@@ -396,9 +396,7 @@ def check_mirrors(*, mirrors: str = "", query: str = "design of everyday things"
 
 def main():
     """CLI dispatcher."""
-    argh.dispatch_commands(
-        [search, download, get_book, acquire, fetch, check_mirrors]
-    )
+    argh.dispatch_commands([search, download, get_book, acquire, fetch, check_mirrors])
 
 
 if __name__ == "__main__":
