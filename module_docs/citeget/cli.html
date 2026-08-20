@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.cli &mdash; citeget 0.2.5 documentation</title>
+  <title>citeget.cli &mdash; citeget 0.2.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=cb850272"></script>
+      <script src="../../_static/documentation_options.js?v=fc7d8818"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -55,8 +55,10 @@
 <li class="toctree-l1"><a class="reference internal" href="article_pub.html">citeget.article_pub</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">citeget.cli</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.cli.acquire"><code class="docutils literal notranslate"><span class="pre">acquire()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.cli.check_mirrors"><code class="docutils literal notranslate"><span class="pre">check_mirrors()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.cli.download"><code class="docutils literal notranslate"><span class="pre">download()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.cli.fetch"><code class="docutils literal notranslate"><span class="pre">fetch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.cli.get_book"><code class="docutils literal notranslate"><span class="pre">get_book()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.cli.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.cli.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
 </ul>
@@ -64,7 +66,10 @@
 <li class="toctree-l1"><a class="reference internal" href="core.html">citeget.core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extract.html">citeget.extract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fetch.html">citeget.fetch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="names.html">citeget.names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rank.html">citeget.rank</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resolve.html">citeget.resolve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validate.html">citeget.validate</a></li>
 </ul>
 
         </div>
@@ -120,9 +125,30 @@ semantic_scholar, libgen, scihub). Empty uses legacy chain.</p></li>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="citeget.cli.check_mirrors">
+<span class="sig-prename descclassname"><span class="pre">citeget.cli.</span></span><span class="sig-name descname"><span class="pre">check_mirrors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirrors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'design</span> <span class="pre">of</span> <span class="pre">everyday</span> <span class="pre">things'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/cli.html#check_mirrors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.cli.check_mirrors" title="Link to this definition"></a></dt>
+<dd><p>Probe the configured libgen mirrors and report which are healthy.</p>
+<p>Mirror domains rotate, so the shipped default list goes stale on its own
+schedule. Run this when searches start failing: it tells you whether the
+problem is your network or the mirror list, and prints a ready-to-use
+CITEGET_LIBGEN_MIRRORS value for the ones that work.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mirrors</strong> – Comma-separated mirrors to probe (defaults to the configured list).</p></li>
+<li><p><strong>query</strong> – Search terms to probe with (should be something with results).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="citeget.cli.download">
-<span class="sig-prename descclassname"><span class="pre">citeget.cli.</span></span><span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'books'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_downloads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirrors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/cli.html#download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.cli.download" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">citeget.cli.</span></span><span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'books'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_downloads</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_distinct</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirrors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/cli.html#download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.cli.download" title="Link to this definition"></a></dt>
 <dd><p>Search libgen and download top results.</p>
+<p>Counts distinct works towards –max-downloads, since libgen lists one
+edition once per format. To acquire one copy of a specific book, use
+<code class="docutils literal notranslate"><span class="pre">citeget</span> <span class="pre">get-book</span></code> instead, which ranks results against title and author.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -131,6 +157,8 @@ semantic_scholar, libgen, scihub). Empty uses legacy chain.</p></li>
 <li><p><strong>download_dir</strong> – Directory to save files into.</p></li>
 <li><p><strong>max_downloads</strong> – Max number of files to download (0 = all).</p></li>
 <li><p><strong>delay</strong> – Seconds between downloads (rate limiting).</p></li>
+<li><p><strong>no_distinct</strong> – Take libgen’s raw result order, including the same
+edition repeated once per file format.</p></li>
 <li><p><strong>base_url</strong> – Force a single mirror (e.g. <a class="reference external" href="https://libgen.vg">https://libgen.vg</a>).</p></li>
 <li><p><strong>mirrors</strong> – Comma-separated ordered list of mirror base URLs to try.</p></li>
 </ul>
@@ -156,6 +184,30 @@ and a <cite>wkhtmltopdf</cite> system binary for HTML→PDF conversion.</p></li>
 <li><p><strong>timeout</strong> – HTTP timeout per request, in seconds.</p></li>
 <li><p><strong>skip_existing</strong> – If true (default), skip URLs whose output exists.</p></li>
 <li><p><strong>manifest</strong> – Optional path to write a JSON manifest of results.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.cli.get_book">
+<span class="sig-prename descclassname"><span class="pre">citeget.cli.</span></span><span class="sig-name descname"><span class="pre">get_book</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">authors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'books'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_candidates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mirrors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/cli.html#get_book"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.cli.get_book" title="Link to this definition"></a></dt>
+<dd><p>Acquire one copy of a specific book, ranked against title and author.</p>
+<p>Unlike <code class="docutils literal notranslate"><span class="pre">download</span></code>, which takes libgen’s own top results (usually the same
+book in several formats), this ranks every result against what you asked
+for and downloads the best candidate that validates as a complete book,
+falling through to the next one if it turns out to be an excerpt or a stub.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>title</strong> – The book’s title.</p></li>
+<li><p><strong>authors</strong> – The author(s), if known — strongly improves matching.</p></li>
+<li><p><strong>download_dir</strong> – Directory to save the file into.</p></li>
+<li><p><strong>query</strong> – Override the libgen search string (defaults to title + surname).</p></li>
+<li><p><strong>topic</strong> – “books”, “fiction”, “articles”, etc.</p></li>
+<li><p><strong>max_candidates</strong> – How many ranked candidates to try before giving up.</p></li>
+<li><p><strong>base_url</strong> – Force a single mirror (e.g. <a class="reference external" href="https://libgen.vg">https://libgen.vg</a>).</p></li>
+<li><p><strong>mirrors</strong> – Comma-separated ordered list of mirror base URLs to try.</p></li>
 </ul>
 </dd>
 </dl>

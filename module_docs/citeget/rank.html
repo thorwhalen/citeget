@@ -1,0 +1,267 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.rank &mdash; citeget 0.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=fc7d8818"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="citeget.resolve" href="resolve.html" />
+    <link rel="prev" title="citeget.names" href="names.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fetch.html">citeget.fetch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="names.html">citeget.names</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">citeget.rank</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.rank.ScoreWeights"><code class="docutils literal notranslate"><span class="pre">ScoreWeights</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.rank.ScoredResult"><code class="docutils literal notranslate"><span class="pre">ScoredResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.rank.SizeBounds"><code class="docutils literal notranslate"><span class="pre">SizeBounds</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.rank.candidate_surnames"><code class="docutils literal notranslate"><span class="pre">candidate_surnames()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.rank.dedupe_key"><code class="docutils literal notranslate"><span class="pre">dedupe_key()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.rank.dedupe_results"><code class="docutils literal notranslate"><span class="pre">dedupe_results()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.rank.parse_size"><code class="docutils literal notranslate"><span class="pre">parse_size()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.rank.rank_results"><code class="docutils literal notranslate"><span class="pre">rank_results()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.rank.score_result"><code class="docutils literal notranslate"><span class="pre">score_result()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="resolve.html">citeget.resolve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validate.html">citeget.validate</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">citeget.rank</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/citeget/rank.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-citeget.rank">
+<span id="citeget-rank"></span><h1>citeget.rank<a class="headerlink" href="#module-citeget.rank" title="Link to this heading"></a></h1>
+<p>Rank libgen search results against a requested title and author.</p>
+<p><code class="docutils literal notranslate"><span class="pre">search()</span></code> returns whatever libgen’s relevance ordering produced, which for a
+known title is typically the same book repeated in several formats, interleaved
+with derivative works (summaries, workbooks) and download-spam listings. This
+module scores each result against what the caller actually asked for, so a
+caller can take the best match rather than the first row.</p>
+<p>Simple case:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">search</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">citeget.rank</span><span class="w"> </span><span class="kn">import</span> <span class="n">rank_results</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span><span class="s2">"Introduction to Algorithms Cormen"</span><span class="p">)</span>
+<span class="n">best</span> <span class="o">=</span> <span class="n">rank_results</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"Introduction to Algorithms"</span><span class="p">,</span>
+                    <span class="n">authors</span><span class="o">=</span><span class="s2">"Thomas H. Cormen"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Everything about the scoring is overridable without editing this module: pass
+<code class="docutils literal notranslate"><span class="pre">weights</span></code>, <code class="docutils literal notranslate"><span class="pre">format_preference</span></code>, <code class="docutils literal notranslate"><span class="pre">language</span></code>, or <code class="docutils literal notranslate"><span class="pre">decoy_pattern</span></code>.</p>
+<p>Scoring uses only fields already present in a <code class="docutils literal notranslate"><span class="pre">search()</span></code> result dict, so
+ranking costs no extra requests.</p>
+<p>Two independent guards keep non-books from winning:</p>
+<ul class="simple">
+<li><p>a <strong>decoy pattern</strong> over the title (<code class="docutils literal notranslate"><span class="pre">summary</span></code>, <code class="docutils literal notranslate"><span class="pre">workbook</span></code>, <code class="docutils literal notranslate"><span class="pre">gratis</span></code>, …),
+catching derivative works and download-spam landing pages, and</p></li>
+<li><p>a <strong>stub check</strong> — a PDF under a few hundred kB is a landing page, not a scan.
+This floor is much higher than the general one, because a short EPUB of a real
+book is legitimately ~100 kB; one shared floor gets one of those two wrong.</p></li>
+</ul>
+<p>Both are penalties rather than filters, so a decoy can still surface when it is
+genuinely the only thing available — it just never outranks a real match.</p>
+<p>Based on the ranking contributed in
+<a class="reference external" href="https://github.com/thorwhalen/citeget/issues/7">https://github.com/thorwhalen/citeget/issues/7</a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.rank.ScoreWeights">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.rank.</span></span><span class="sig-name descname"><span class="pre">ScoreWeights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">author</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoy_penalty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">6.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stub_penalty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/rank.html#ScoreWeights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.rank.ScoreWeights" title="Link to this definition"></a></dt>
+<dd><p>Relative contribution of each signal to the total score.</p>
+<p>Title and author dominate: format and language only break ties between
+results that are already plausibly the right book.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.rank.ScoredResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.rank.</span></span><span class="sig-name descname"><span class="pre">ScoredResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_match</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">author_match</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_decoy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_stub</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/rank.html#ScoredResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.rank.ScoredResult" title="Link to this definition"></a></dt>
+<dd><p>A search result with its score and the signal breakdown behind it.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.rank.SizeBounds">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.rank.</span></span><span class="sig-name descname"><span class="pre">SizeBounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_bytes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">80000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_pdf_bytes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">300000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">implausible_bytes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">120000000</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/rank.html#SizeBounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.rank.SizeBounds" title="Link to this definition"></a></dt>
+<dd><p>Plausibility bounds for a real book file.</p>
+<p><code class="docutils literal notranslate"><span class="pre">min_pdf_bytes</span></code> is deliberately far above <code class="docutils literal notranslate"><span class="pre">min_bytes</span></code>: a landing-page
+“download” stub is typically a valid but nearly empty PDF, whereas a short
+epub of a genuine book can legitimately be ~100 kB.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.rank.candidate_surnames">
+<span class="sig-prename descclassname"><span class="pre">citeget.rank.</span></span><span class="sig-name descname"><span class="pre">candidate_surnames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">authors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span></span></span><a class="reference internal" href="../../_modules/citeget/names.html#candidate_surnames"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.rank.candidate_surnames" title="Link to this definition"></a></dt>
+<dd><p>Normalized surnames usable for matching, in either name ordering.</p>
+<p>Multi-word surnames contribute their last word, since that is what a
+caller-supplied author string is most likely to share.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">candidate_surnames</span><span class="p">(</span><span class="s2">"Alice Smith &amp; Bob Jones"</span><span class="p">))</span>
+<span class="go">['jones', 'smith']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">candidate_surnames</span><span class="p">(</span><span class="s2">"Sander van der Linden"</span><span class="p">))</span>
+<span class="go">['linden']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.rank.dedupe_key">
+<span class="sig-prename descclassname"><span class="pre">citeget.rank.</span></span><span class="sig-name descname"><span class="pre">dedupe_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span></span></span><a class="reference internal" href="../../_modules/citeget/rank.html#dedupe_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.rank.dedupe_key" title="Link to this definition"></a></dt>
+<dd><p>Identity of the <em>work</em> behind a result, ignoring which format it is in.</p>
+<p>Libgen lists one edition once per format, so <code class="docutils literal notranslate"><span class="pre">max_downloads=5</span></code> otherwise
+means “five copies of one book”. Title, year and author surnames together
+identify an edition well enough to collapse those rows while keeping
+genuinely different editions apart.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.rank.dedupe_results">
+<span class="sig-prename descclassname"><span class="pre">citeget.rank.</span></span><span class="sig-name descname"><span class="pre">dedupe_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">results,</span> <span class="pre">*,</span> <span class="pre">key:</span> <span class="pre">~typing.Callable[[dict],</span> <span class="pre">tuple]</span> <span class="pre">=</span> <span class="pre">&lt;function</span> <span class="pre">dedupe_key&gt;</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../../_modules/citeget/rank.html#dedupe_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.rank.dedupe_results" title="Link to this definition"></a></dt>
+<dd><p>Keep only the first result for each distinct work, preserving order.</p>
+<p>Apply after ranking so the surviving copy of each work is the best-scoring
+one. Accepts either plain result dicts or <a class="reference internal" href="#citeget.rank.ScoredResult" title="citeget.rank.ScoredResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoredResult</span></code></a> objects and
+returns the same kind it was given.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.rank.parse_size">
+<span class="sig-prename descclassname"><span class="pre">citeget.rank.</span></span><span class="sig-name descname"><span class="pre">parse_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size_text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="reference internal" href="../../_modules/citeget/rank.html#parse_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.rank.parse_size" title="Link to this definition"></a></dt>
+<dd><p>Bytes from a libgen size string such as <code class="docutils literal notranslate"><span class="pre">'2</span> <span class="pre">MB'</span></code>; 0 if unparseable.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_size</span><span class="p">(</span><span class="s2">"2 MB"</span><span class="p">)</span>
+<span class="go">2000000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parse_size</span><span class="p">(</span><span class="s2">"587 kB"</span><span class="p">)</span>
+<span class="go">587000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parse_size</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.rank.rank_results">
+<span class="sig-prename descclassname"><span class="pre">citeget.rank.</span></span><span class="sig-name descname"><span class="pre">rank_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">authors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../../_modules/citeget/rank.html#rank_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.rank.rank_results" title="Link to this definition"></a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">results</span></code> as <a class="reference internal" href="#citeget.rank.ScoredResult" title="citeget.rank.ScoredResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScoredResult</span></code></a> objects, best match first.</p>
+<p><code class="docutils literal notranslate"><span class="pre">kwargs</span></code> are forwarded to <a class="reference internal" href="#citeget.rank.score_result" title="citeget.rank.score_result"><code class="xref py py-func docutils literal notranslate"><span class="pre">score_result()</span></code></a> (<code class="docutils literal notranslate"><span class="pre">format_preference</span></code>,
+<code class="docutils literal notranslate"><span class="pre">language</span></code>, <code class="docutils literal notranslate"><span class="pre">weights</span></code>, <code class="docutils literal notranslate"><span class="pre">size_bounds</span></code>, <code class="docutils literal notranslate"><span class="pre">decoy_pattern</span></code>).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.rank.score_result">
+<span class="sig-prename descclassname"><span class="pre">citeget.rank.</span></span><span class="sig-name descname"><span class="pre">score_result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">authors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format_preference</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('pdf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'epub'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'azw3'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'mobi'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'azw'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'djvu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'fb2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'txt')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'english'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.rank.ScoreWeights" title="citeget.rank.ScoreWeights"><span class="pre">ScoreWeights</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ScoreWeights(title=5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">author</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoy_penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stub_penalty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_bounds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.rank.SizeBounds" title="citeget.rank.SizeBounds"><span class="pre">SizeBounds</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">SizeBounds(min_bytes=80000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_pdf_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">implausible_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120000000)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoy_pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Pattern</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">re.compile('\\b(summary|summaries|workbook|study</span> <span class="pre">guide|sparknotes|cliffs?notes|key</span> <span class="pre">takeaways|conversation</span> <span class="pre">starters|review</span> <span class="pre">and</span> <span class="pre">analysis|analysis</span> <span class="pre">of|insights</span> <span class="pre">(?:on|from)|companion</span> <span class="pre">to|instaread|blinkist|downloaden|</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">re.IGNORECASE)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.rank.ScoredResult" title="citeget.rank.ScoredResult"><span class="pre">ScoredResult</span></a></span></span><a class="reference internal" href="../../_modules/citeget/rank.html#score_result"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.rank.score_result" title="Link to this definition"></a></dt>
+<dd><p>Score one <code class="docutils literal notranslate"><span class="pre">search()</span></code> result against a requested title and author.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> – A result dict from <a class="reference internal" href="../citeget.html#citeget.search" title="citeget.search"><code class="xref py py-func docutils literal notranslate"><span class="pre">citeget.search()</span></code></a>.</p></li>
+<li><p><strong>title</strong> – The title actually wanted.</p></li>
+<li><p><strong>authors</strong> – The author(s) wanted, in any of the orderings
+<a class="reference internal" href="names.html#module-citeget.names" title="citeget.names"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citeget.names</span></code></a> understands. None skips author scoring.</p></li>
+<li><p><strong>format_preference</strong> – File formats, best first.</p></li>
+<li><p><strong>language</strong> – Preferred language; a result with no language set is treated
+as neutral rather than penalised, since libgen often omits it.</p></li>
+<li><p><strong>weights</strong> – Per-signal weights.</p></li>
+<li><p><strong>size_bounds</strong> – What counts as a plausible file size.</p></li>
+<li><p><strong>decoy_pattern</strong> – Title pattern marking derivative or spam listings.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="names.html" class="btn btn-neutral float-left" title="citeget.names" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="resolve.html" class="btn btn-neutral float-right" title="citeget.resolve" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

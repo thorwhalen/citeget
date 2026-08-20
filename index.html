@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to citeget’s documentation! &mdash; citeget 0.2.5 documentation</title>
+  <title>Welcome to citeget’s documentation! &mdash; citeget 0.2.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="_static/jquery.js?v=5d32c60e"></script>
       <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="_static/documentation_options.js?v=cb850272"></script>
+      <script src="_static/documentation_options.js?v=fc7d8818"></script>
       <script src="_static/doctools.js?v=fd6eb6e6"></script>
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -56,7 +56,10 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/core.html">citeget.core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/extract.html">citeget.extract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/fetch.html">citeget.fetch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/names.html">citeget.names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/rank.html">citeget.rank</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/resolve.html">citeget.resolve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/validate.html">citeget.validate</a></li>
 </ul>
 
         </div>
@@ -92,15 +95,26 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.AcquisitionResult"><code class="docutils literal notranslate"><span class="pre">AcquisitionResult</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.ExtractionResult"><code class="docutils literal notranslate"><span class="pre">ExtractionResult</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.FetchResult"><code class="docutils literal notranslate"><span class="pre">FetchResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.InvalidDownloadError"><code class="docutils literal notranslate"><span class="pre">InvalidDownloadError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.MirrorUnreachableError"><code class="docutils literal notranslate"><span class="pre">MirrorUnreachableError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.Reference"><code class="docutils literal notranslate"><span class="pre">Reference</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.ScoreWeights"><code class="docutils literal notranslate"><span class="pre">ScoreWeights</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.ScoredResult"><code class="docutils literal notranslate"><span class="pre">ScoredResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.SizeBounds"><code class="docutils literal notranslate"><span class="pre">SizeBounds</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.UrlEntry"><code class="docutils literal notranslate"><span class="pre">UrlEntry</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.ValidationPolicy"><code class="docutils literal notranslate"><span class="pre">ValidationPolicy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.ValidationResult"><code class="docutils literal notranslate"><span class="pre">ValidationResult</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.acquire_all_references"><code class="docutils literal notranslate"><span class="pre">acquire_all_references()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.acquire_reference"><code class="docutils literal notranslate"><span class="pre">acquire_reference()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.apa7_authors"><code class="docutils literal notranslate"><span class="pre">apa7_authors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.candidate_surnames"><code class="docutils literal notranslate"><span class="pre">candidate_surnames()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.chain_extractors"><code class="docutils literal notranslate"><span class="pre">chain_extractors()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.chain_resolvers"><code class="docutils literal notranslate"><span class="pre">chain_resolvers()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.chain_strategies"><code class="docutils literal notranslate"><span class="pre">chain_strategies()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.check_existing_downloads"><code class="docutils literal notranslate"><span class="pre">check_existing_downloads()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.check_mirrors"><code class="docutils literal notranslate"><span class="pre">check_mirrors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.dedupe_results"><code class="docutils literal notranslate"><span class="pre">dedupe_results()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.download_best"><code class="docutils literal notranslate"><span class="pre">download_best()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.download_one"><code class="docutils literal notranslate"><span class="pre">download_one()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.download_results"><code class="docutils literal notranslate"><span class="pre">download_results()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.extract_references"><code class="docutils literal notranslate"><span class="pre">extract_references()</span></code></a></li>
@@ -108,6 +122,7 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.fetch"><code class="docutils literal notranslate"><span class="pre">fetch()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.fetch_one"><code class="docutils literal notranslate"><span class="pre">fetch_one()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.generate_search_queries"><code class="docutils literal notranslate"><span class="pre">generate_search_queries()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.get_book"><code class="docutils literal notranslate"><span class="pre">get_book()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.html_to_markdown"><code class="docutils literal notranslate"><span class="pre">html_to_markdown()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.html_to_pdf"><code class="docutils literal notranslate"><span class="pre">html_to_pdf()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.infer_filename"><code class="docutils literal notranslate"><span class="pre">infer_filename()</span></code></a></li>
@@ -118,6 +133,7 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.merge_extractors"><code class="docutils literal notranslate"><span class="pre">merge_extractors()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.parse_reference"><code class="docutils literal notranslate"><span class="pre">parse_reference()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.parse_references_section"><code class="docutils literal notranslate"><span class="pre">parse_references_section()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.rank_results"><code class="docutils literal notranslate"><span class="pre">rank_results()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.regex_extractor"><code class="docutils literal notranslate"><span class="pre">regex_extractor()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.register_downloader"><code class="docutils literal notranslate"><span class="pre">register_downloader()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.register_extractor"><code class="docutils literal notranslate"><span class="pre">register_extractor()</span></code></a></li>
@@ -126,9 +142,13 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.resolve_and_download"><code class="docutils literal notranslate"><span class="pre">resolve_and_download()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.resolve_reference"><code class="docutils literal notranslate"><span class="pre">resolve_reference()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.resolve_work_dir"><code class="docutils literal notranslate"><span class="pre">resolve_work_dir()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.score_result"><code class="docutils literal notranslate"><span class="pre">score_result()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.search_and_download"><code class="docutils literal notranslate"><span class="pre">search_and_download()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.surnames"><code class="docutils literal notranslate"><span class="pre">surnames()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.url_rewriter"><code class="docutils literal notranslate"><span class="pre">url_rewriter()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.validate_bytes"><code class="docutils literal notranslate"><span class="pre">validate_bytes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.validate_download"><code class="docutils literal notranslate"><span class="pre">validate_download()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.write_missed_references_md"><code class="docutils literal notranslate"><span class="pre">write_missed_references_md()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget.html#citeget.write_references_md"><code class="docutils literal notranslate"><span class="pre">write_references_md()</span></code></a></li>
 </ul>
@@ -151,8 +171,10 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/article_pub.html">citeget.article_pub</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/cli.html">citeget.cli</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/cli.html#citeget.cli.acquire"><code class="docutils literal notranslate"><span class="pre">acquire()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/cli.html#citeget.cli.check_mirrors"><code class="docutils literal notranslate"><span class="pre">check_mirrors()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/cli.html#citeget.cli.download"><code class="docutils literal notranslate"><span class="pre">download()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/cli.html#citeget.cli.fetch"><code class="docutils literal notranslate"><span class="pre">fetch()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/cli.html#citeget.cli.get_book"><code class="docutils literal notranslate"><span class="pre">get_book()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/cli.html#citeget.cli.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/cli.html#citeget.cli.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
 </ul>
@@ -160,8 +182,11 @@
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/core.html">citeget.core</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/core.html#mirror-configuration">Mirror configuration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/core.html#citeget.core.MirrorUnreachableError"><code class="docutils literal notranslate"><span class="pre">MirrorUnreachableError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/core.html#citeget.core.check_mirrors"><code class="docutils literal notranslate"><span class="pre">check_mirrors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/core.html#citeget.core.download_best"><code class="docutils literal notranslate"><span class="pre">download_best()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/core.html#citeget.core.download_one"><code class="docutils literal notranslate"><span class="pre">download_one()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/core.html#citeget.core.download_results"><code class="docutils literal notranslate"><span class="pre">download_results()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/core.html#citeget.core.get_book"><code class="docutils literal notranslate"><span class="pre">get_book()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/core.html#citeget.core.search"><code class="docutils literal notranslate"><span class="pre">search()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/core.html#citeget.core.search_and_download"><code class="docutils literal notranslate"><span class="pre">search_and_download()</span></code></a></li>
 </ul>
@@ -195,6 +220,27 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/fetch.html#citeget.fetch.slugify"><code class="docutils literal notranslate"><span class="pre">slugify()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/names.html">citeget.names</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/names.html#citeget.names.apa7_authors"><code class="docutils literal notranslate"><span class="pre">apa7_authors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/names.html#citeget.names.candidate_surnames"><code class="docutils literal notranslate"><span class="pre">candidate_surnames()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/names.html#citeget.names.normalize_name"><code class="docutils literal notranslate"><span class="pre">normalize_name()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/names.html#citeget.names.split_author_chunks"><code class="docutils literal notranslate"><span class="pre">split_author_chunks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/names.html#citeget.names.surname_of"><code class="docutils literal notranslate"><span class="pre">surname_of()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/names.html#citeget.names.surnames"><code class="docutils literal notranslate"><span class="pre">surnames()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/rank.html">citeget.rank</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/rank.html#citeget.rank.ScoreWeights"><code class="docutils literal notranslate"><span class="pre">ScoreWeights</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/rank.html#citeget.rank.ScoredResult"><code class="docutils literal notranslate"><span class="pre">ScoredResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/rank.html#citeget.rank.SizeBounds"><code class="docutils literal notranslate"><span class="pre">SizeBounds</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/rank.html#citeget.rank.candidate_surnames"><code class="docutils literal notranslate"><span class="pre">candidate_surnames()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/rank.html#citeget.rank.dedupe_key"><code class="docutils literal notranslate"><span class="pre">dedupe_key()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/rank.html#citeget.rank.dedupe_results"><code class="docutils literal notranslate"><span class="pre">dedupe_results()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/rank.html#citeget.rank.parse_size"><code class="docutils literal notranslate"><span class="pre">parse_size()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/rank.html#citeget.rank.rank_results"><code class="docutils literal notranslate"><span class="pre">rank_results()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/rank.html#citeget.rank.score_result"><code class="docutils literal notranslate"><span class="pre">score_result()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/resolve.html">citeget.resolve</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/resolve.html#extension-semantics">Extension semantics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/resolve.html#citeget.resolve.AcquisitionStrategy"><code class="docutils literal notranslate"><span class="pre">AcquisitionStrategy</span></code></a></li>
@@ -222,6 +268,19 @@
 <li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/resolve.html#citeget.resolve.with_logging"><code class="docutils literal notranslate"><span class="pre">with_logging()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="module_docs/citeget/validate.html">citeget.validate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/validate.html#citeget.validate.BOOK_POLICY"><code class="docutils literal notranslate"><span class="pre">BOOK_POLICY</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/validate.html#citeget.validate.InvalidDownloadError"><code class="docutils literal notranslate"><span class="pre">InvalidDownloadError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/validate.html#citeget.validate.ValidationPolicy"><code class="docutils literal notranslate"><span class="pre">ValidationPolicy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/validate.html#citeget.validate.ValidationResult"><code class="docutils literal notranslate"><span class="pre">ValidationResult</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/validate.html#citeget.validate.detect_format"><code class="docutils literal notranslate"><span class="pre">detect_format()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/validate.html#citeget.validate.epub_markup_bytes"><code class="docutils literal notranslate"><span class="pre">epub_markup_bytes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/validate.html#citeget.validate.looks_like_html"><code class="docutils literal notranslate"><span class="pre">looks_like_html()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/validate.html#citeget.validate.pdf_page_count"><code class="docutils literal notranslate"><span class="pre">pdf_page_count()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/validate.html#citeget.validate.validate_bytes"><code class="docutils literal notranslate"><span class="pre">validate_bytes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_docs/citeget/validate.html#citeget.validate.validate_download"><code class="docutils literal notranslate"><span class="pre">validate_download()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -232,8 +291,8 @@
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-<p>Release: 0.2.5</p>
-<p>Last change: Jul 24, 2026</p>
+<p>Release: 0.2.6</p>
+<p>Last change: Aug 20, 2026</p>
 </section>
 
 

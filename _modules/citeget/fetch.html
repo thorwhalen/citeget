@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.fetch &mdash; citeget 0.2.5 documentation</title>
+  <title>citeget.fetch &mdash; citeget 0.2.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=cb850272"></script>
+      <script src="../../_static/documentation_options.js?v=fc7d8818"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -54,7 +54,10 @@
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/core.html">citeget.core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/extract.html">citeget.extract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/fetch.html">citeget.fetch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/names.html">citeget.names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/rank.html">citeget.rank</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/resolve.html">citeget.resolve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/validate.html">citeget.validate</a></li>
 </ul>
 
         </div>
@@ -82,7 +85,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for citeget.fetch</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;General-purpose URL → file fetching with format routing.</span>
+<span></span><span class="sd">"""General-purpose URL → file fetching with format routing.</span>
 
 <span class="sd">Where :mod:`citeget.resolve` is specialized for *academic references*</span>
 <span class="sd">(structured ``Reference`` objects, libgen / arxiv / sci-hub strategies, PDF</span>
@@ -92,9 +95,9 @@
 <span class="sd">Pipeline per URL:</span>
 
 <span class="sd">1. Fetch the URL (httpx, follows redirects).</span>
-<span class="sd">2. If the response is a PDF and the user wants ``&quot;pdf&quot;`` or ``&quot;original&quot;``,</span>
+<span class="sd">2. If the response is a PDF and the user wants ``"pdf"`` or ``"original"``,</span>
 <span class="sd">   save it directly.</span>
-<span class="sd">3. If the response is HTML and the user wants ``&quot;pdf&quot;``, scan for an</span>
+<span class="sd">3. If the response is HTML and the user wants ``"pdf"``, scan for an</span>
 <span class="sd">   embedded direct-PDF link (arxiv ``/pdf/``, GitHub ``.pdf`` assets, ACM</span>
 <span class="sd">   ``/doi/pdf/``, etc.) and try that first; otherwise convert HTML→PDF via</span>
 <span class="sd">   ``pdfkit`` (requires ``wkhtmltopdf``).</span>
@@ -111,9 +114,9 @@
 <span class="sd">- :func:`infer_filename` — derive a slug from anchor / citation / URL path.</span>
 
 <span class="sd">The HTML→PDF converter is registered as a citeget downloader under the name</span>
-<span class="sd">``&quot;html_to_pdf&quot;``, and HTML→Markdown as ``&quot;html_to_md&quot;``, so they compose</span>
+<span class="sd">``"html_to_pdf"``, and HTML→Markdown as ``"html_to_md"``, so they compose</span>
 <span class="sd">with the existing :mod:`citeget.resolve` registry.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -129,7 +132,7 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="n">PreferFormat</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;md&quot;</span><span class="p">,</span> <span class="s2">&quot;pdf&quot;</span><span class="p">,</span> <span class="s2">&quot;original&quot;</span><span class="p">,</span> <span class="s2">&quot;auto&quot;</span><span class="p">]</span>
+<span class="n">PreferFormat</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"md"</span><span class="p">,</span> <span class="s2">"pdf"</span><span class="p">,</span> <span class="s2">"original"</span><span class="p">,</span> <span class="s2">"auto"</span><span class="p">]</span>
 
 
 <span class="c1"># ---------------------------------------------------------------------------</span>
@@ -137,17 +140,17 @@
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
 <span class="n">URL_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-    <span class="sa">r</span><span class="s1">&#39;https?://[^\s&lt;&gt;\[\]()&quot;</span><span class="se">\&#39;</span><span class="s1">,;|]+(?:\([^\s&lt;&gt;]*\))*[^\s&lt;&gt;\[\]()&quot;</span><span class="se">\&#39;</span><span class="s1">,;.|]*&#39;</span>
+    <span class="sa">r</span><span class="s1">'https?://[^\s&lt;&gt;\[\]()"</span><span class="se">\'</span><span class="s1">,;|]+(?:\([^\s&lt;&gt;]*\))*[^\s&lt;&gt;\[\]()"</span><span class="se">\'</span><span class="s1">,;.|]*'</span>
 <span class="p">)</span>
-<span class="n">MD_LINK_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\[([^\]]*)\]\((https?://[^)]+)\)&quot;</span><span class="p">)</span>
-<span class="n">REF_LINK_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^\[(\d+)\]\s*(.*?)(https?://\S+)&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
+<span class="n">MD_LINK_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\[([^\]]*)\]\((https?://[^)]+)\)"</span><span class="p">)</span>
+<span class="n">REF_LINK_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\[(\d+)\]\s*(.*?)(https?://\S+)"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="UrlEntry">
 <a class="viewcode-back" href="../../module_docs/citeget/fetch.html#citeget.UrlEntry">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">UrlEntry</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A URL with optional context preserved for filename inference.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A URL with optional context preserved for filename inference."""</span>
 
     <span class="n">url</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">title</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -158,20 +161,20 @@
 <div class="viewcode-block" id="extract_urls_from_text">
 <a class="viewcode-back" href="../../module_docs/citeget/fetch.html#citeget.extract_urls_from_text">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">extract_urls_from_text</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">UrlEntry</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse URLs from prose / markdown / reference-style citations.</span>
+<span class="w">    </span><span class="sd">"""Parse URLs from prose / markdown / reference-style citations.</span>
 
 <span class="sd">    Recognized forms (each URL deduped, first match wins):</span>
 
 <span class="sd">    - ``[anchor](https://url)``                    → markdown link</span>
 <span class="sd">    - ``[1] Some citation. https://url``           → reference-style</span>
 <span class="sd">    - bare ``https://url``                          → fallback</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">UrlEntry</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">MD_LINK_RE</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
         <span class="n">anchor</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="n">url</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">url</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
             <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
             <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">UrlEntry</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">anchor</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">))</span>
@@ -179,18 +182,18 @@
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">REF_LINK_RE</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
         <span class="n">ref_num</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">citation</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-        <span class="n">url</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;.,;:&quot;</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">".,;:"</span><span class="p">)</span>
         <span class="c1"># If this matched the outer `[anchor](url)` part of a markdown link</span>
         <span class="c1"># (rare: `[N] text [anchor](https://...)`), strip the bracketed tail.</span>
-        <span class="n">url</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\]\(https?://.*$&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\]\(https?://.*$"</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
         <span class="c1"># Skip if this URL was already captured by the markdown-link pass.</span>
         <span class="k">if</span> <span class="n">url</span> <span class="ow">and</span> <span class="n">url</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
             <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-            <span class="n">title</span> <span class="o">=</span> <span class="n">citation</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;,. &quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;*[(&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">citation</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">",. "</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">'"*[('</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span>
             <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">UrlEntry</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="n">ref_num</span><span class="p">))</span>
 
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">URL_RE</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
-        <span class="n">url</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;.,;:&quot;</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">".,;:"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">url</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
             <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
             <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">UrlEntry</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">))</span>
@@ -207,12 +210,12 @@
 <div class="viewcode-block" id="slugify">
 <a class="viewcode-back" href="../../module_docs/citeget/fetch.html#citeget.slugify">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">slugify</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">80</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a filesystem-safe slug for *text* (lowercase, hyphenated).&quot;&quot;&quot;</span>
-    <span class="n">text</span> <span class="o">=</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s2">&quot;NFKD&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">,</span> <span class="s2">&quot;ignore&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
-    <span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[^a-z0-9]+&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
-    <span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;-+&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Return a filesystem-safe slug for *text* (lowercase, hyphenated)."""</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s2">"NFKD"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">,</span> <span class="s2">"ignore"</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^a-z0-9]+"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">,</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"-"</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"-+"</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_len</span><span class="p">:</span>
-        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="p">[:</span><span class="n">max_len</span><span class="p">]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="p">[:</span><span class="n">max_len</span><span class="p">]</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"-"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">text</span></div>
 
 
@@ -220,32 +223,32 @@
 <div class="viewcode-block" id="infer_filename">
 <a class="viewcode-back" href="../../module_docs/citeget/fetch.html#citeget.infer_filename">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">infer_filename</span><span class="p">(</span><span class="n">entry</span><span class="p">:</span> <span class="n">UrlEntry</span><span class="p">,</span> <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Infer a filename for *entry*, ending in ``.{ext}``.</span>
+<span class="w">    </span><span class="sd">"""Infer a filename for *entry*, ending in ``.{ext}``.</span>
 
 <span class="sd">    Strategy (first non-empty wins):</span>
 <span class="sd">    1. anchor text / citation title (slugified)</span>
-<span class="sd">    2. URL&#39;s last meaningful path segment</span>
+<span class="sd">    2. URL's last meaningful path segment</span>
 <span class="sd">    3. domain + short hash</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ref_</span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">_&quot;</span> <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">ref</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+<span class="sd">    """</span>
+    <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"ref_</span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">ref</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s2">_"</span> <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">ref</span> <span class="k">else</span> <span class="s2">""</span>
 
     <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">title</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">title</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
         <span class="n">slug</span> <span class="o">=</span> <span class="n">slugify</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">slug</span><span class="p">:</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">slug</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">slug</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">"</span>
 
     <span class="n">parsed</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
-    <span class="n">path</span> <span class="o">=</span> <span class="n">parsed</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">path</span> <span class="ow">and</span> <span class="n">path</span> <span class="o">!=</span> <span class="s2">&quot;/&quot;</span><span class="p">:</span>
-        <span class="n">segment</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">segment</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\.(html?|php|aspx?)$&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">segment</span><span class="p">)</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">parsed</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">path</span> <span class="ow">and</span> <span class="n">path</span> <span class="o">!=</span> <span class="s2">"/"</span><span class="p">:</span>
+        <span class="n">segment</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s2">"/"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">segment</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\.(html?|php|aspx?)$"</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="n">segment</span><span class="p">)</span>
         <span class="n">slug</span> <span class="o">=</span> <span class="n">slugify</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">slug</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">slug</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">slug</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">slug</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">"</span>
 
-    <span class="n">domain</span> <span class="o">=</span> <span class="n">parsed</span><span class="o">.</span><span class="n">netloc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;www.&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">domain</span> <span class="o">=</span> <span class="n">parsed</span><span class="o">.</span><span class="n">netloc</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"www."</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"."</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="n">url_hash</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()[:</span><span class="mi">8</span><span class="p">]</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">slugify</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">url_hash</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&quot;</span></div>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">prefix</span><span class="si">}{</span><span class="n">slugify</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">url_hash</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">"</span></div>
 
 
 
@@ -254,21 +257,21 @@
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
 <span class="n">_HEADERS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="p">(</span>
-        <span class="s2">&quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) &quot;</span>
-        <span class="s2">&quot;AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36&quot;</span>
+    <span class="s2">"User-Agent"</span><span class="p">:</span> <span class="p">(</span>
+        <span class="s2">"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "</span>
+        <span class="s2">"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"</span>
     <span class="p">),</span>
-    <span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="s2">&quot;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&quot;</span><span class="p">,</span>
+    <span class="s2">"Accept"</span><span class="p">:</span> <span class="s2">"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"</span><span class="p">,</span>
 <span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_http_get</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fetch *url* via httpx with redirect-following. Returns response or ``None``.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Fetch *url* via httpx with redirect-following. Returns response or ``None``."""</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">httpx</span>
     <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
-            <span class="s2">&quot;citeget.fetch requires httpx. Install with: pip install httpx&quot;</span>
+            <span class="s2">"citeget.fetch requires httpx. Install with: pip install httpx"</span>
         <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span>
@@ -278,40 +281,40 @@
             <span class="n">resp</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">resp</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to fetch </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Failed to fetch </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_is_pdf_response</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;True if *resp* carries PDF content (magic bytes or content-type).&quot;&quot;&quot;</span>
-    <span class="n">ct</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content-type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="s2">&quot;application/pdf&quot;</span> <span class="ow">in</span> <span class="n">ct</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""True if *resp* carries PDF content (magic bytes or content-type)."""</span>
+    <span class="n">ct</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"content-type"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"application/pdf"</span> <span class="ow">in</span> <span class="n">ct</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span>
-    <span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="sa">b</span><span class="s2">&quot;%PDF-&quot;</span>
+    <span class="k">return</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="sa">b</span><span class="s2">"%PDF-"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_find_pdf_link</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scan *html* for a direct-PDF link associated with *url*&#39;s domain.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Scan *html* for a direct-PDF link associated with *url*'s domain."""</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">bs4</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeautifulSoup</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
+    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="s2">"html.parser"</span><span class="p">)</span>
     <span class="n">domain</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">netloc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="s2">&quot;arxiv.org&quot;</span> <span class="ow">in</span> <span class="n">domain</span><span class="p">:</span>
-        <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;arxiv\.org/abs/([0-9.]+)&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">"arxiv.org"</span> <span class="ow">in</span> <span class="n">domain</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"arxiv\.org/abs/([0-9.]+)"</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">m</span><span class="p">:</span>
-            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;https://arxiv.org/pdf/</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">.pdf&quot;</span>
-        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">href</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-            <span class="k">if</span> <span class="s2">&quot;/pdf/&quot;</span> <span class="ow">in</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;href&quot;</span><span class="p">]:</span>
-                <span class="k">return</span> <span class="n">urljoin</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;href&quot;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">"https://arxiv.org/pdf/</span><span class="si">{</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">.pdf"</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="n">href</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s2">"/pdf/"</span> <span class="ow">in</span> <span class="n">a</span><span class="p">[</span><span class="s2">"href"</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="n">urljoin</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">a</span><span class="p">[</span><span class="s2">"href"</span><span class="p">])</span>
 
     <span class="c1"># Generic: any link ending in .pdf</span>
-    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">href</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="n">href</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">&quot;href&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\.pdf(\?|$)&quot;</span><span class="p">,</span> <span class="n">href</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">"a"</span><span class="p">,</span> <span class="n">href</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">href</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="s2">"href"</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\.pdf(\?|$)"</span><span class="p">,</span> <span class="n">href</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">urljoin</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">href</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="kc">None</span>
@@ -324,14 +327,14 @@
 
 <div class="viewcode-block" id="html_to_markdown">
 <a class="viewcode-back" href="../../module_docs/citeget/fetch.html#citeget.html_to_markdown">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">html_to_markdown</span><span class="p">(</span><span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">source_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert *html* to clean Markdown via html2text.&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">html_to_markdown</span><span class="p">(</span><span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">source_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convert *html* to clean Markdown via html2text."""</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">html2text</span>
     <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
-            <span class="s2">&quot;HTML→Markdown conversion requires html2text. &quot;</span>
-            <span class="s2">&quot;Install with: pip install html2text&quot;</span>
+            <span class="s2">"HTML→Markdown conversion requires html2text. "</span>
+            <span class="s2">"Install with: pip install html2text"</span>
         <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
 
     <span class="n">h</span> <span class="o">=</span> <span class="n">html2text</span><span class="o">.</span><span class="n">HTML2Text</span><span class="p">()</span>
@@ -346,42 +349,42 @@
 
     <span class="n">md</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">source_url</span><span class="p">:</span>
-        <span class="n">md</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&lt;!-- Source: </span><span class="si">{</span><span class="n">source_url</span><span class="si">}</span><span class="s2"> --&gt;</span><span class="se">\n\n</span><span class="si">{</span><span class="n">md</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">md</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;!-- Source: </span><span class="si">{</span><span class="n">source_url</span><span class="si">}</span><span class="s2"> --&gt;</span><span class="se">\n\n</span><span class="si">{</span><span class="n">md</span><span class="si">}</span><span class="s2">"</span>
     <span class="k">return</span> <span class="n">md</span></div>
 
 
 
 <div class="viewcode-block" id="html_to_pdf">
 <a class="viewcode-back" href="../../module_docs/citeget/fetch.html#citeget.html_to_pdf">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">html_to_pdf</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">html</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Render *url* (or *html* fallback) to PDF bytes via pdfkit/wkhtmltopdf.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">html_to_pdf</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">html</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bytes</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Render *url* (or *html* fallback) to PDF bytes via pdfkit/wkhtmltopdf.</span>
 
 <span class="sd">    Returns ``None`` if pdfkit / wkhtmltopdf is unavailable or rendering fails.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">pdfkit</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">&quot;HTML→PDF conversion requires pdfkit. &quot;</span>
-            <span class="s2">&quot;Install with: pip install citeget[fetch] (and `brew install wkhtmltopdf`).&quot;</span>
+            <span class="s2">"HTML→PDF conversion requires pdfkit. "</span>
+            <span class="s2">"Install with: pip install citeget[fetch] (and `brew install wkhtmltopdf`)."</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="n">options</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;quiet&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;no-stop-slow-scripts&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;encoding&quot;</span><span class="p">:</span> <span class="s2">&quot;UTF-8&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;enable-local-file-access&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">"quiet"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"no-stop-slow-scripts"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+        <span class="s2">"encoding"</span><span class="p">:</span> <span class="s2">"UTF-8"</span><span class="p">,</span>
+        <span class="s2">"enable-local-file-access"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">pdfkit</span><span class="o">.</span><span class="n">from_url</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;pdfkit.from_url failed for </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"pdfkit.from_url failed for </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">html</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">pdfkit</span><span class="o">.</span><span class="n">from_string</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e2</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;pdfkit.from_string also failed: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"pdfkit.from_string also failed: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
 
@@ -395,20 +398,20 @@
 <a class="viewcode-back" href="../../module_docs/citeget/fetch.html#citeget.FetchResult">[docs]</a>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FetchResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Outcome of a single URL fetch.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Outcome of a single URL fetch."""</span>
 
     <span class="n">url</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">status</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="s2">&quot;skipped&quot;</span><span class="p">,</span> <span class="s2">&quot;failed&quot;</span><span class="p">]</span>
+    <span class="n">status</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"skipped"</span><span class="p">,</span> <span class="s2">"failed"</span><span class="p">]</span>
     <span class="n">output_file</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="nb">format</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># &quot;pdf&quot;, &quot;md&quot;, or &quot;original&quot;</span>
+    <span class="nb">format</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># "pdf", "md", or "original"</span>
     <span class="n">title</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">error</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ok</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;True if file was written or already existed (status in {ok, skipped}).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;ok&quot;</span><span class="p">,</span> <span class="s2">&quot;skipped&quot;</span><span class="p">)</span></div>
+<span class="w">        </span><span class="sd">"""True if file was written or already existed (status in {ok, skipped})."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"ok"</span><span class="p">,</span> <span class="s2">"skipped"</span><span class="p">)</span></div>
 
 
 
@@ -418,19 +421,19 @@
     <span class="n">source</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">UrlEntry</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-    <span class="n">prefer</span><span class="p">:</span> <span class="n">PreferFormat</span> <span class="o">=</span> <span class="s2">&quot;md&quot;</span><span class="p">,</span>
+    <span class="n">prefer</span><span class="p">:</span> <span class="n">PreferFormat</span> <span class="o">=</span> <span class="s2">"md"</span><span class="p">,</span>
     <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
     <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FetchResult</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fetch a single URL and save it under *output_dir*.</span>
+<span class="w">    </span><span class="sd">"""Fetch a single URL and save it under *output_dir*.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        source: A URL string or a :class:`UrlEntry` (carries title/ref context).</span>
 <span class="sd">        output_dir: Directory to write into (created if missing).</span>
-<span class="sd">        prefer: Output format. ``&quot;md&quot;`` (default) converts HTML to Markdown;</span>
-<span class="sd">            PDFs are saved as-is. ``&quot;pdf&quot;`` tries to keep/produce a PDF</span>
-<span class="sd">            (requires ``pdfkit`` for HTML→PDF). ``&quot;original&quot;`` saves whatever</span>
-<span class="sd">            content-type the server returned. ``&quot;auto&quot;`` is like ``&quot;md&quot;``</span>
+<span class="sd">        prefer: Output format. ``"md"`` (default) converts HTML to Markdown;</span>
+<span class="sd">            PDFs are saved as-is. ``"pdf"`` tries to keep/produce a PDF</span>
+<span class="sd">            (requires ``pdfkit`` for HTML→PDF). ``"original"`` saves whatever</span>
+<span class="sd">            content-type the server returned. ``"auto"`` is like ``"md"``</span>
 <span class="sd">            for HTML and saves PDFs as PDFs.</span>
 <span class="sd">        timeout: HTTP timeout in seconds.</span>
 <span class="sd">        skip_existing: If True (default), skip when the inferred output</span>
@@ -438,30 +441,30 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A :class:`FetchResult` describing what happened.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">entry</span> <span class="o">=</span> <span class="n">source</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">UrlEntry</span><span class="p">)</span> <span class="k">else</span> <span class="n">UrlEntry</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">source</span><span class="p">)</span>
     <span class="n">output_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
     <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">result</span> <span class="o">=</span> <span class="n">FetchResult</span><span class="p">(</span>
-        <span class="n">url</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s2">&quot;failed&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">ref</span>
+        <span class="n">url</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s2">"failed"</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">ref</span>
     <span class="p">)</span>
 
     <span class="n">resp</span> <span class="o">=</span> <span class="n">_http_get</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">resp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="s2">&quot;fetch_failed&quot;</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="s2">"fetch_failed"</span>
         <span class="k">return</span> <span class="n">result</span>
 
     <span class="c1"># --- Already a PDF -----------------------------------------------------</span>
     <span class="k">if</span> <span class="n">_is_pdf_response</span><span class="p">(</span><span class="n">resp</span><span class="p">):</span>
-        <span class="c1"># If user wants md, we still save it as pdf (can&#39;t convert PDF→md here);</span>
+        <span class="c1"># If user wants md, we still save it as pdf (can't convert PDF→md here);</span>
         <span class="c1"># for any other choice, save as pdf.</span>
         <span class="k">return</span> <span class="n">_save_bytes</span><span class="p">(</span>
             <span class="n">entry</span><span class="p">,</span>
             <span class="n">output_dir</span><span class="p">,</span>
             <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
-            <span class="n">ext</span><span class="o">=</span><span class="s2">&quot;pdf&quot;</span><span class="p">,</span>
-            <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;pdf&quot;</span><span class="p">,</span>
+            <span class="n">ext</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
+            <span class="n">fmt</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
             <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
             <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
         <span class="p">)</span>
@@ -469,18 +472,18 @@
     <span class="n">html</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">text</span>
 
     <span class="c1"># --- prefer=pdf: try direct PDF link, then HTML→PDF --------------------</span>
-    <span class="k">if</span> <span class="n">prefer</span> <span class="o">==</span> <span class="s2">&quot;pdf&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">prefer</span> <span class="o">==</span> <span class="s2">"pdf"</span><span class="p">:</span>
         <span class="n">pdf_url</span> <span class="o">=</span> <span class="n">_find_pdf_link</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">html</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">pdf_url</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Found embedded PDF link: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pdf_url</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Found embedded PDF link: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">pdf_url</span><span class="p">)</span>
             <span class="n">pdf_resp</span> <span class="o">=</span> <span class="n">_http_get</span><span class="p">(</span><span class="n">pdf_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">pdf_resp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_is_pdf_response</span><span class="p">(</span><span class="n">pdf_resp</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">_save_bytes</span><span class="p">(</span>
                     <span class="n">entry</span><span class="p">,</span>
                     <span class="n">output_dir</span><span class="p">,</span>
                     <span class="n">pdf_resp</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
-                    <span class="n">ext</span><span class="o">=</span><span class="s2">&quot;pdf&quot;</span><span class="p">,</span>
-                    <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;pdf&quot;</span><span class="p">,</span>
+                    <span class="n">ext</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
+                    <span class="n">fmt</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
                     <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
                     <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
                 <span class="p">)</span>
@@ -491,23 +494,23 @@
                 <span class="n">entry</span><span class="p">,</span>
                 <span class="n">output_dir</span><span class="p">,</span>
                 <span class="n">pdf_bytes</span><span class="p">,</span>
-                <span class="n">ext</span><span class="o">=</span><span class="s2">&quot;pdf&quot;</span><span class="p">,</span>
-                <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;pdf&quot;</span><span class="p">,</span>
+                <span class="n">ext</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
+                <span class="n">fmt</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
                 <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
                 <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;HTML→PDF unavailable; falling back to Markdown for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"HTML→PDF unavailable; falling back to Markdown for </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
 
     <span class="c1"># --- prefer=original: save raw response --------------------------------</span>
-    <span class="k">if</span> <span class="n">prefer</span> <span class="o">==</span> <span class="s2">&quot;original&quot;</span><span class="p">:</span>
-        <span class="n">ct</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content-type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="n">ext</span> <span class="o">=</span> <span class="s2">&quot;html&quot;</span> <span class="k">if</span> <span class="s2">&quot;html&quot;</span> <span class="ow">in</span> <span class="n">ct</span> <span class="ow">or</span> <span class="s2">&quot;xml&quot;</span> <span class="ow">in</span> <span class="n">ct</span> <span class="k">else</span> <span class="s2">&quot;bin&quot;</span>
+    <span class="k">if</span> <span class="n">prefer</span> <span class="o">==</span> <span class="s2">"original"</span><span class="p">:</span>
+        <span class="n">ct</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"content-type"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="s2">"html"</span> <span class="k">if</span> <span class="s2">"html"</span> <span class="ow">in</span> <span class="n">ct</span> <span class="ow">or</span> <span class="s2">"xml"</span> <span class="ow">in</span> <span class="n">ct</span> <span class="k">else</span> <span class="s2">"bin"</span>
         <span class="k">return</span> <span class="n">_save_bytes</span><span class="p">(</span>
             <span class="n">entry</span><span class="p">,</span>
             <span class="n">output_dir</span><span class="p">,</span>
             <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
             <span class="n">ext</span><span class="o">=</span><span class="n">ext</span><span class="p">,</span>
-            <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;original&quot;</span><span class="p">,</span>
+            <span class="n">fmt</span><span class="o">=</span><span class="s2">"original"</span><span class="p">,</span>
             <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
             <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
         <span class="p">)</span>
@@ -518,8 +521,8 @@
         <span class="n">entry</span><span class="p">,</span>
         <span class="n">output_dir</span><span class="p">,</span>
         <span class="n">md</span><span class="p">,</span>
-        <span class="n">ext</span><span class="o">=</span><span class="s2">&quot;md&quot;</span><span class="p">,</span>
-        <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;md&quot;</span><span class="p">,</span>
+        <span class="n">ext</span><span class="o">=</span><span class="s2">"md"</span><span class="p">,</span>
+        <span class="n">fmt</span><span class="o">=</span><span class="s2">"md"</span><span class="p">,</span>
         <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
         <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
     <span class="p">)</span></div>
@@ -538,12 +541,12 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FetchResult</span><span class="p">:</span>
     <span class="n">out_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">infer_filename</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">skip_existing</span> <span class="ow">and</span> <span class="n">out_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;skipped&quot;</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"skipped"</span>
         <span class="n">result</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">out_path</span>
         <span class="n">result</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">fmt</span>
         <span class="k">return</span> <span class="n">result</span>
     <span class="n">out_path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;ok&quot;</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"ok"</span>
     <span class="n">result</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">out_path</span>
     <span class="n">result</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">fmt</span>
     <span class="k">return</span> <span class="n">result</span>
@@ -561,12 +564,12 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FetchResult</span><span class="p">:</span>
     <span class="n">out_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">infer_filename</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">skip_existing</span> <span class="ow">and</span> <span class="n">out_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;skipped&quot;</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"skipped"</span>
         <span class="n">result</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">out_path</span>
         <span class="n">result</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">fmt</span>
         <span class="k">return</span> <span class="n">result</span>
-    <span class="n">out_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-    <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">&quot;ok&quot;</span>
+    <span class="n">out_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"ok"</span>
     <span class="n">result</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">out_path</span>
     <span class="n">result</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">fmt</span>
     <span class="k">return</span> <span class="n">result</span>
@@ -578,14 +581,14 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_coerce_to_entries</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">UrlEntry</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn flexible *source* input into a deduped list of :class:`UrlEntry`.</span>
+<span class="w">    </span><span class="sd">"""Turn flexible *source* input into a deduped list of :class:`UrlEntry`.</span>
 
 <span class="sd">    Accepts:</span>
 <span class="sd">    - a single URL string</span>
 <span class="sd">    - a path-like to a file containing URLs in any form</span>
 <span class="sd">    - a string with prose / markdown / reference citations</span>
 <span class="sd">    - an iterable of any of the above (including UrlEntry instances)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">UrlEntry</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span>
 
@@ -593,8 +596,8 @@
         <span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-            <span class="k">return</span> <span class="n">extract_urls_from_text</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">&quot;http://&quot;</span><span class="p">,</span> <span class="s2">&quot;https://&quot;</span><span class="p">))</span> <span class="ow">and</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">extract_urls_from_text</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">"http://"</span><span class="p">,</span> <span class="s2">"https://"</span><span class="p">))</span> <span class="ow">and</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="n">UrlEntry</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">())]</span>
         <span class="k">return</span> <span class="n">extract_urls_from_text</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
 
@@ -608,7 +611,7 @@
                     <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">out</span>
 
-    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported source type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported source type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="fetch">
@@ -616,19 +619,19 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span>
     <span class="n">source</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">output_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;~/Downloads&quot;</span><span class="p">,</span>
-    <span class="n">prefer</span><span class="p">:</span> <span class="n">PreferFormat</span> <span class="o">=</span> <span class="s2">&quot;md&quot;</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"~/Downloads"</span><span class="p">,</span>
+    <span class="n">prefer</span><span class="p">:</span> <span class="n">PreferFormat</span> <span class="o">=</span> <span class="s2">"md"</span><span class="p">,</span>
     <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
     <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">on_result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">FetchResult</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fetch one or many URLs from a flexible *source*.</span>
+<span class="w">    </span><span class="sd">"""Fetch one or many URLs from a flexible *source*.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        source: A URL, list of URLs, path to a file containing URLs, or</span>
 <span class="sd">            a string of prose / markdown / reference-style text.</span>
 <span class="sd">        output_dir: Where to save files (created if missing).</span>
-<span class="sd">        prefer: ``&quot;md&quot;`` (default), ``&quot;pdf&quot;``, ``&quot;original&quot;``, or ``&quot;auto&quot;``.</span>
+<span class="sd">        prefer: ``"md"`` (default), ``"pdf"``, ``"original"``, or ``"auto"``.</span>
 <span class="sd">            See :func:`fetch_one` for details.</span>
 <span class="sd">        timeout: HTTP timeout per request.</span>
 <span class="sd">        skip_existing: Skip URLs whose inferred output file exists.</span>
@@ -637,7 +640,7 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        A list of :class:`FetchResult`, one per unique URL.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">entries</span> <span class="o">=</span> <span class="n">_coerce_to_entries</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
     <span class="n">output_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
 
@@ -664,7 +667,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_html_to_pdf_downloader</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Downloader: render *url* (HTML) to PDF at *filepath*.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Downloader: render *url* (HTML) to PDF at *filepath*."""</span>
     <span class="n">pdf_bytes</span> <span class="o">=</span> <span class="n">html_to_pdf</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pdf_bytes</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
@@ -674,13 +677,13 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_html_to_md_downloader</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Downloader: fetch *url* (HTML) and save Markdown at *filepath*.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Downloader: fetch *url* (HTML) and save Markdown at *filepath*."""</span>
     <span class="n">resp</span> <span class="o">=</span> <span class="n">_http_get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">resp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="n">md</span> <span class="o">=</span> <span class="n">html_to_markdown</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">source_url</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
     <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">filepath</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="n">filepath</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">100</span>
 
 
@@ -688,8 +691,8 @@
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.resolve</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_downloader</span>
 
-    <span class="n">register_downloader</span><span class="p">(</span><span class="s2">&quot;html_to_pdf&quot;</span><span class="p">,</span> <span class="n">_html_to_pdf_downloader</span><span class="p">)</span>
-    <span class="n">register_downloader</span><span class="p">(</span><span class="s2">&quot;html_to_md&quot;</span><span class="p">,</span> <span class="n">_html_to_md_downloader</span><span class="p">)</span>
+    <span class="n">register_downloader</span><span class="p">(</span><span class="s2">"html_to_pdf"</span><span class="p">,</span> <span class="n">_html_to_pdf_downloader</span><span class="p">)</span>
+    <span class="n">register_downloader</span><span class="p">(</span><span class="s2">"html_to_md"</span><span class="p">,</span> <span class="n">_html_to_md_downloader</span><span class="p">)</span>
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
     <span class="k">pass</span>
 </pre></div>

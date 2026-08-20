@@ -10,4 +10,7 @@
    module_docs/citeget/core
    module_docs/citeget/extract
    module_docs/citeget/fetch
+   module_docs/citeget/names
+   module_docs/citeget/rank
    module_docs/citeget/resolve
+   module_docs/citeget/validate

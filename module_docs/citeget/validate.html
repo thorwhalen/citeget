@@ -1,0 +1,385 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.validate &mdash; citeget 0.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=fc7d8818"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="citeget.resolve" href="resolve.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fetch.html">citeget.fetch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="names.html">citeget.names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rank.html">citeget.rank</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resolve.html">citeget.resolve</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">citeget.validate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.validate.BOOK_POLICY"><code class="docutils literal notranslate"><span class="pre">BOOK_POLICY</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.validate.InvalidDownloadError"><code class="docutils literal notranslate"><span class="pre">InvalidDownloadError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.validate.ValidationPolicy"><code class="docutils literal notranslate"><span class="pre">ValidationPolicy</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#citeget.validate.ValidationPolicy.min_bytes"><code class="docutils literal notranslate"><span class="pre">ValidationPolicy.min_bytes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#citeget.validate.ValidationPolicy.min_pdf_bytes"><code class="docutils literal notranslate"><span class="pre">ValidationPolicy.min_pdf_bytes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#citeget.validate.ValidationPolicy.require_magic"><code class="docutils literal notranslate"><span class="pre">ValidationPolicy.require_magic</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#citeget.validate.ValidationPolicy.reject_html"><code class="docutils literal notranslate"><span class="pre">ValidationPolicy.reject_html</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#citeget.validate.ValidationPolicy.truncation_ratio"><code class="docutils literal notranslate"><span class="pre">ValidationPolicy.truncation_ratio</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#citeget.validate.ValidationPolicy.min_pages"><code class="docutils literal notranslate"><span class="pre">ValidationPolicy.min_pages</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#citeget.validate.ValidationPolicy.min_epub_markup_bytes"><code class="docutils literal notranslate"><span class="pre">ValidationPolicy.min_epub_markup_bytes</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.validate.ValidationResult"><code class="docutils literal notranslate"><span class="pre">ValidationResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#citeget.validate.ValidationResult.raise_if_invalid"><code class="docutils literal notranslate"><span class="pre">ValidationResult.raise_if_invalid()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.validate.detect_format"><code class="docutils literal notranslate"><span class="pre">detect_format()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.validate.epub_markup_bytes"><code class="docutils literal notranslate"><span class="pre">epub_markup_bytes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.validate.looks_like_html"><code class="docutils literal notranslate"><span class="pre">looks_like_html()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.validate.pdf_page_count"><code class="docutils literal notranslate"><span class="pre">pdf_page_count()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.validate.validate_bytes"><code class="docutils literal notranslate"><span class="pre">validate_bytes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.validate.validate_download"><code class="docutils literal notranslate"><span class="pre">validate_download()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">citeget.validate</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/citeget/validate.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-citeget.validate">
+<span id="citeget-validate"></span><h1>citeget.validate<a class="headerlink" href="#module-citeget.validate" title="Link to this heading"></a></h1>
+<p>Validate that a downloaded file is actually the book or paper it claims to be.</p>
+<p>Nothing about a successful HTTP transfer says the bytes are a document. Libgen
+download paths routinely hand back HTML error pages, captcha walls and
+truncated stubs, and — more subtly — perfectly valid PDFs that are a 17-page
+front-matter sample catalogued under the full book’s title. This module is the
+one place that decides whether a download is acceptable, so every download path
+in <a class="reference internal" href="core.html#module-citeget.core" title="citeget.core"><code class="xref py py-mod docutils literal notranslate"><span class="pre">citeget.core</span></code></a> can route through it.</p>
+<p>Two tiers of check, because they answer different questions:</p>
+<ul class="simple">
+<li><p><strong>Integrity</strong> (always on): magic bytes matching the expected extension, no
+HTML body, a realistic size floor, and — when the caller knows what libgen
+advertised — a truncation check against that size.</p></li>
+<li><p><strong>Depth</strong> (opt-in, see <a class="reference internal" href="#citeget.validate.BOOK_POLICY" title="citeget.validate.BOOK_POLICY"><code class="xref py py-data docutils literal notranslate"><span class="pre">BOOK_POLICY</span></code></a>): is there enough <em>content</em> here to
+be the whole work? A PDF page count and an EPUB markup-volume measure catch
+excerpts and reviews that pass every integrity check.</p></li>
+</ul>
+<p>Depth is opt-in because it is only meaningful when you know what you asked for:
+an 80-page floor is right for a book and badly wrong for a journal article.</p>
+<p>Simple case — validate a finished download:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citeget.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_download</span>
+
+<span class="n">verdict</span> <span class="o">=</span> <span class="n">validate_download</span><span class="p">(</span><span class="s2">"book.pdf"</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">verdict</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">verdict</span><span class="o">.</span><span class="n">reason</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Stricter, when the file is supposed to be a complete book:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citeget.validate</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_download</span><span class="p">,</span> <span class="n">BOOK_POLICY</span>
+
+<span class="n">verdict</span> <span class="o">=</span> <span class="n">validate_download</span><span class="p">(</span><span class="s2">"book.pdf"</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="n">BOOK_POLICY</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Tune without editing this module by building your own policy:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">replace</span>
+<span class="n">lenient</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">BOOK_POLICY</span><span class="p">,</span> <span class="n">min_pages</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>PDF page counting uses <code class="docutils literal notranslate"><span class="pre">pypdf</span></code> when it is installed and is skipped (with the
+check reported as inconclusive rather than failed) when it is not.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="citeget.validate.BOOK_POLICY">
+<span class="sig-prename descclassname"><span class="pre">citeget.validate.</span></span><span class="sig-name descname"><span class="pre">BOOK_POLICY</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">ValidationPolicy(min_bytes=10000,</span> <span class="pre">min_pdf_bytes=300000,</span> <span class="pre">require_magic=True,</span> <span class="pre">reject_html=True,</span> <span class="pre">truncation_ratio=0.5,</span> <span class="pre">min_pages=80,</span> <span class="pre">min_epub_markup_bytes=150000)</span></span><a class="headerlink" href="#citeget.validate.BOOK_POLICY" title="Link to this definition"></a></dt>
+<dd><p>Integrity plus content-depth checks, for downloads that should be a complete
+book. The page floor is set where excerpts and front-matter samples fall:
+full books under 80 pages are rare, whereas samples are almost always well
+under it.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="citeget.validate.InvalidDownloadError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.validate.</span></span><span class="sig-name descname"><span class="pre">InvalidDownloadError</span></span><a class="reference internal" href="../../_modules/citeget/validate.html#InvalidDownloadError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.validate.InvalidDownloadError" title="Link to this definition"></a></dt>
+<dd><p>Raised when downloaded bytes are not a usable copy of the requested file.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.validate.ValidationPolicy">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.validate.</span></span><span class="sig-name descname"><span class="pre">ValidationPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">min_bytes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_pdf_bytes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_magic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reject_html</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncation_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_pages</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_epub_markup_bytes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/validate.html#ValidationPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.validate.ValidationPolicy" title="Link to this definition"></a></dt>
+<dd><p>What counts as an acceptable download.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citeget.validate.ValidationPolicy.min_bytes">
+<span class="sig-name descname"><span class="pre">min_bytes</span></span><a class="headerlink" href="#citeget.validate.ValidationPolicy.min_bytes" title="Link to this definition"></a></dt>
+<dd><p>Absolute floor below which nothing can be a real document.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citeget.validate.ValidationPolicy.min_pdf_bytes">
+<span class="sig-name descname"><span class="pre">min_pdf_bytes</span></span><a class="headerlink" href="#citeget.validate.ValidationPolicy.min_pdf_bytes" title="Link to this definition"></a></dt>
+<dd><p>Higher floor for PDFs, which is where landing-page stubs
+show up. A genuine short EPUB can be ~100 kB, so this cannot be a
+single shared floor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citeget.validate.ValidationPolicy.require_magic">
+<span class="sig-name descname"><span class="pre">require_magic</span></span><a class="headerlink" href="#citeget.validate.ValidationPolicy.require_magic" title="Link to this definition"></a></dt>
+<dd><p>Reject a file whose leading bytes do not match its
+extension. Unknown extensions are always accepted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citeget.validate.ValidationPolicy.reject_html">
+<span class="sig-name descname"><span class="pre">reject_html</span></span><a class="headerlink" href="#citeget.validate.ValidationPolicy.reject_html" title="Link to this definition"></a></dt>
+<dd><p>Reject a body that opens like an HTML document.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citeget.validate.ValidationPolicy.truncation_ratio">
+<span class="sig-name descname"><span class="pre">truncation_ratio</span></span><a class="headerlink" href="#citeget.validate.ValidationPolicy.truncation_ratio" title="Link to this definition"></a></dt>
+<dd><p>Reject a file smaller than this fraction of the size
+the search result advertised. Set to 0 to disable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citeget.validate.ValidationPolicy.min_pages">
+<span class="sig-name descname"><span class="pre">min_pages</span></span><a class="headerlink" href="#citeget.validate.ValidationPolicy.min_pages" title="Link to this definition"></a></dt>
+<dd><p>Minimum PDF page count (0 disables the check). Only sensible
+when the caller knows the download should be a complete book.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="citeget.validate.ValidationPolicy.min_epub_markup_bytes">
+<span class="sig-name descname"><span class="pre">min_epub_markup_bytes</span></span><a class="headerlink" href="#citeget.validate.ValidationPolicy.min_epub_markup_bytes" title="Link to this definition"></a></dt>
+<dd><p>Minimum total size of the markup entries inside
+an EPUB (0 disables). Measures content volume rather than file size,
+so a small-but-complete EPUB passes where a raw size floor fails.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.validate.ValidationResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.validate.</span></span><span class="sig-name descname"><span class="pre">ValidationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ok</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reason</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;factory&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/validate.html#ValidationResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.validate.ValidationResult" title="Link to this definition"></a></dt>
+<dd><p>Verdict on a download, plus the measurements behind it.</p>
+<p>Falsy when the download is unacceptable, so it reads naturally:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="ow">not</span> <span class="n">validate_download</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="citeget.validate.ValidationResult.raise_if_invalid">
+<span class="sig-name descname"><span class="pre">raise_if_invalid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.validate.ValidationResult" title="citeget.validate.ValidationResult"><span class="pre">ValidationResult</span></a></span></span><a class="reference internal" href="../../_modules/citeget/validate.html#ValidationResult.raise_if_invalid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.validate.ValidationResult.raise_if_invalid" title="Link to this definition"></a></dt>
+<dd><p>Return self when valid, else raise <a class="reference internal" href="#citeget.validate.InvalidDownloadError" title="citeget.validate.InvalidDownloadError"><code class="xref py py-class docutils literal notranslate"><span class="pre">InvalidDownloadError</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.validate.detect_format">
+<span class="sig-prename descclassname"><span class="pre">citeget.validate.</span></span><span class="sig-name descname"><span class="pre">detect_format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/citeget/validate.html#detect_format"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.validate.detect_format" title="Link to this definition"></a></dt>
+<dd><p>Best-guess format name from magic bytes, or None if unrecognized.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">detect_format</span><span class="p">(</span><span class="sa">b</span><span class="s2">"%PDF-1.4"</span><span class="p">)</span>
+<span class="go">'pdf'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.validate.epub_markup_bytes">
+<span class="sig-prename descclassname"><span class="pre">citeget.validate.</span></span><span class="sig-name descname"><span class="pre">epub_markup_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/citeget/validate.html#epub_markup_bytes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.validate.epub_markup_bytes" title="Link to this definition"></a></dt>
+<dd><p>Total uncompressed size of the markup entries in an EPUB, or None.</p>
+<p>Measures how much text the book actually contains, which distinguishes a
+complete-but-compact EPUB from an excerpt far better than file size does.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.validate.looks_like_html">
+<span class="sig-prename descclassname"><span class="pre">citeget.validate.</span></span><span class="sig-name descname"><span class="pre">looks_like_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">head</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/citeget/validate.html#looks_like_html"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.validate.looks_like_html" title="Link to this definition"></a></dt>
+<dd><p>True if <em>head</em> opens like an HTML document rather than a binary file.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">looks_like_html</span><span class="p">(</span><span class="sa">b</span><span class="s2">"&lt;!DOCTYPE html&gt;</span><span class="se">\n</span><span class="s2">&lt;html&gt;"</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">looks_like_html</span><span class="p">(</span><span class="sa">b</span><span class="s2">"%PDF-1.7"</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.validate.pdf_page_count">
+<span class="sig-prename descclassname"><span class="pre">citeget.validate.</span></span><span class="sig-name descname"><span class="pre">pdf_page_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/citeget/validate.html#pdf_page_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.validate.pdf_page_count" title="Link to this definition"></a></dt>
+<dd><p>Page count of a PDF, or None if it cannot be determined.</p>
+<p>Returns None — rather than raising — when <code class="docutils literal notranslate"><span class="pre">pypdf</span></code> is not installed, so a
+missing optional dependency downgrades the check instead of failing it.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.validate.validate_bytes">
+<span class="sig-prename descclassname"><span class="pre">citeget.validate.</span></span><span class="sig-name descname"><span class="pre">validate_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_bytes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.validate.ValidationPolicy" title="citeget.validate.ValidationPolicy"><span class="pre">ValidationPolicy</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ValidationPolicy(min_bytes=10000,</span> <span class="pre">min_pdf_bytes=50000,</span> <span class="pre">require_magic=True,</span> <span class="pre">reject_html=True,</span> <span class="pre">truncation_ratio=0.5,</span> <span class="pre">min_pages=0,</span> <span class="pre">min_epub_markup_bytes=0)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.validate.ValidationResult" title="citeget.validate.ValidationResult"><span class="pre">ValidationResult</span></a></span></span><a class="reference internal" href="../../_modules/citeget/validate.html#validate_bytes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.validate.validate_bytes" title="Link to this definition"></a></dt>
+<dd><p>Validate an in-memory response body without writing it to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body</strong> – The bytes received.</p></li>
+<li><p><strong>extension</strong> – Expected file extension (<code class="docutils literal notranslate"><span class="pre">&quot;pdf&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;epub&quot;</span></code>, …). Drives
+the magic-byte and size-floor checks; unknown values relax them.</p></li>
+<li><p><strong>expected_bytes</strong> – Size the search result advertised, for the truncation
+check. None skips it.</p></li>
+<li><p><strong>policy</strong> – Which checks to apply. See <code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_POLICY</span></code> and
+<a class="reference internal" href="#citeget.validate.BOOK_POLICY" title="citeget.validate.BOOK_POLICY"><code class="xref py py-data docutils literal notranslate"><span class="pre">BOOK_POLICY</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span><span class="n">validate_bytes</span><span class="p">(</span><span class="sa">b</span><span class="s2">"&lt;!DOCTYPE html&gt;&lt;html&gt;..."</span><span class="p">,</span> <span class="n">extension</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">))</span>
+<span class="go">False</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.validate.validate_download">
+<span class="sig-prename descclassname"><span class="pre">citeget.validate.</span></span><span class="sig-name descname"><span class="pre">validate_download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_bytes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#citeget.validate.ValidationPolicy" title="citeget.validate.ValidationPolicy"><span class="pre">ValidationPolicy</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ValidationPolicy(min_bytes=10000,</span> <span class="pre">min_pdf_bytes=50000,</span> <span class="pre">require_magic=True,</span> <span class="pre">reject_html=True,</span> <span class="pre">truncation_ratio=0.5,</span> <span class="pre">min_pages=0,</span> <span class="pre">min_epub_markup_bytes=0)</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#citeget.validate.ValidationResult" title="citeget.validate.ValidationResult"><span class="pre">ValidationResult</span></a></span></span><a class="reference internal" href="../../_modules/citeget/validate.html#validate_download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.validate.validate_download" title="Link to this definition"></a></dt>
+<dd><p>Validate a file on disk. Extension defaults to the file’s own suffix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> – File to check.</p></li>
+<li><p><strong>extension</strong> – Override the expected extension; defaults to <code class="docutils literal notranslate"><span class="pre">path</span></code>’s suffix.</p></li>
+<li><p><strong>expected_bytes</strong> – Size the search result advertised, for the truncation check.</p></li>
+<li><p><strong>policy</strong> – Which checks to apply.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="resolve.html" class="btn btn-neutral float-left" title="citeget.resolve" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

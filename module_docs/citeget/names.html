@@ -1,0 +1,253 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.names &mdash; citeget 0.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=fc7d8818"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="citeget.rank" href="rank.html" />
+    <link rel="prev" title="citeget.fetch" href="fetch.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fetch.html">citeget.fetch</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">citeget.names</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.names.apa7_authors"><code class="docutils literal notranslate"><span class="pre">apa7_authors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.names.candidate_surnames"><code class="docutils literal notranslate"><span class="pre">candidate_surnames()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.names.normalize_name"><code class="docutils literal notranslate"><span class="pre">normalize_name()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.names.split_author_chunks"><code class="docutils literal notranslate"><span class="pre">split_author_chunks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.names.surname_of"><code class="docutils literal notranslate"><span class="pre">surname_of()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.names.surnames"><code class="docutils literal notranslate"><span class="pre">surnames()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rank.html">citeget.rank</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resolve.html">citeget.resolve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="validate.html">citeget.validate</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">citeget.names</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/module_docs/citeget/names.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-citeget.names">
+<span id="citeget-names"></span><h1>citeget.names<a class="headerlink" href="#module-citeget.names" title="Link to this heading"></a></h1>
+<p>Author-name parsing for libgen metadata.</p>
+<p>Libgen supplies an <code class="docutils literal notranslate"><span class="pre">authors</span></code> field in a mix of conventions, and getting the
+surname out of it is needed in two places: building the download filename
+(<code class="docutils literal notranslate"><span class="pre">core._make_filename</span></code>) and matching a result against a requested author
+(<code class="docutils literal notranslate"><span class="pre">rank.score_result</span></code>). This module is the single source of truth for that
+parsing so the two never drift apart.</p>
+<p>The conventions this handles:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">"Moore, Geoffrey A."</span>                              <span class="n">surname</span> <span class="n">first</span><span class="p">,</span> <span class="n">comma</span> <span class="n">inside</span> <span class="n">one</span> <span class="n">name</span>
+<span class="s2">"Moore G.A."</span>                                      <span class="n">surname</span> <span class="n">first</span><span class="p">,</span> <span class="n">joined</span> <span class="n">initials</span>
+<span class="s2">"Edward R. Tufte"</span>                                 <span class="n">surname</span> <span class="n">last</span>
+<span class="s2">"Chris Voss &amp; Tahl Raz"</span>                           <span class="s1">'&amp;'</span> <span class="n">between</span> <span class="n">authors</span>
+<span class="s2">"Tufte, Edward R. (author);Krasny, Dmitry (author)"</span>   <span class="s1">';'</span> <span class="n">between</span><span class="p">,</span> <span class="n">role</span> <span class="n">markers</span>
+<span class="s2">"Brian Christian, Tom Griffiths"</span>                  <span class="n">comma</span> <span class="n">between</span> <span class="n">authors</span>
+</pre></div>
+</div>
+<p>The rule that is easy to get wrong: <strong>a comma usually separates the surname
+from the given name inside a single author</strong>, not one author from the next —
+authors are separated by <code class="docutils literal notranslate"><span class="pre">;</span></code>, <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> or <code class="docutils literal notranslate"><span class="pre">and</span></code>. Libgen does occasionally put
+a comma between full names too, so what a comma means is decided by whether the
+text before it reads as a surname on its own (see <code class="xref py py-func docutils literal notranslate"><span class="pre">_reads_as_one_surname()</span></code>).</p>
+<p>Basic use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">apa7_authors</span><span class="p">(</span><span class="s2">"Moore, Geoffrey A."</span><span class="p">)</span>
+<span class="go">'Moore'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">apa7_authors</span><span class="p">(</span><span class="s2">"Chris Voss &amp; Tahl Raz"</span><span class="p">)</span>
+<span class="go">'Voss &amp; Raz'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">candidate_surnames</span><span class="p">(</span><span class="s2">"Cormen, T. (author);Leiserson, C. (author)"</span><span class="p">))</span>
+<span class="go">['cormen', 'leiserson']</span>
+</pre></div>
+</div>
+<p>Note: reference strings parsed out of a <em>document</em> (as opposed to libgen
+metadata) use the opposite convention — <code class="docutils literal notranslate"><span class="pre">&quot;A.</span> <span class="pre">B.</span> <span class="pre">Smith,</span> <span class="pre">C.</span> <span class="pre">D.</span> <span class="pre">Jones&quot;</span></code> separates
+authors with commas — and are handled by
+<code class="xref py py-func docutils literal notranslate"><span class="pre">citeget.acquire_references._parse_all_surnames()</span></code> instead.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.names.apa7_authors">
+<span class="sig-prename descclassname"><span class="pre">citeget.names.</span></span><span class="sig-name descname"><span class="pre">apa7_authors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">authors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/citeget/names.html#apa7_authors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.names.apa7_authors" title="Link to this definition"></a></dt>
+<dd><p>Format <em>authors</em> APA 7 style, surnames only.</p>
+<p>1 author -&gt; <code class="docutils literal notranslate"><span class="pre">&quot;Smith&quot;</span></code>; 2 -&gt; <code class="docutils literal notranslate"><span class="pre">&quot;Smith</span> <span class="pre">&amp;</span> <span class="pre">Jones&quot;</span></code>; 3+ -&gt; <code class="docutils literal notranslate"><span class="pre">&quot;Smith</span> <span class="pre">et</span> <span class="pre">al.&quot;</span></code>;
+nothing usable -&gt; <code class="docutils literal notranslate"><span class="pre">&quot;Unknown&quot;</span></code>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">apa7_authors</span><span class="p">(</span><span class="s2">"Moore, Geoffrey A."</span><span class="p">)</span>
+<span class="go">'Moore'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">apa7_authors</span><span class="p">(</span><span class="s2">"Tufte, Edward R. (author);Krasny, Dmitry (author)"</span><span class="p">)</span>
+<span class="go">'Tufte &amp; Krasny'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">apa7_authors</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+<span class="go">'Unknown'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.names.candidate_surnames">
+<span class="sig-prename descclassname"><span class="pre">citeget.names.</span></span><span class="sig-name descname"><span class="pre">candidate_surnames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">authors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span></span></span><a class="reference internal" href="../../_modules/citeget/names.html#candidate_surnames"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.names.candidate_surnames" title="Link to this definition"></a></dt>
+<dd><p>Normalized surnames usable for matching, in either name ordering.</p>
+<p>Multi-word surnames contribute their last word, since that is what a
+caller-supplied author string is most likely to share.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">candidate_surnames</span><span class="p">(</span><span class="s2">"Alice Smith &amp; Bob Jones"</span><span class="p">))</span>
+<span class="go">['jones', 'smith']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">candidate_surnames</span><span class="p">(</span><span class="s2">"Sander van der Linden"</span><span class="p">))</span>
+<span class="go">['linden']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.names.normalize_name">
+<span class="sig-prename descclassname"><span class="pre">citeget.names.</span></span><span class="sig-name descname"><span class="pre">normalize_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/citeget/names.html#normalize_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.names.normalize_name" title="Link to this definition"></a></dt>
+<dd><p>Fold <em>text</em> to lowercase ASCII alphanumerics plus spaces, for matching.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">normalize_name</span><span class="p">(</span><span class="s2">"Émile Durkheim"</span><span class="p">)</span>
+<span class="go">'emile durkheim'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.names.split_author_chunks">
+<span class="sig-prename descclassname"><span class="pre">citeget.names.</span></span><span class="sig-name descname"><span class="pre">split_author_chunks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">authors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../../_modules/citeget/names.html#split_author_chunks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.names.split_author_chunks" title="Link to this definition"></a></dt>
+<dd><p>Split an authors string into one chunk per author, cleaned of role markers.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">split_author_chunks</span><span class="p">(</span><span class="s2">"Tufte, Edward R. (author);Krasny, Dmitry (author)"</span><span class="p">)</span>
+<span class="go">['Tufte, Edward R.', 'Krasny, Dmitry']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">split_author_chunks</span><span class="p">(</span><span class="s2">"Chris Voss &amp; Tahl Raz"</span><span class="p">)</span>
+<span class="go">['Chris Voss', 'Tahl Raz']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">split_author_chunks</span><span class="p">(</span><span class="s2">"Brian Christian, Tom Griffiths"</span><span class="p">)</span>
+<span class="go">['Brian Christian', 'Tom Griffiths']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.names.surname_of">
+<span class="sig-prename descclassname"><span class="pre">citeget.names.</span></span><span class="sig-name descname"><span class="pre">surname_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/citeget/names.html#surname_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.names.surname_of" title="Link to this definition"></a></dt>
+<dd><p>Extract the surname from a single author <em>chunk</em>, preserving its casing.</p>
+<p>If the chunk contains a comma, the surname is everything before it
+(libgen’s <code class="docutils literal notranslate"><span class="pre">&quot;Surname,</span> <span class="pre">Given&quot;</span></code> form). Otherwise it is the last token that
+is not an initial.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">surname_of</span><span class="p">(</span><span class="s2">"Moore, Geoffrey A."</span><span class="p">)</span>
+<span class="go">'Moore'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">surname_of</span><span class="p">(</span><span class="s2">"Edward R. Tufte"</span><span class="p">)</span>
+<span class="go">'Tufte'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">surname_of</span><span class="p">(</span><span class="s2">"van der Linden, Sander"</span><span class="p">)</span>
+<span class="go">'van der Linden'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">surname_of</span><span class="p">(</span><span class="s2">"Martin Luther King Jr."</span><span class="p">)</span>
+<span class="go">'King'</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">surname_of</span><span class="p">(</span><span class="s2">"Moore G.A."</span><span class="p">)</span>
+<span class="go">'Moore'</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.names.surnames">
+<span class="sig-prename descclassname"><span class="pre">citeget.names.</span></span><span class="sig-name descname"><span class="pre">surnames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">authors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="reference internal" href="../../_modules/citeget/names.html#surnames"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.names.surnames" title="Link to this definition"></a></dt>
+<dd><p>Surnames of every author in <em>authors</em>, in order, casing preserved.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">surnames</span><span class="p">(</span><span class="s2">"Tufte, Edward R. (author);Krasny, Dmitry (author)"</span><span class="p">)</span>
+<span class="go">['Tufte', 'Krasny']</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">surnames</span><span class="p">(</span><span class="s2">"Chris Voss &amp; Tahl Raz"</span><span class="p">)</span>
+<span class="go">['Voss', 'Raz']</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fetch.html" class="btn btn-neutral float-left" title="citeget.fetch" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rank.html" class="btn btn-neutral float-right" title="citeget.rank" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

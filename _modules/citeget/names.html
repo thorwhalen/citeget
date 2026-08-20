@@ -1,0 +1,386 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.names &mdash; citeget 0.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=fc7d8818"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/fetch.html">citeget.fetch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/names.html">citeget.names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/rank.html">citeget.rank</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/resolve.html">citeget.resolve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/validate.html">citeget.validate</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citeget.names</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citeget.names</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Author-name parsing for libgen metadata.</span>
+
+<span class="sd">Libgen supplies an ``authors`` field in a mix of conventions, and getting the</span>
+<span class="sd">surname out of it is needed in two places: building the download filename</span>
+<span class="sd">(``core._make_filename``) and matching a result against a requested author</span>
+<span class="sd">(``rank.score_result``). This module is the single source of truth for that</span>
+<span class="sd">parsing so the two never drift apart.</span>
+
+<span class="sd">The conventions this handles::</span>
+
+<span class="sd">    "Moore, Geoffrey A."                              surname first, comma inside one name</span>
+<span class="sd">    "Moore G.A."                                      surname first, joined initials</span>
+<span class="sd">    "Edward R. Tufte"                                 surname last</span>
+<span class="sd">    "Chris Voss &amp; Tahl Raz"                           '&amp;' between authors</span>
+<span class="sd">    "Tufte, Edward R. (author);Krasny, Dmitry (author)"   ';' between, role markers</span>
+<span class="sd">    "Brian Christian, Tom Griffiths"                  comma between authors</span>
+
+<span class="sd">The rule that is easy to get wrong: **a comma usually separates the surname</span>
+<span class="sd">from the given name inside a single author**, not one author from the next —</span>
+<span class="sd">authors are separated by ``;``, ``&amp;`` or ``and``. Libgen does occasionally put</span>
+<span class="sd">a comma between full names too, so what a comma means is decided by whether the</span>
+<span class="sd">text before it reads as a surname on its own (see :func:`_reads_as_one_surname`).</span>
+
+<span class="sd">Basic use::</span>
+
+<span class="sd">    &gt;&gt;&gt; apa7_authors("Moore, Geoffrey A.")</span>
+<span class="sd">    'Moore'</span>
+<span class="sd">    &gt;&gt;&gt; apa7_authors("Chris Voss &amp; Tahl Raz")</span>
+<span class="sd">    'Voss &amp; Raz'</span>
+<span class="sd">    &gt;&gt;&gt; sorted(candidate_surnames("Cormen, T. (author);Leiserson, C. (author)"))</span>
+<span class="sd">    ['cormen', 'leiserson']</span>
+
+<span class="sd">Note: reference strings parsed out of a *document* (as opposed to libgen</span>
+<span class="sd">metadata) use the opposite convention — ``"A. B. Smith, C. D. Jones"`` separates</span>
+<span class="sd">authors with commas — and are handled by</span>
+<span class="sd">:func:`citeget.acquire_references._parse_all_surnames` instead.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">unicodedata</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"split_author_chunks"</span><span class="p">,</span>
+    <span class="s2">"surname_of"</span><span class="p">,</span>
+    <span class="s2">"surnames"</span><span class="p">,</span>
+    <span class="s2">"candidate_surnames"</span><span class="p">,</span>
+    <span class="s2">"apa7_authors"</span><span class="p">,</span>
+    <span class="s2">"normalize_name"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1"># Separators *between* authors. Note that ',' is deliberately absent: in libgen</span>
+<span class="c1"># data the comma separates surname from given name within a single author.</span>
+<span class="n">_AUTHOR_SEPARATOR_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\s*;\s*|\s*&amp;\s*|\s+and\s+"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">)</span>
+
+<span class="c1"># Role markers libgen appends to names, e.g. "Tufte, Edward R. (author)".</span>
+<span class="n">_ROLE_MARKER_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"\((?:author|editor|translator|illustrator|contributor|compiler|foreword"</span>
+    <span class="sa">r</span><span class="s2">"|introduction|narrator|photographer)s?\)"</span><span class="p">,</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Separator noise sometimes left on a name once role markers are stripped.</span>
+<span class="c1"># Deliberately does not strip "." so that trailing initials ("Edward R.")</span>
+<span class="c1"># survive intact.</span>
+<span class="n">_TRAILING_PUNCT_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[\s,;:&amp;-]+|[\s,;:&amp;-]+$"</span><span class="p">)</span>
+
+<span class="c1"># Generational and honorific suffixes that are never the surname.</span>
+<span class="n">_NAME_SUFFIXES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="s2">"jr sr ii iii iv v phd md dphil llb llm esq"</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+
+<span class="c1"># Particles that glue a multi-word surname together, so "van der Linden" reads</span>
+<span class="c1"># as one name rather than as three.</span>
+<span class="n">_NAME_PARTICLES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+    <span class="s2">"van von der den de del della di da dos du la le el al bin ibn st saint "</span>
+    <span class="s2">"mac mc o abu ter ten"</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="normalize_name">
+<a class="viewcode-back" href="../../module_docs/citeget/names.html#citeget.normalize_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">normalize_name</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Fold *text* to lowercase ASCII alphanumerics plus spaces, for matching.</span>
+
+<span class="sd">    &gt;&gt;&gt; normalize_name("Émile Durkheim")</span>
+<span class="sd">    'emile durkheim'</span>
+<span class="sd">    """</span>
+    <span class="n">folded</span> <span class="o">=</span> <span class="n">unicodedata</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="s2">"NFKD"</span><span class="p">,</span> <span class="n">text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="n">folded</span> <span class="o">=</span> <span class="n">folded</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">"ascii"</span><span class="p">,</span> <span class="s2">"ignore"</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[^a-z0-9 ]"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">,</span> <span class="n">folded</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_initial</span><span class="p">(</span><span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""True for tokens like ``'R.'``, ``'J'`` or ``'G.A.'`` that are initials.</span>
+
+<span class="sd">    The compound form matters: libgen writes plenty of authors as</span>
+<span class="sd">    ``"Moore G.A."``, and treating ``G.A.`` as a surname yields a filename</span>
+<span class="sd">    crediting the book to "G.A". A dotted token counts as initials only when</span>
+<span class="sd">    its letters are few and all uppercase, so a genuinely short surname like</span>
+<span class="sd">    "Hu" or an abbreviation like "St." is not swallowed.</span>
+
+<span class="sd">    &gt;&gt;&gt; _is_initial("R."), _is_initial("G.A."), _is_initial("Hu")</span>
+<span class="sd">    (True, True, False)</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">"."</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="s2">"."</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">token</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">letters</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">token</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">isalpha</span><span class="p">()]</span>
+    <span class="k">return</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">3</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">isupper</span><span class="p">()</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">letters</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_suffix</span><span class="p">(</span><span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""True for generational/honorific suffixes such as ``'Jr.'`` or ``'PhD'``."""</span>
+    <span class="k">return</span> <span class="n">token</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">".,"</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">_NAME_SUFFIXES</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_reads_as_one_surname</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""True if *text* — the part before a comma — is a single surname.</span>
+
+<span class="sd">    This is what decides whether a comma separates surname from given name</span>
+<span class="sd">    inside one author, or separates one author from the next. Libgen writes</span>
+<span class="sd">    both: ``"Moore, Geoffrey A."`` is one person, ``"Brian Christian, Tom</span>
+<span class="sd">    Griffiths"`` is two. A lone token is a surname; several tokens are only a</span>
+<span class="sd">    surname when a particle glues them together.</span>
+<span class="sd">    """</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">_NAME_PARTICLES</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_split_on_commas_if_between_authors</span><span class="p">(</span><span class="n">chunk</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Split *chunk* on commas when they separate authors rather than names."""</span>
+    <span class="k">if</span> <span class="s2">","</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">chunk</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">chunk</span><span class="p">]</span>
+    <span class="n">head</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">","</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">_reads_as_one_surname</span><span class="p">(</span><span class="n">head</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">chunk</span><span class="p">]</span>  <span class="c1"># "Surname, Given" — the comma belongs inside the name</span>
+    <span class="c1"># A trailing "Jr." segment is a suffix of the previous name, not an author.</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">part</span>
+        <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="p">(</span><span class="n">segment</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">chunk</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">part</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">_is_suffix</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+    <span class="p">]</span>
+
+
+<div class="viewcode-block" id="split_author_chunks">
+<a class="viewcode-back" href="../../module_docs/citeget/names.html#citeget.split_author_chunks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">split_author_chunks</span><span class="p">(</span><span class="n">authors</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Split an authors string into one chunk per author, cleaned of role markers.</span>
+
+<span class="sd">    &gt;&gt;&gt; split_author_chunks("Tufte, Edward R. (author);Krasny, Dmitry (author)")</span>
+<span class="sd">    ['Tufte, Edward R.', 'Krasny, Dmitry']</span>
+<span class="sd">    &gt;&gt;&gt; split_author_chunks("Chris Voss &amp; Tahl Raz")</span>
+<span class="sd">    ['Chris Voss', 'Tahl Raz']</span>
+<span class="sd">    &gt;&gt;&gt; split_author_chunks("Brian Christian, Tom Griffiths")</span>
+<span class="sd">    ['Brian Christian', 'Tom Griffiths']</span>
+<span class="sd">    """</span>
+    <span class="n">chunks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">raw</span> <span class="ow">in</span> <span class="n">_AUTHOR_SEPARATOR_RE</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">authors</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">):</span>
+        <span class="n">cleaned</span> <span class="o">=</span> <span class="n">_TRAILING_PUNCT_RE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">_ROLE_MARKER_RE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="n">raw</span><span class="p">))</span>
+        <span class="n">cleaned</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\s+"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">,</span> <span class="n">cleaned</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">cleaned</span><span class="p">:</span>
+            <span class="n">chunks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_split_on_commas_if_between_authors</span><span class="p">(</span><span class="n">cleaned</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">chunks</span></div>
+
+
+
+<div class="viewcode-block" id="surname_of">
+<a class="viewcode-back" href="../../module_docs/citeget/names.html#citeget.surname_of">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">surname_of</span><span class="p">(</span><span class="n">chunk</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Extract the surname from a single author *chunk*, preserving its casing.</span>
+
+<span class="sd">    If the chunk contains a comma, the surname is everything before it</span>
+<span class="sd">    (libgen's ``"Surname, Given"`` form). Otherwise it is the last token that</span>
+<span class="sd">    is not an initial.</span>
+
+<span class="sd">    &gt;&gt;&gt; surname_of("Moore, Geoffrey A.")</span>
+<span class="sd">    'Moore'</span>
+<span class="sd">    &gt;&gt;&gt; surname_of("Edward R. Tufte")</span>
+<span class="sd">    'Tufte'</span>
+<span class="sd">    &gt;&gt;&gt; surname_of("van der Linden, Sander")</span>
+<span class="sd">    'van der Linden'</span>
+<span class="sd">    &gt;&gt;&gt; surname_of("Martin Luther King Jr.")</span>
+<span class="sd">    'King'</span>
+<span class="sd">    &gt;&gt;&gt; surname_of("Moore G.A.")</span>
+<span class="sd">    'Moore'</span>
+<span class="sd">    """</span>
+    <span class="n">chunk</span> <span class="o">=</span> <span class="p">(</span><span class="n">chunk</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">chunk</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="k">if</span> <span class="s2">","</span> <span class="ow">in</span> <span class="n">chunk</span><span class="p">:</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">head</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">head</span>
+        <span class="n">chunk</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">tokens</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">""</span>
+    <span class="n">real</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tokens</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_initial</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">_is_suffix</span><span class="p">(</span><span class="n">t</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">real</span> <span class="ow">or</span> <span class="n">tokens</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">".,"</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="surnames">
+<a class="viewcode-back" href="../../module_docs/citeget/names.html#citeget.surnames">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">surnames</span><span class="p">(</span><span class="n">authors</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Surnames of every author in *authors*, in order, casing preserved.</span>
+
+<span class="sd">    &gt;&gt;&gt; surnames("Tufte, Edward R. (author);Krasny, Dmitry (author)")</span>
+<span class="sd">    ['Tufte', 'Krasny']</span>
+<span class="sd">    &gt;&gt;&gt; surnames("Chris Voss &amp; Tahl Raz")</span>
+<span class="sd">    ['Voss', 'Raz']</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">split_author_chunks</span><span class="p">(</span><span class="n">authors</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">surname_of</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span><span class="p">:</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<div class="viewcode-block" id="candidate_surnames">
+<a class="viewcode-back" href="../../module_docs/citeget/rank.html#citeget.candidate_surnames">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">candidate_surnames</span><span class="p">(</span><span class="n">authors</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Normalized surnames usable for matching, in either name ordering.</span>
+
+<span class="sd">    Multi-word surnames contribute their last word, since that is what a</span>
+<span class="sd">    caller-supplied author string is most likely to share.</span>
+
+<span class="sd">    &gt;&gt;&gt; sorted(candidate_surnames("Alice Smith &amp; Bob Jones"))</span>
+<span class="sd">    ['jones', 'smith']</span>
+<span class="sd">    &gt;&gt;&gt; sorted(candidate_surnames("Sander van der Linden"))</span>
+<span class="sd">    ['linden']</span>
+<span class="sd">    """</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">surnames</span><span class="p">(</span><span class="n">authors</span><span class="p">):</span>
+        <span class="n">words</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">normalize_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">words</span><span class="p">:</span>
+            <span class="n">found</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">words</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">found</span></div>
+
+
+
+<div class="viewcode-block" id="apa7_authors">
+<a class="viewcode-back" href="../../module_docs/citeget/names.html#citeget.apa7_authors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">apa7_authors</span><span class="p">(</span><span class="n">authors</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Format *authors* APA 7 style, surnames only.</span>
+
+<span class="sd">    1 author -&gt; ``"Smith"``; 2 -&gt; ``"Smith &amp; Jones"``; 3+ -&gt; ``"Smith et al."``;</span>
+<span class="sd">    nothing usable -&gt; ``"Unknown"``.</span>
+
+<span class="sd">    &gt;&gt;&gt; apa7_authors("Moore, Geoffrey A.")</span>
+<span class="sd">    'Moore'</span>
+<span class="sd">    &gt;&gt;&gt; apa7_authors("Tufte, Edward R. (author);Krasny, Dmitry (author)")</span>
+<span class="sd">    'Tufte &amp; Krasny'</span>
+<span class="sd">    &gt;&gt;&gt; apa7_authors("")</span>
+<span class="sd">    'Unknown'</span>
+<span class="sd">    """</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">surnames</span><span class="p">(</span><span class="n">authors</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">names</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">"Unknown"</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> &amp; </span><span class="si">{</span><span class="n">names</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> et al."</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

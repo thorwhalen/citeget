@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.resolve &mdash; citeget 0.2.5 documentation</title>
+  <title>citeget.resolve &mdash; citeget 0.2.6 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=cb850272"></script>
+      <script src="../../_static/documentation_options.js?v=fc7d8818"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -24,7 +24,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="prev" title="citeget.fetch" href="fetch.html" /> 
+    <link rel="next" title="citeget.validate" href="validate.html" />
+    <link rel="prev" title="citeget.rank" href="rank.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -56,6 +57,8 @@
 <li class="toctree-l1"><a class="reference internal" href="core.html">citeget.core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="extract.html">citeget.extract</a></li>
 <li class="toctree-l1"><a class="reference internal" href="fetch.html">citeget.fetch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="names.html">citeget.names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rank.html">citeget.rank</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">citeget.resolve</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#extension-semantics">Extension semantics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.AcquisitionStrategy"><code class="docutils literal notranslate"><span class="pre">AcquisitionStrategy</span></code></a></li>
@@ -83,6 +86,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#citeget.resolve.with_logging"><code class="docutils literal notranslate"><span class="pre">with_logging()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="validate.html">citeget.validate</a></li>
 </ul>
 
         </div>
@@ -138,17 +142,17 @@ on non-PDF content” — automatically.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">citeget.resolve</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_reference</span>
 
 <span class="c1"># Zero-config: tries all built-in strategies in order</span>
-<span class="n">path</span> <span class="o">=</span> <span class="n">resolve_reference</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;paper.pdf&quot;</span><span class="p">))</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">resolve_reference</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">Path</span><span class="p">(</span><span class="s2">"paper.pdf"</span><span class="p">))</span>
 
 <span class="c1"># Custom chain</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.resolve</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">STRATEGIES</span>
-<span class="n">my</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">&quot;direct&quot;</span><span class="p">],</span> <span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">&quot;arxiv_search&quot;</span><span class="p">])</span>
+<span class="n">my</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">"direct"</span><span class="p">],</span> <span class="n">STRATEGIES</span><span class="p">[</span><span class="s2">"arxiv_search"</span><span class="p">])</span>
 <span class="n">resolve_reference</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">strategy</span><span class="o">=</span><span class="n">my</span><span class="p">)</span>
 
 <span class="c1"># Add a repository rule</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.resolve</span><span class="w"> </span><span class="kn">import</span> <span class="n">url_rewriter</span><span class="p">,</span> <span class="n">BUILTIN_URL_RULES</span><span class="p">,</span> <span class="n">register_resolver</span>
-<span class="n">rules</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">BUILTIN_URL_RULES</span><span class="p">,</span> <span class="s2">&quot;myrepo.org&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/view/&quot;</span><span class="p">,</span> <span class="s2">&quot;/dl/&quot;</span><span class="p">)}</span>
-<span class="n">register_resolver</span><span class="p">(</span><span class="s2">&quot;my_rewriter&quot;</span><span class="p">,</span> <span class="n">url_rewriter</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="n">rules</span><span class="p">))</span>
+<span class="n">rules</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">BUILTIN_URL_RULES</span><span class="p">,</span> <span class="s2">"myrepo.org"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="n">u</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"/view/"</span><span class="p">,</span> <span class="s2">"/dl/"</span><span class="p">)}</span>
+<span class="n">register_resolver</span><span class="p">(</span><span class="s2">"my_rewriter"</span><span class="p">,</span> <span class="n">url_rewriter</span><span class="p">(</span><span class="n">rules</span><span class="o">=</span><span class="n">rules</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -365,7 +369,8 @@ strategy name (<code class="docutils literal notranslate"><span class="pre">str<
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="fetch.html" class="btn btn-neutral float-left" title="citeget.fetch" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rank.html" class="btn btn-neutral float-left" title="citeget.rank" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="validate.html" class="btn btn-neutral float-right" title="citeget.validate" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

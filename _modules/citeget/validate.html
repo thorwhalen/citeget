@@ -1,0 +1,545 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.validate &mdash; citeget 0.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=fc7d8818"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/fetch.html">citeget.fetch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/names.html">citeget.names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/rank.html">citeget.rank</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/resolve.html">citeget.resolve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/validate.html">citeget.validate</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citeget.validate</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citeget.validate</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Validate that a downloaded file is actually the book or paper it claims to be.</span>
+
+<span class="sd">Nothing about a successful HTTP transfer says the bytes are a document. Libgen</span>
+<span class="sd">download paths routinely hand back HTML error pages, captcha walls and</span>
+<span class="sd">truncated stubs, and — more subtly — perfectly valid PDFs that are a 17-page</span>
+<span class="sd">front-matter sample catalogued under the full book's title. This module is the</span>
+<span class="sd">one place that decides whether a download is acceptable, so every download path</span>
+<span class="sd">in :mod:`citeget.core` can route through it.</span>
+
+<span class="sd">Two tiers of check, because they answer different questions:</span>
+
+<span class="sd">- **Integrity** (always on): magic bytes matching the expected extension, no</span>
+<span class="sd">  HTML body, a realistic size floor, and — when the caller knows what libgen</span>
+<span class="sd">  advertised — a truncation check against that size.</span>
+<span class="sd">- **Depth** (opt-in, see :data:`BOOK_POLICY`): is there enough *content* here to</span>
+<span class="sd">  be the whole work? A PDF page count and an EPUB markup-volume measure catch</span>
+<span class="sd">  excerpts and reviews that pass every integrity check.</span>
+
+<span class="sd">Depth is opt-in because it is only meaningful when you know what you asked for:</span>
+<span class="sd">an 80-page floor is right for a book and badly wrong for a journal article.</span>
+
+<span class="sd">Simple case — validate a finished download::</span>
+
+<span class="sd">    from citeget.validate import validate_download</span>
+
+<span class="sd">    verdict = validate_download("book.pdf")</span>
+<span class="sd">    if not verdict:</span>
+<span class="sd">        print(verdict.reason)</span>
+
+<span class="sd">Stricter, when the file is supposed to be a complete book::</span>
+
+<span class="sd">    from citeget.validate import validate_download, BOOK_POLICY</span>
+
+<span class="sd">    verdict = validate_download("book.pdf", policy=BOOK_POLICY)</span>
+
+<span class="sd">Tune without editing this module by building your own policy::</span>
+
+<span class="sd">    from dataclasses import replace</span>
+<span class="sd">    lenient = replace(BOOK_POLICY, min_pages=40)</span>
+
+<span class="sd">PDF page counting uses ``pypdf`` when it is installed and is skipped (with the</span>
+<span class="sd">check reported as inconclusive rather than failed) when it is not.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">replace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"ValidationPolicy"</span><span class="p">,</span>
+    <span class="s2">"ValidationResult"</span><span class="p">,</span>
+    <span class="s2">"InvalidDownloadError"</span><span class="p">,</span>
+    <span class="s2">"DEFAULT_POLICY"</span><span class="p">,</span>
+    <span class="s2">"BOOK_POLICY"</span><span class="p">,</span>
+    <span class="s2">"MAGIC_SIGNATURES"</span><span class="p">,</span>
+    <span class="s2">"validate_bytes"</span><span class="p">,</span>
+    <span class="s2">"validate_download"</span><span class="p">,</span>
+    <span class="s2">"looks_like_html"</span><span class="p">,</span>
+    <span class="s2">"detect_format"</span><span class="p">,</span>
+    <span class="s2">"pdf_page_count"</span><span class="p">,</span>
+    <span class="s2">"epub_markup_bytes"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1"># Leading bytes that identify each format we know how to download. A format may</span>
+<span class="c1"># have several accepted signatures (mobi variants), and the offset is not always</span>
+<span class="c1"># zero (djvu wraps its data in an IFF container).</span>
+<span class="n">MAGIC_SIGNATURES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"pdf"</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"%PDF"</span><span class="p">),),</span>
+    <span class="s2">"epub"</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"PK</span><span class="se">\x03\x04</span><span class="s2">"</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"PK</span><span class="se">\x05\x06</span><span class="s2">"</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"PK</span><span class="se">\x07\x08</span><span class="s2">"</span><span class="p">)),</span>
+    <span class="s2">"mobi"</span><span class="p">:</span> <span class="p">((</span><span class="mi">60</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"BOOKMOBI"</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"TPZ"</span><span class="p">),</span> <span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"TEXtREAd"</span><span class="p">)),</span>
+    <span class="s2">"azw"</span><span class="p">:</span> <span class="p">((</span><span class="mi">60</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"BOOKMOBI"</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"TPZ"</span><span class="p">)),</span>
+    <span class="s2">"azw3"</span><span class="p">:</span> <span class="p">((</span><span class="mi">60</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"BOOKMOBI"</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"TPZ"</span><span class="p">)),</span>
+    <span class="s2">"djvu"</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"AT&amp;TFORM"</span><span class="p">),),</span>
+    <span class="s2">"djv"</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"AT&amp;TFORM"</span><span class="p">),),</span>
+    <span class="s2">"fb2"</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"&lt;?xml"</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"PK</span><span class="se">\x03\x04</span><span class="s2">"</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"</span><span class="se">\xef\xbb\xbf</span><span class="s2">&lt;?xml"</span><span class="p">)),</span>
+    <span class="s2">"zip"</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"PK</span><span class="se">\x03\x04</span><span class="s2">"</span><span class="p">),),</span>
+    <span class="s2">"rar"</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"Rar!"</span><span class="p">),),</span>
+    <span class="s2">"chm"</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"ITSF"</span><span class="p">),),</span>
+    <span class="s2">"doc"</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"</span><span class="se">\xd0\xcf\x11\xe0</span><span class="s2">"</span><span class="p">),),</span>
+    <span class="s2">"docx"</span><span class="p">:</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="sa">b</span><span class="s2">"PK</span><span class="se">\x03\x04</span><span class="s2">"</span><span class="p">),),</span>
+<span class="p">}</span>
+
+<span class="c1"># Openings that mean "this is a web page", never a document. Compared against a</span>
+<span class="c1"># lowercased, whitespace-stripped prefix of the body.</span>
+<span class="n">_HTML_OPENINGS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="sa">b</span><span class="s2">"&lt;!doctype html"</span><span class="p">,</span>
+    <span class="sa">b</span><span class="s2">"&lt;html"</span><span class="p">,</span>
+    <span class="sa">b</span><span class="s2">"&lt;head"</span><span class="p">,</span>
+    <span class="sa">b</span><span class="s1">'&lt;?xml version="1.0" encoding="utf-8"?&gt;&lt;!doctype html'</span><span class="p">,</span>
+    <span class="sa">b</span><span class="s2">"&lt;script"</span><span class="p">,</span>
+    <span class="sa">b</span><span class="s2">"&lt;body"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># How much of the file the magic-byte and HTML checks need to look at.</span>
+<span class="n">_HEAD_BYTES</span> <span class="o">=</span> <span class="mi">2048</span>
+
+<span class="c1"># A transfer that stopped early is far below the advertised size. Coarse</span>
+<span class="c1"># libgen size strings ("2 MB") make anything tighter than this unreliable.</span>
+<span class="n">_TRUNCATION_RATIO</span> <span class="o">=</span> <span class="mf">0.5</span>
+
+
+<div class="viewcode-block" id="InvalidDownloadError">
+<a class="viewcode-back" href="../../module_docs/citeget/validate.html#citeget.InvalidDownloadError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">InvalidDownloadError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Raised when downloaded bytes are not a usable copy of the requested file."""</span></div>
+
+
+
+<div class="viewcode-block" id="ValidationPolicy">
+<a class="viewcode-back" href="../../module_docs/citeget/validate.html#citeget.ValidationPolicy">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ValidationPolicy</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What counts as an acceptable download.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        min_bytes: Absolute floor below which nothing can be a real document.</span>
+<span class="sd">        min_pdf_bytes: Higher floor for PDFs, which is where landing-page stubs</span>
+<span class="sd">            show up. A genuine short EPUB can be ~100 kB, so this cannot be a</span>
+<span class="sd">            single shared floor.</span>
+<span class="sd">        require_magic: Reject a file whose leading bytes do not match its</span>
+<span class="sd">            extension. Unknown extensions are always accepted.</span>
+<span class="sd">        reject_html: Reject a body that opens like an HTML document.</span>
+<span class="sd">        truncation_ratio: Reject a file smaller than this fraction of the size</span>
+<span class="sd">            the search result advertised. Set to 0 to disable.</span>
+<span class="sd">        min_pages: Minimum PDF page count (0 disables the check). Only sensible</span>
+<span class="sd">            when the caller knows the download should be a complete book.</span>
+<span class="sd">        min_epub_markup_bytes: Minimum total size of the markup entries inside</span>
+<span class="sd">            an EPUB (0 disables). Measures content volume rather than file size,</span>
+<span class="sd">            so a small-but-complete EPUB passes where a raw size floor fails.</span>
+<span class="sd">    """</span>
+
+    <span class="n">min_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10_000</span>
+    <span class="n">min_pdf_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50_000</span>
+    <span class="n">require_magic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">reject_html</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">truncation_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">_TRUNCATION_RATIO</span>
+    <span class="n">min_pages</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">min_epub_markup_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+
+<div class="viewcode-block" id="ValidationResult">
+<a class="viewcode-back" href="../../module_docs/citeget/validate.html#citeget.ValidationResult">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ValidationResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Verdict on a download, plus the measurements behind it.</span>
+
+<span class="sd">    Falsy when the download is unacceptable, so it reads naturally::</span>
+
+<span class="sd">        if not validate_download(path):</span>
+<span class="sd">            ...</span>
+<span class="sd">    """</span>
+
+    <span class="n">ok</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="n">detail</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ok</span>
+
+<div class="viewcode-block" id="ValidationResult.raise_if_invalid">
+<a class="viewcode-back" href="../../module_docs/citeget/validate.html#citeget.ValidationResult.raise_if_invalid">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">raise_if_invalid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"ValidationResult"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return self when valid, else raise :class:`InvalidDownloadError`."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ok</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidDownloadError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+</div>
+
+
+
+<span class="n">DEFAULT_POLICY</span> <span class="o">=</span> <span class="n">ValidationPolicy</span><span class="p">()</span>
+
+<span class="c1">#: Integrity plus content-depth checks, for downloads that should be a complete</span>
+<span class="c1">#: book. The page floor is set where excerpts and front-matter samples fall:</span>
+<span class="c1">#: full books under 80 pages are rare, whereas samples are almost always well</span>
+<span class="c1">#: under it.</span>
+<span class="n">BOOK_POLICY</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span>
+    <span class="n">DEFAULT_POLICY</span><span class="p">,</span>
+    <span class="n">min_pdf_bytes</span><span class="o">=</span><span class="mi">300_000</span><span class="p">,</span>
+    <span class="n">min_pages</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
+    <span class="n">min_epub_markup_bytes</span><span class="o">=</span><span class="mi">150_000</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="looks_like_html">
+<a class="viewcode-back" href="../../module_docs/citeget/validate.html#citeget.looks_like_html">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">looks_like_html</span><span class="p">(</span><span class="n">head</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""True if *head* opens like an HTML document rather than a binary file.</span>
+
+<span class="sd">    &gt;&gt;&gt; looks_like_html(b"&lt;!DOCTYPE html&gt;\\n&lt;html&gt;")</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; looks_like_html(b"%PDF-1.7")</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="n">stripped</span> <span class="o">=</span> <span class="p">(</span><span class="n">head</span> <span class="ow">or</span> <span class="sa">b</span><span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()[:</span><span class="mi">200</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">stripped</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">opening</span><span class="p">)</span> <span class="k">for</span> <span class="n">opening</span> <span class="ow">in</span> <span class="n">_HTML_OPENINGS</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="detect_format">
+<a class="viewcode-back" href="../../module_docs/citeget/validate.html#citeget.detect_format">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">detect_format</span><span class="p">(</span><span class="n">head</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Best-guess format name from magic bytes, or None if unrecognized.</span>
+
+<span class="sd">    &gt;&gt;&gt; detect_format(b"%PDF-1.4")</span>
+<span class="sd">    'pdf'</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">signatures</span> <span class="ow">in</span> <span class="n">MAGIC_SIGNATURES</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"azw"</span><span class="p">,</span> <span class="s2">"azw3"</span><span class="p">,</span> <span class="s2">"djv"</span><span class="p">,</span> <span class="s2">"zip"</span><span class="p">,</span> <span class="s2">"docx"</span><span class="p">):</span>
+            <span class="k">continue</span>  <span class="c1"># aliases of a format already listed; keep the report simple</span>
+        <span class="k">if</span> <span class="n">_matches_any_signature</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="n">signatures</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">name</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_matches_any_signature</span><span class="p">(</span><span class="n">head</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">signatures</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""True if *head* starts with any (offset, magic) pair in *signatures*."""</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="n">head</span><span class="p">[</span><span class="n">offset</span> <span class="p">:</span> <span class="n">offset</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">magic</span><span class="p">)]</span> <span class="o">==</span> <span class="n">magic</span> <span class="k">for</span> <span class="n">offset</span><span class="p">,</span> <span class="n">magic</span> <span class="ow">in</span> <span class="n">signatures</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="pdf_page_count">
+<a class="viewcode-back" href="../../module_docs/citeget/validate.html#citeget.pdf_page_count">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">pdf_page_count</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Page count of a PDF, or None if it cannot be determined.</span>
+
+<span class="sd">    Returns None — rather than raising — when ``pypdf`` is not installed, so a</span>
+<span class="sd">    missing optional dependency downgrades the check instead of failing it.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">pypdf</span><span class="w"> </span><span class="kn">import</span> <span class="n">PdfReader</span>
+    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">PdfReader</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">pages</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="epub_markup_bytes">
+<a class="viewcode-back" href="../../module_docs/citeget/validate.html#citeget.epub_markup_bytes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">epub_markup_bytes</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Total uncompressed size of the markup entries in an EPUB, or None.</span>
+
+<span class="sd">    Measures how much text the book actually contains, which distinguishes a</span>
+<span class="sd">    complete-but-compact EPUB from an excerpt far better than file size does.</span>
+<span class="sd">    """</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span> <span class="k">as</span> <span class="n">zf</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span>
+                <span class="n">info</span><span class="o">.</span><span class="n">file_size</span>
+                <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">zf</span><span class="o">.</span><span class="n">infolist</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">".xhtml"</span><span class="p">,</span> <span class="s2">".html"</span><span class="p">,</span> <span class="s2">".htm"</span><span class="p">))</span>
+            <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_size_checks</span><span class="p">(</span><span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">extension</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="n">ValidationPolicy</span><span class="p">,</span> <span class="n">detail</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a failure reason for *size*, or None if the size is plausible."""</span>
+    <span class="n">floor</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">min_pdf_bytes</span> <span class="k">if</span> <span class="n">extension</span> <span class="o">==</span> <span class="s2">"pdf"</span> <span class="k">else</span> <span class="n">policy</span><span class="o">.</span><span class="n">min_bytes</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="n">floor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"file too small (</span><span class="si">{</span><span class="n">size</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> bytes &lt; </span><span class="si">{</span><span class="n">floor</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> floor for </span><span class="si">{</span><span class="n">extension</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'file'</span><span class="si">}</span><span class="s2">)"</span>
+    <span class="n">expected</span> <span class="o">=</span> <span class="n">detail</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"expected_bytes"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">expected</span> <span class="ow">and</span> <span class="n">policy</span><span class="o">.</span><span class="n">truncation_ratio</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="n">expected</span> <span class="o">*</span> <span class="n">policy</span><span class="o">.</span><span class="n">truncation_ratio</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"truncated transfer: </span><span class="si">{</span><span class="n">size</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> bytes for a file advertised as "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">expected</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> bytes"</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_depth_checks</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span> <span class="n">extension</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="n">ValidationPolicy</span><span class="p">,</span> <span class="n">detail</span><span class="p">:</span> <span class="nb">dict</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a failure reason from the content-depth checks, or None."""</span>
+    <span class="k">if</span> <span class="n">extension</span> <span class="o">==</span> <span class="s2">"pdf"</span> <span class="ow">and</span> <span class="n">policy</span><span class="o">.</span><span class="n">min_pages</span><span class="p">:</span>
+        <span class="n">pages</span> <span class="o">=</span> <span class="n">pdf_page_count</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">detail</span><span class="p">[</span><span class="s2">"pages"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pages</span>
+        <span class="k">if</span> <span class="n">pages</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">pages</span> <span class="o">&lt;</span> <span class="n">policy</span><span class="o">.</span><span class="n">min_pages</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"only </span><span class="si">{</span><span class="n">pages</span><span class="si">}</span><span class="s2"> pages: this looks like an excerpt or review, not "</span>
+                <span class="sa">f</span><span class="s2">"the full work (expected at least </span><span class="si">{</span><span class="n">policy</span><span class="o">.</span><span class="n">min_pages</span><span class="si">}</span><span class="s2">)"</span>
+            <span class="p">)</span>
+    <span class="k">if</span> <span class="n">extension</span> <span class="o">==</span> <span class="s2">"epub"</span> <span class="ow">and</span> <span class="n">policy</span><span class="o">.</span><span class="n">min_epub_markup_bytes</span><span class="p">:</span>
+        <span class="n">markup</span> <span class="o">=</span> <span class="n">epub_markup_bytes</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="n">detail</span><span class="p">[</span><span class="s2">"epub_markup_bytes"</span><span class="p">]</span> <span class="o">=</span> <span class="n">markup</span>
+        <span class="k">if</span> <span class="n">markup</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">markup</span> <span class="o">&lt;</span> <span class="n">policy</span><span class="o">.</span><span class="n">min_epub_markup_bytes</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"only </span><span class="si">{</span><span class="n">markup</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> bytes of markup: this looks like an excerpt, "</span>
+                <span class="sa">f</span><span class="s2">"not the full work (expected at least "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">policy</span><span class="o">.</span><span class="n">min_epub_markup_bytes</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2">)"</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bytes</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+    <span class="n">head</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">extension</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">expected_bytes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">policy</span><span class="p">:</span> <span class="n">ValidationPolicy</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Shared body of :func:`validate_bytes` and :func:`validate_download`."""</span>
+    <span class="n">extension</span> <span class="o">=</span> <span class="p">(</span><span class="n">extension</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+    <span class="n">detail</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">"size"</span><span class="p">:</span> <span class="n">size</span><span class="p">,</span>
+        <span class="s2">"extension"</span><span class="p">:</span> <span class="n">extension</span><span class="p">,</span>
+        <span class="s2">"expected_bytes"</span><span class="p">:</span> <span class="n">expected_bytes</span><span class="p">,</span>
+        <span class="s2">"detected_format"</span><span class="p">:</span> <span class="n">detect_format</span><span class="p">(</span><span class="n">head</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ValidationResult</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="s2">"file is empty"</span><span class="p">,</span> <span class="n">detail</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">policy</span><span class="o">.</span><span class="n">reject_html</span> <span class="ow">and</span> <span class="n">looks_like_html</span><span class="p">(</span><span class="n">head</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ValidationResult</span><span class="p">(</span>
+            <span class="kc">False</span><span class="p">,</span> <span class="s2">"response is an HTML page, not a document"</span><span class="p">,</span> <span class="n">detail</span>
+        <span class="p">)</span>
+
+    <span class="n">signatures</span> <span class="o">=</span> <span class="n">MAGIC_SIGNATURES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">extension</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">policy</span><span class="o">.</span><span class="n">require_magic</span>
+        <span class="ow">and</span> <span class="n">signatures</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">_matches_any_signature</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="n">signatures</span><span class="p">)</span>
+    <span class="p">):</span>
+        <span class="n">detected</span> <span class="o">=</span> <span class="n">detail</span><span class="p">[</span><span class="s2">"detected_format"</span><span class="p">]</span> <span class="ow">or</span> <span class="s2">"unrecognized data"</span>
+        <span class="k">return</span> <span class="n">ValidationResult</span><span class="p">(</span>
+            <span class="kc">False</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">"content is not a </span><span class="si">{</span><span class="n">extension</span><span class="si">}</span><span class="s2"> file (leading bytes look like </span><span class="si">{</span><span class="n">detected</span><span class="si">}</span><span class="s2">)"</span><span class="p">,</span>
+            <span class="n">detail</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">reason</span> <span class="o">=</span> <span class="n">_size_checks</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">extension</span><span class="p">,</span> <span class="n">policy</span><span class="p">,</span> <span class="n">detail</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reason</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ValidationResult</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">detail</span><span class="p">)</span>
+
+    <span class="n">reason</span> <span class="o">=</span> <span class="n">_depth_checks</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">extension</span><span class="p">,</span> <span class="n">policy</span><span class="p">,</span> <span class="n">detail</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">reason</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ValidationResult</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="n">reason</span><span class="p">,</span> <span class="n">detail</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">ValidationResult</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="n">detail</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="validate_bytes">
+<a class="viewcode-back" href="../../module_docs/citeget/validate.html#citeget.validate_bytes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_bytes</span><span class="p">(</span>
+    <span class="n">body</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">extension</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">expected_bytes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">policy</span><span class="p">:</span> <span class="n">ValidationPolicy</span> <span class="o">=</span> <span class="n">DEFAULT_POLICY</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Validate an in-memory response body without writing it to disk.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        body: The bytes received.</span>
+<span class="sd">        extension: Expected file extension (``"pdf"``, ``"epub"``, ...). Drives</span>
+<span class="sd">            the magic-byte and size-floor checks; unknown values relax them.</span>
+<span class="sd">        expected_bytes: Size the search result advertised, for the truncation</span>
+<span class="sd">            check. None skips it.</span>
+<span class="sd">        policy: Which checks to apply. See :data:`DEFAULT_POLICY` and</span>
+<span class="sd">            :data:`BOOK_POLICY`.</span>
+
+<span class="sd">    &gt;&gt;&gt; bool(validate_bytes(b"&lt;!DOCTYPE html&gt;&lt;html&gt;...", extension="pdf"))</span>
+<span class="sd">    False</span>
+<span class="sd">    """</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">body</span> <span class="ow">or</span> <span class="sa">b</span><span class="s2">""</span>
+    <span class="k">return</span> <span class="n">_validate</span><span class="p">(</span>
+        <span class="n">body</span><span class="p">,</span>
+        <span class="n">body</span><span class="p">[:</span><span class="n">_HEAD_BYTES</span><span class="p">],</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">),</span>
+        <span class="n">extension</span><span class="o">=</span><span class="n">extension</span><span class="p">,</span>
+        <span class="n">expected_bytes</span><span class="o">=</span><span class="n">expected_bytes</span><span class="p">,</span>
+        <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="validate_download">
+<a class="viewcode-back" href="../../module_docs/citeget/validate.html#citeget.validate_download">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_download</span><span class="p">(</span>
+    <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">extension</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">expected_bytes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">policy</span><span class="p">:</span> <span class="n">ValidationPolicy</span> <span class="o">=</span> <span class="n">DEFAULT_POLICY</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ValidationResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Validate a file on disk. Extension defaults to the file's own suffix.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: File to check.</span>
+<span class="sd">        extension: Override the expected extension; defaults to ``path``'s suffix.</span>
+<span class="sd">        expected_bytes: Size the search result advertised, for the truncation check.</span>
+<span class="sd">        policy: Which checks to apply.</span>
+<span class="sd">    """</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="k">return</span> <span class="n">ValidationResult</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"file does not exist: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="p">{</span><span class="s2">"size"</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+    <span class="k">if</span> <span class="n">extension</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">extension</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">path</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">_HEAD_BYTES</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_validate</span><span class="p">(</span>
+        <span class="n">path</span><span class="p">,</span>
+        <span class="n">head</span><span class="p">,</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="p">,</span>
+        <span class="n">extension</span><span class="o">=</span><span class="n">extension</span><span class="p">,</span>
+        <span class="n">expected_bytes</span><span class="o">=</span><span class="n">expected_bytes</span><span class="p">,</span>
+        <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

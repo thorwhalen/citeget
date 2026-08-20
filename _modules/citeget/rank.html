@@ -1,0 +1,450 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>citeget.rank &mdash; citeget 0.2.6 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=fc7d8818"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            citeget
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget.html">citeget</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/__main__.html">citeget.__main__</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/acquire_references.html">citeget.acquire_references</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/article_pub.html">citeget.article_pub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/cli.html">citeget.cli</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/core.html">citeget.core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/extract.html">citeget.extract</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/fetch.html">citeget.fetch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/names.html">citeget.names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/rank.html">citeget.rank</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/resolve.html">citeget.resolve</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../module_docs/citeget/validate.html">citeget.validate</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">citeget</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">citeget.rank</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for citeget.rank</h1><div class="highlight"><pre>
+<span></span><span class="sd">"""Rank libgen search results against a requested title and author.</span>
+
+<span class="sd">``search()`` returns whatever libgen's relevance ordering produced, which for a</span>
+<span class="sd">known title is typically the same book repeated in several formats, interleaved</span>
+<span class="sd">with derivative works (summaries, workbooks) and download-spam listings. This</span>
+<span class="sd">module scores each result against what the caller actually asked for, so a</span>
+<span class="sd">caller can take the best match rather than the first row.</span>
+
+<span class="sd">Simple case::</span>
+
+<span class="sd">    from citeget import search</span>
+<span class="sd">    from citeget.rank import rank_results</span>
+
+<span class="sd">    results = search("Introduction to Algorithms Cormen")</span>
+<span class="sd">    best = rank_results(results, title="Introduction to Algorithms",</span>
+<span class="sd">                        authors="Thomas H. Cormen")[0]</span>
+
+<span class="sd">Everything about the scoring is overridable without editing this module: pass</span>
+<span class="sd">``weights``, ``format_preference``, ``language``, or ``decoy_pattern``.</span>
+
+<span class="sd">Scoring uses only fields already present in a ``search()`` result dict, so</span>
+<span class="sd">ranking costs no extra requests.</span>
+
+<span class="sd">Two independent guards keep non-books from winning:</span>
+
+<span class="sd">- a **decoy pattern** over the title (``summary``, ``workbook``, ``gratis``, …),</span>
+<span class="sd">  catching derivative works and download-spam landing pages, and</span>
+<span class="sd">- a **stub check** — a PDF under a few hundred kB is a landing page, not a scan.</span>
+<span class="sd">  This floor is much higher than the general one, because a short EPUB of a real</span>
+<span class="sd">  book is legitimately ~100 kB; one shared floor gets one of those two wrong.</span>
+
+<span class="sd">Both are penalties rather than filters, so a decoy can still surface when it is</span>
+<span class="sd">genuinely the only thing available — it just never outranks a real match.</span>
+
+<span class="sd">Based on the ranking contributed in</span>
+<span class="sd">https://github.com/thorwhalen/citeget/issues/7.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">difflib</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceMatcher</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">citeget.names</span><span class="w"> </span><span class="kn">import</span> <span class="n">candidate_surnames</span><span class="p">,</span> <span class="n">normalize_name</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"ScoreWeights"</span><span class="p">,</span>
+    <span class="s2">"SizeBounds"</span><span class="p">,</span>
+    <span class="s2">"ScoredResult"</span><span class="p">,</span>
+    <span class="s2">"DEFAULT_WEIGHTS"</span><span class="p">,</span>
+    <span class="s2">"DEFAULT_SIZE_BOUNDS"</span><span class="p">,</span>
+    <span class="s2">"DEFAULT_FORMAT_PREFERENCE"</span><span class="p">,</span>
+    <span class="s2">"DEFAULT_DECOY_PATTERN"</span><span class="p">,</span>
+    <span class="s2">"TITLE_STOPWORDS"</span><span class="p">,</span>
+    <span class="s2">"score_result"</span><span class="p">,</span>
+    <span class="s2">"rank_results"</span><span class="p">,</span>
+    <span class="s2">"dedupe_results"</span><span class="p">,</span>
+    <span class="s2">"dedupe_key"</span><span class="p">,</span>
+    <span class="s2">"parse_size"</span><span class="p">,</span>
+    <span class="s2">"candidate_surnames"</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="c1"># Words carrying no discriminating power in a title match.</span>
+<span class="n">TITLE_STOPWORDS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+    <span class="s2">"a an and as at be by for how in is it me my not of on or the to with"</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+<span class="p">)</span>
+
+<span class="c1"># Preferred file formats, best first. Callers with different needs (e.g. an</span>
+<span class="c1"># e-reader workflow preferring epub) pass their own ordering.</span>
+<span class="n">DEFAULT_FORMAT_PREFERENCE</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"pdf"</span><span class="p">,</span> <span class="s2">"epub"</span><span class="p">,</span> <span class="s2">"azw3"</span><span class="p">,</span> <span class="s2">"mobi"</span><span class="p">,</span> <span class="s2">"azw"</span><span class="p">,</span> <span class="s2">"djvu"</span><span class="p">,</span> <span class="s2">"fb2"</span><span class="p">,</span> <span class="s2">"txt"</span><span class="p">)</span>
+
+<span class="c1"># Derivative works and download-spam listings that match a title well but are</span>
+<span class="c1"># not the book. Matched case-insensitively against the result title.</span>
+<span class="n">DEFAULT_DECOY_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s2">"\b("</span>
+    <span class="sa">r</span><span class="s2">"summary|summaries|workbook|study guide|sparknotes|cliffs?notes|"</span>
+    <span class="sa">r</span><span class="s2">"key takeaways|conversation starters|review and analysis|analysis of|"</span>
+    <span class="sa">r</span><span class="s2">"insights (?:on|from)|companion to|instaread|blinkist|"</span>
+    <span class="sa">r</span><span class="s2">"downloaden|gratis|free download|telecharger|descargar"</span>
+    <span class="sa">r</span><span class="s2">")\b"</span><span class="p">,</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">_SIZE_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"([\d.]+)\s*([kKmMgG]?)i?[bB]"</span><span class="p">)</span>
+<span class="n">_SIZE_UNITS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">""</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"k"</span><span class="p">:</span> <span class="mi">10</span><span class="o">**</span><span class="mi">3</span><span class="p">,</span> <span class="s2">"m"</span><span class="p">:</span> <span class="mi">10</span><span class="o">**</span><span class="mi">6</span><span class="p">,</span> <span class="s2">"g"</span><span class="p">:</span> <span class="mi">10</span><span class="o">**</span><span class="mi">9</span><span class="p">}</span>
+
+<span class="c1"># How token coverage and sequence similarity combine into the title score.</span>
+<span class="c1"># Coverage leads because genuine subtitles are extremely common and must not be</span>
+<span class="c1"># punished as hard as the extra material a summary adds.</span>
+<span class="n">_COVERAGE_WEIGHT</span> <span class="o">=</span> <span class="mf">0.65</span>
+
+
+<div class="viewcode-block" id="ScoreWeights">
+<a class="viewcode-back" href="../../module_docs/citeget/rank.html#citeget.ScoreWeights">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScoreWeights</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Relative contribution of each signal to the total score.</span>
+
+<span class="sd">    Title and author dominate: format and language only break ties between</span>
+<span class="sd">    results that are already plausibly the right book.</span>
+<span class="sd">    """</span>
+
+    <span class="n">title</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">5.0</span>
+    <span class="n">author</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span>
+    <span class="nb">format</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.2</span>
+    <span class="n">language</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span>
+    <span class="n">decoy_penalty</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">6.0</span>
+    <span class="n">stub_penalty</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.0</span></div>
+
+
+
+<div class="viewcode-block" id="SizeBounds">
+<a class="viewcode-back" href="../../module_docs/citeget/rank.html#citeget.SizeBounds">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SizeBounds</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Plausibility bounds for a real book file.</span>
+
+<span class="sd">    ``min_pdf_bytes`` is deliberately far above ``min_bytes``: a landing-page</span>
+<span class="sd">    "download" stub is typically a valid but nearly empty PDF, whereas a short</span>
+<span class="sd">    epub of a genuine book can legitimately be ~100 kB.</span>
+<span class="sd">    """</span>
+
+    <span class="n">min_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">80_000</span>
+    <span class="n">min_pdf_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300_000</span>
+    <span class="n">implausible_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">120_000_000</span></div>
+
+
+
+<span class="n">DEFAULT_WEIGHTS</span> <span class="o">=</span> <span class="n">ScoreWeights</span><span class="p">()</span>
+<span class="n">DEFAULT_SIZE_BOUNDS</span> <span class="o">=</span> <span class="n">SizeBounds</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="ScoredResult">
+<a class="viewcode-back" href="../../module_docs/citeget/rank.html#citeget.ScoredResult">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ScoredResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A search result with its score and the signal breakdown behind it."""</span>
+
+    <span class="n">result</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="n">score</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">title_match</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">author_match</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">is_decoy</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">is_stub</span><span class="p">:</span> <span class="nb">bool</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extension</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"extension"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">title</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_tokens</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">drop_stopwords</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Normalized word set of *text*, optionally minus non-discriminating words."""</span>
+    <span class="n">words</span> <span class="o">=</span> <span class="p">(</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">normalize_name</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span> <span class="k">if</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">drop_stopwords</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">words</span> <span class="k">if</span> <span class="n">w</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">TITLE_STOPWORDS</span><span class="p">}</span>
+    <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="parse_size">
+<a class="viewcode-back" href="../../module_docs/citeget/rank.html#citeget.parse_size">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_size</span><span class="p">(</span><span class="n">size_text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Bytes from a libgen size string such as ``'2 MB'``; 0 if unparseable.</span>
+
+<span class="sd">    &gt;&gt;&gt; parse_size("2 MB")</span>
+<span class="sd">    2000000</span>
+<span class="sd">    &gt;&gt;&gt; parse_size("587 kB")</span>
+<span class="sd">    587000</span>
+<span class="sd">    &gt;&gt;&gt; parse_size("")</span>
+<span class="sd">    0</span>
+<span class="sd">    """</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">_SIZE_RE</span><span class="o">.</span><span class="n">match</span><span class="p">((</span><span class="n">size_text</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">value</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span> <span class="o">*</span> <span class="n">_SIZE_UNITS</span><span class="p">[</span><span class="n">unit</span><span class="p">])</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_title_score</span><span class="p">(</span><span class="n">requested</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">found</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Blend token coverage with sequence similarity.</span>
+
+<span class="sd">    Coverage alone rewards a result whose title merely contains the request</span>
+<span class="sd">    (``'Summary of X'`` covers ``'X'`` fully); the similarity ratio penalises</span>
+<span class="sd">    the extra material.</span>
+<span class="sd">    """</span>
+    <span class="n">requested_tokens</span> <span class="o">=</span> <span class="n">_tokens</span><span class="p">(</span><span class="n">requested</span><span class="p">)</span>
+    <span class="n">coverage</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">requested_tokens</span> <span class="o">&amp;</span> <span class="n">_tokens</span><span class="p">(</span><span class="n">found</span><span class="p">))</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">requested_tokens</span><span class="p">))</span>
+    <span class="n">similarity</span> <span class="o">=</span> <span class="n">SequenceMatcher</span><span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span> <span class="n">normalize_name</span><span class="p">(</span><span class="n">requested</span><span class="p">),</span> <span class="n">normalize_name</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">ratio</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_COVERAGE_WEIGHT</span> <span class="o">*</span> <span class="n">coverage</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">_COVERAGE_WEIGHT</span><span class="p">)</span> <span class="o">*</span> <span class="n">similarity</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_format_score</span><span class="p">(</span><span class="n">extension</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">preference</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Score in ``(0, 1]`` by position in *preference*; 0 for unlisted formats."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="nb">list</span><span class="p">(</span><span class="n">preference</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">extension</span><span class="p">)</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">preference</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
+
+
+<div class="viewcode-block" id="score_result">
+<a class="viewcode-back" href="../../module_docs/citeget/rank.html#citeget.score_result">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">score_result</span><span class="p">(</span>
+    <span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">authors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">format_preference</span><span class="p">:</span> <span class="n">Sequence</span> <span class="o">=</span> <span class="n">DEFAULT_FORMAT_PREFERENCE</span><span class="p">,</span>
+    <span class="n">language</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"english"</span><span class="p">,</span>
+    <span class="n">weights</span><span class="p">:</span> <span class="n">ScoreWeights</span> <span class="o">=</span> <span class="n">DEFAULT_WEIGHTS</span><span class="p">,</span>
+    <span class="n">size_bounds</span><span class="p">:</span> <span class="n">SizeBounds</span> <span class="o">=</span> <span class="n">DEFAULT_SIZE_BOUNDS</span><span class="p">,</span>
+    <span class="n">decoy_pattern</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">Pattern</span> <span class="o">=</span> <span class="n">DEFAULT_DECOY_PATTERN</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScoredResult</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Score one ``search()`` result against a requested title and author.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        result: A result dict from :func:`citeget.search`.</span>
+<span class="sd">        title: The title actually wanted.</span>
+<span class="sd">        authors: The author(s) wanted, in any of the orderings</span>
+<span class="sd">            :mod:`citeget.names` understands. None skips author scoring.</span>
+<span class="sd">        format_preference: File formats, best first.</span>
+<span class="sd">        language: Preferred language; a result with no language set is treated</span>
+<span class="sd">            as neutral rather than penalised, since libgen often omits it.</span>
+<span class="sd">        weights: Per-signal weights.</span>
+<span class="sd">        size_bounds: What counts as a plausible file size.</span>
+<span class="sd">        decoy_pattern: Title pattern marking derivative or spam listings.</span>
+<span class="sd">    """</span>
+    <span class="n">extension</span> <span class="o">=</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"extension"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">parse_size</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"size"</span><span class="p">))</span>
+
+    <span class="n">title_match</span> <span class="o">=</span> <span class="n">_title_score</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">authors</span><span class="p">:</span>
+        <span class="n">wanted</span> <span class="o">=</span> <span class="n">candidate_surnames</span><span class="p">(</span><span class="n">authors</span><span class="p">)</span>
+        <span class="n">present</span> <span class="o">=</span> <span class="n">_tokens</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"authors"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="n">drop_stopwords</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">author_match</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">wanted</span> <span class="o">&amp;</span> <span class="n">present</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">author_match</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="n">result_language</span> <span class="o">=</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"language"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="c1"># An unset language is common and should not be penalised.</span>
+    <span class="n">language_match</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mf">1.0</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">language</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">result_language</span> <span class="ow">or</span> <span class="n">language</span> <span class="ow">in</span> <span class="n">result_language</span><span class="p">)</span>
+        <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="p">)</span>
+
+    <span class="n">is_stub</span> <span class="o">=</span> <span class="n">extension</span> <span class="o">==</span> <span class="s2">"pdf"</span> <span class="ow">and</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">size</span> <span class="o">&lt;</span> <span class="n">size_bounds</span><span class="o">.</span><span class="n">min_pdf_bytes</span>
+    <span class="k">if</span> <span class="n">size</span> <span class="ow">and</span> <span class="p">(</span><span class="n">size</span> <span class="o">&lt;</span> <span class="n">size_bounds</span><span class="o">.</span><span class="n">min_bytes</span> <span class="ow">or</span> <span class="n">is_stub</span><span class="p">):</span>
+        <span class="n">size_score</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">elif</span> <span class="n">size</span> <span class="o">&gt;</span> <span class="n">size_bounds</span><span class="o">.</span><span class="n">implausible_bytes</span><span class="p">:</span>
+        <span class="n">size_score</span> <span class="o">=</span> <span class="mf">0.3</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">size_score</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="n">is_decoy</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">decoy_pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)))</span>
+
+    <span class="n">total</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">weights</span><span class="o">.</span><span class="n">title</span> <span class="o">*</span> <span class="n">title_match</span>
+        <span class="o">+</span> <span class="n">weights</span><span class="o">.</span><span class="n">author</span> <span class="o">*</span> <span class="n">author_match</span>
+        <span class="o">+</span> <span class="n">weights</span><span class="o">.</span><span class="n">format</span> <span class="o">*</span> <span class="n">_format_score</span><span class="p">(</span><span class="n">extension</span><span class="p">,</span> <span class="n">format_preference</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">weights</span><span class="o">.</span><span class="n">language</span> <span class="o">*</span> <span class="n">language_match</span>
+        <span class="o">+</span> <span class="n">weights</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="n">size_score</span>
+        <span class="o">-</span> <span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">decoy_penalty</span> <span class="k">if</span> <span class="n">is_decoy</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="o">-</span> <span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">stub_penalty</span> <span class="k">if</span> <span class="n">is_stub</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">ScoredResult</span><span class="p">(</span>
+        <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+        <span class="n">score</span><span class="o">=</span><span class="n">total</span><span class="p">,</span>
+        <span class="n">title_match</span><span class="o">=</span><span class="n">title_match</span><span class="p">,</span>
+        <span class="n">author_match</span><span class="o">=</span><span class="n">author_match</span><span class="p">,</span>
+        <span class="n">is_decoy</span><span class="o">=</span><span class="n">is_decoy</span><span class="p">,</span>
+        <span class="n">is_stub</span><span class="o">=</span><span class="n">is_stub</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="rank_results">
+<a class="viewcode-back" href="../../module_docs/citeget/rank.html#citeget.rank_results">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rank_results</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">authors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return ``results`` as :class:`ScoredResult` objects, best match first.</span>
+
+<span class="sd">    ``kwargs`` are forwarded to :func:`score_result` (``format_preference``,</span>
+<span class="sd">    ``language``, ``weights``, ``size_bounds``, ``decoy_pattern``).</span>
+<span class="sd">    """</span>
+    <span class="n">scored</span> <span class="o">=</span> <span class="p">(</span><span class="n">score_result</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">,</span> <span class="n">authors</span><span class="o">=</span><span class="n">authors</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">scored</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="o">-</span><span class="n">s</span><span class="o">.</span><span class="n">score</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="dedupe_key">
+<a class="viewcode-back" href="../../module_docs/citeget/rank.html#citeget.dedupe_key">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">dedupe_key</span><span class="p">(</span><span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Identity of the *work* behind a result, ignoring which format it is in.</span>
+
+<span class="sd">    Libgen lists one edition once per format, so ``max_downloads=5`` otherwise</span>
+<span class="sd">    means "five copies of one book". Title, year and author surnames together</span>
+<span class="sd">    identify an edition well enough to collapse those rows while keeping</span>
+<span class="sd">    genuinely different editions apart.</span>
+<span class="sd">    """</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="s2">" "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_tokens</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))))</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"year"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()[:</span><span class="mi">4</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">candidate_surnames</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"authors"</span><span class="p">,</span> <span class="s2">""</span><span class="p">))))</span></div>
+
+
+
+<div class="viewcode-block" id="dedupe_results">
+<a class="viewcode-back" href="../../module_docs/citeget/rank.html#citeget.dedupe_results">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">dedupe_results</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="n">dedupe_key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Keep only the first result for each distinct work, preserving order.</span>
+
+<span class="sd">    Apply after ranking so the surviving copy of each work is the best-scoring</span>
+<span class="sd">    one. Accepts either plain result dicts or :class:`ScoredResult` objects and</span>
+<span class="sd">    returns the same kind it was given.</span>
+<span class="sd">    """</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">kept</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">result</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">ScoredResult</span><span class="p">)</span> <span class="k">else</span> <span class="n">item</span>
+        <span class="n">item_key</span> <span class="o">=</span> <span class="n">key</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">item_key</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">item_key</span><span class="p">)</span>
+        <span class="n">kept</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">kept</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
