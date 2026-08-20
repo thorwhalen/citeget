@@ -493,7 +493,9 @@ def _load_with_retries(
 
     A hard connection failure is never retried — a domain that does not resolve
     will not start resolving two seconds later — but a timeout is, since that is
-    what a healthy mirror under load produces.
+    what a healthy mirror under load produces. A page that loads without a
+    results table is retried too: libgen returns a blank page transiently often
+    enough that the same query can yield 0 results and then 21 a minute later.
     """
     last_exc = None
     for attempt in range(1, max(1, attempts) + 1):
@@ -501,12 +503,16 @@ def _load_with_retries(
             table = _load_results_table(
                 page, url, timeout=timeout, table_timeout=table_timeout
             )
-            return table, None
+            if table is not None:
+                return table, None
+            last_exc = None  # loaded fine, just had nothing on it
         except Exception as exc:
             last_exc = exc
-            if _is_hard_unreachable(exc) or attempt >= attempts:
+            if _is_hard_unreachable(exc):
                 break
-            time.sleep(backoff * attempt)
+        if attempt >= attempts:
+            break
+        time.sleep(backoff * attempt)
     return None, last_exc
 
 
@@ -992,8 +998,7 @@ def download_one(
             return str(filepath)
         if verbose:
             print(
-                "    download_one: discarding unusable cached file "
-                f"({verdict.reason})"
+                f"    download_one: discarding unusable cached file ({verdict.reason})"
             )
         try:
             filepath.unlink()

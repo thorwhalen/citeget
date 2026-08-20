@@ -150,8 +150,13 @@ def test_retries_are_bounded():
     assert len(page.goto_calls) == 3
 
 
-def test_page_that_loads_without_a_table_is_a_no_results_answer():
-    """Not an error: a mirror that answered is authoritative about having none."""
+def test_page_that_loads_without_a_table_is_not_an_error():
+    """Reported as "nothing here" rather than as a failure — but retried first.
+
+    Live libgen returns a blank page transiently often enough that the same
+    query gave 0 results and then 21 a minute later, so one blank render is
+    not evidence that a query has no matches.
+    """
     page = FakePage(table=None)
     table, exc = _load_with_retries(
         page,
@@ -162,7 +167,24 @@ def test_page_that_loads_without_a_table_is_a_no_results_answer():
         backoff=0,
     )
     assert table is None and exc is None
-    assert len(page.goto_calls) == 1  # no pointless retry
+    assert len(page.goto_calls) == 2
+
+
+def test_a_blank_page_that_renders_on_retry_is_used():
+    class _BlankThenTable(FakePage):
+        def query_selector(self, selector):
+            return None if len(self.goto_calls) < 2 else "<table>"
+
+    page = _BlankThenTable()
+    table, exc = _load_with_retries(
+        page,
+        "https://libgen.vg/x",
+        timeout=45000,
+        table_timeout=20000,
+        attempts=2,
+        backoff=0,
+    )
+    assert exc is None and table == "<table>"
 
 
 # --- issue #4: waiting for the right thing ---------------------------------
@@ -308,17 +330,22 @@ def test_empty_first_mirror_falls_over_to_a_working_one(scripted_browser):
     page = scripted_browser(
         {"libgen.vg": None, "libgen.la": _FakeTable(["header", "row"])}
     )
-    results = core.search("q", mirrors=["https://libgen.vg", "https://libgen.la"])
+    results = core.search(
+        "q", mirrors=["https://libgen.vg", "https://libgen.la"], retry_backoff=0
+    )
     assert results == [{"title": "hit", "base_url": "https://libgen.la"}]
-    assert len(page.visited) == 2
+    # The blank mirror is retried before we move on, then the next one answers.
+    blank_visits = sum("libgen.vg" in url for url in page.visited)
+    assert blank_visits == core.DEFAULT_ATTEMPTS_PER_MIRROR
+    assert "libgen.la" in page.visited[-1]
 
 
 def test_two_empty_mirrors_agreeing_means_no_results(scripted_browser):
     page = scripted_browser({"libgen": None})
     mirrors = ["https://libgen.vg", "https://libgen.la", "https://libgen.li"]
-    assert core.search("q", mirrors=mirrors) == []
-    # Stops as soon as two mirrors agree; does not walk the whole list.
-    assert len(page.visited) == 2
+    assert core.search("q", mirrors=mirrors, retry_backoff=0) == []
+    # Stops as soon as two mirrors agree; never reaches the third.
+    assert not any("libgen.li" in url for url in page.visited)
 
 
 def test_unreachable_mirrors_still_raise_rather_than_returning_empty(
@@ -326,7 +353,9 @@ def test_unreachable_mirrors_still_raise_rather_than_returning_empty(
 ):
     scripted_browser({"libgen": Exception("net::ERR_NAME_NOT_RESOLVED")})
     with pytest.raises(core.MirrorUnreachableError):
-        core.search("q", mirrors=["https://libgen.vg", "https://libgen.la"])
+        core.search(
+            "q", mirrors=["https://libgen.vg", "https://libgen.la"], retry_backoff=0
+        )
 
 
 def test_a_dead_mirror_plus_an_empty_one_reports_no_results(scripted_browser):
@@ -338,4 +367,9 @@ def test_a_dead_mirror_plus_an_empty_one_reports_no_results(scripted_browser):
     )
     # One mirror answered and had nothing; that is the honest answer even
     # though the confirmation threshold was never reached.
-    assert core.search("q", mirrors=["https://libgen.vg", "https://libgen.la"]) == []
+    assert (
+        core.search(
+            "q", mirrors=["https://libgen.vg", "https://libgen.la"], retry_backoff=0
+        )
+        == []
+    )
