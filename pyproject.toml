@@ -38,6 +38,7 @@ dependencies = [
     "httpx",
     "html2text",
     "argh",
+    "pypdf",
 ]
 
 [project.scripts]

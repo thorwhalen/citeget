@@ -69,10 +69,15 @@ def download(
     download_dir: str = ".",
     max_downloads: int = 5,
     delay: float = 2.0,
+    no_distinct: bool = False,
     base_url: str = "",
     mirrors: str = "",
 ):
     """Search libgen and download top results.
+
+    Counts distinct works towards --max-downloads, since libgen lists one
+    edition once per format. To acquire one copy of a specific book, use
+    ``citeget get-book`` instead, which ranks results against title and author.
 
     Args:
         query: Search terms.
@@ -80,6 +85,8 @@ def download(
         download_dir: Directory to save files into.
         max_downloads: Max number of files to download (0 = all).
         delay: Seconds between downloads (rate limiting).
+        no_distinct: Take libgen's raw result order, including the same
+            edition repeated once per file format.
         base_url: Force a single mirror (e.g. https://libgen.vg).
         mirrors: Comma-separated ordered list of mirror base URLs to try.
     """
@@ -94,6 +101,7 @@ def download(
             download_dir=download_dir,
             max_downloads=max_downloads,
             delay=delay,
+            distinct=not no_distinct,
             base_url=base_url or None,
             mirrors=mirror_list,
         )
@@ -288,9 +296,109 @@ def fetch(
         print(f"{_ts()} Manifest: {manifest_path}")
 
 
+def get_book(
+    title: str,
+    *,
+    authors: str = "",
+    download_dir: str = ".",
+    query: str = "",
+    topic: str = "books",
+    max_candidates: int = 5,
+    base_url: str = "",
+    mirrors: str = "",
+):
+    """Acquire one copy of a specific book, ranked against title and author.
+
+    Unlike ``download``, which takes libgen's own top results (usually the same
+    book in several formats), this ranks every result against what you asked
+    for and downloads the best candidate that validates as a complete book,
+    falling through to the next one if it turns out to be an excerpt or a stub.
+
+    Args:
+        title: The book's title.
+        authors: The author(s), if known — strongly improves matching.
+        download_dir: Directory to save the file into.
+        query: Override the libgen search string (defaults to title + surname).
+        topic: "books", "fiction", "articles", etc.
+        max_candidates: How many ranked candidates to try before giving up.
+        base_url: Force a single mirror (e.g. https://libgen.vg).
+        mirrors: Comma-separated ordered list of mirror base URLs to try.
+    """
+    from citeget import get_book as do_get_book, MirrorUnreachableError
+
+    mirror_list = [m.strip() for m in mirrors.split(",") if m.strip()] or None
+
+    try:
+        path = do_get_book(
+            title,
+            authors=authors or None,
+            download_dir=download_dir,
+            query=query or None,
+            topic=topic,
+            max_candidates=max_candidates,
+            base_url=base_url or None,
+            mirrors=mirror_list,
+            verbose=True,
+        )
+    except MirrorUnreachableError as exc:
+        print(f"ERROR: {exc}")
+        return
+
+    if path:
+        from pathlib import Path as _Path
+
+        print(f"\n{_ts()} Saved: {path} ({_Path(path).stat().st_size:,} bytes)")
+    else:
+        print(
+            f"\n{_ts()} No usable copy found for {title!r}. "
+            "Try a different --query, or raise --max-candidates."
+        )
+
+
+def check_mirrors(*, mirrors: str = "", query: str = "design of everyday things"):
+    """Probe the configured libgen mirrors and report which are healthy.
+
+    Mirror domains rotate, so the shipped default list goes stale on its own
+    schedule. Run this when searches start failing: it tells you whether the
+    problem is your network or the mirror list, and prints a ready-to-use
+    CITEGET_LIBGEN_MIRRORS value for the ones that work.
+
+    Args:
+        mirrors: Comma-separated mirrors to probe (defaults to the configured list).
+        query: Search terms to probe with (should be something with results).
+    """
+    from citeget import check_mirrors as do_check
+
+    mirror_list = [m.strip() for m in mirrors.split(",") if m.strip()] or None
+    reports = do_check(mirrors=mirror_list, query=query)
+
+    print(f"Probing {len(reports)} mirror(s) with query {query!r}:\n")
+    print(f"  {'status':7s} {'mirror':28s} {'hits':>5s}  {'time':>7s}  detail")
+    for r in reports:
+        status = "OK" if r["ok"] else "FAIL"
+        print(
+            f"  {status:7s} {r['mirror']:28s} {r['results']:5d}  "
+            f"{r['elapsed_ms']:6d}ms  {r['error']}"
+        )
+
+    healthy = [r["mirror"] for r in reports if r["ok"] and r["results"]]
+    print()
+    if healthy:
+        print("Working mirrors — use them without editing code:")
+        print(f"  export CITEGET_LIBGEN_MIRRORS='{','.join(healthy)}'")
+    else:
+        print(
+            "No mirror returned results. Either every listed domain has moved "
+            "(check for current libgen mirrors and pass --mirrors), or your "
+            "network/DNS is blocking them."
+        )
+
+
 def main():
     """CLI dispatcher."""
-    argh.dispatch_commands([search, download, acquire, fetch])
+    argh.dispatch_commands(
+        [search, download, get_book, acquire, fetch, check_mirrors]
+    )
 
 
 if __name__ == "__main__":

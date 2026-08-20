@@ -601,6 +601,11 @@ def _make_ref_basename(ref: Reference) -> str:
     return _sanitize_filename(name)
 
 
+# Minimum ``_match_result_to_ref`` score for a libgen result to be worth
+# downloading at all. Below this the result is about something else.
+_MATCH_THRESHOLD = 0.4
+
+
 def _match_result_to_ref(result: dict, ref: Reference) -> float:
     """Score how well a libgen result matches a reference (0-1)."""
     score = 0.0
@@ -642,6 +647,7 @@ def _try_libgen(
     topics: tuple | None = None,
     log_entries: list,
     timeout: int = 30000,
+    max_candidates: int = 3,
     verbose: bool = False,
 ) -> Optional[str]:
     """Try to find and download the reference from libgen.
@@ -654,6 +660,9 @@ def _try_libgen(
             ``("books", "fiction", "articles")``.  Overrides ``topic``.
         log_entries: Log list (mutated in place).
         timeout: Browser timeout in ms.
+        max_candidates: How many plausible results to try per query before
+            moving on. More than one, because the top-scoring row is often an
+            excerpt or a stub rather than the work itself.
         verbose: Print diagnostic info.
 
     Returns filepath on success, None on failure.
@@ -691,16 +700,18 @@ def _try_libgen(
             )
             continue
 
-        # Score results
-        best_result = None
-        best_score = 0.0
-        for r in results:
-            score = _match_result_to_ref(r, ref)
-            if score > best_score:
-                best_score = score
-                best_result = r
-
-        matched = best_score >= 0.4 and best_result is not None
+        # Score results, keeping every plausible candidate rather than only the
+        # top one. Libgen catalogues excerpts, samples and reviews under the
+        # full work's title, so when the best-scoring row fails to download or
+        # fails validation, the next one is usually the real thing.
+        scored = sorted(
+            ((_match_result_to_ref(r, ref), r) for r in results),
+            key=lambda pair: -pair[0],
+        )
+        candidates = [r for score, r in scored if score >= _MATCH_THRESHOLD]
+        best_score = scored[0][0] if scored else 0.0
+        best_result = scored[0][1] if scored else None
+        matched = bool(candidates)
 
         log_entry = {
             "timestamp": timestamp,
@@ -717,14 +728,20 @@ def _try_libgen(
         log_entries.append(log_entry)
 
         if matched:
-            try:
-                downloaded = download_one(
-                    best_result,
-                    download_dir=str(filepath.parent),
-                    timeout=60000,
-                    try_mirrors=True,
-                    verbose=verbose,
-                )
+            download_errors = []
+            for candidate in candidates[:max_candidates]:
+                label = candidate.get("extension") or "?"
+                try:
+                    downloaded = download_one(
+                        candidate,
+                        download_dir=str(filepath.parent),
+                        timeout=60000,
+                        try_mirrors=True,
+                        verbose=verbose,
+                    )
+                except Exception as e:
+                    download_errors.append(f"{label}: {e}")
+                    continue
                 if downloaded:
                     # Rename to our standard name
                     dl_path = Path(downloaded)
@@ -733,11 +750,8 @@ def _try_libgen(
                             filepath.unlink()
                         dl_path.rename(filepath)
                     return str(filepath)
-                else:
-                    log_entry["error"] = "download returned None (all methods failed)"
-            except Exception as e:
-                log_entry["error"] = f"download failed: {e}"
-                continue
+                download_errors.append(f"{label}: all download methods failed")
+            log_entry["error"] = "; ".join(download_errors)[:300]
 
     return None
 
