@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.core &mdash; citeget 0.2.6 documentation</title>
+  <title>citeget.core &mdash; citeget 0.2.7 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=fc7d8818"></script>
+      <script src="../../_static/documentation_options.js?v=58050c01"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -167,6 +167,11 @@
 <span class="c1"># results table simply has not rendered yet, so one mirror showing no table is</span>
 <span class="c1"># not evidence of "no results". This many mirrors must agree before we say so.</span>
 <span class="n">DEFAULT_NO_TABLE_CONFIRMATIONS</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="c1"># Even after per-mirror retries and cross-mirror confirmation, libgen returns a</span>
+<span class="c1"># blank result set for a query with real matches often enough to matter: in</span>
+<span class="c1"># measured repeats of one such query, roughly one run in four came back empty.</span>
+<span class="c1"># High-level callers re-run the whole search this many times before believing it.</span>
+<span class="n">DEFAULT_SEARCH_ATTEMPTS</span> <span class="o">=</span> <span class="mi">2</span>
 
 <span class="c1"># Default single base URL (first mirror). Kept for backwards compatibility with</span>
 <span class="c1"># callers/tests that import ``BASE_URL`` directly.</span>
@@ -1439,6 +1444,7 @@
     <span class="n">topic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"books"</span><span class="p">,</span>
     <span class="n">max_candidates</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
     <span class="n">results_per_page</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+    <span class="n">search_attempts</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_SEARCH_ATTEMPTS</span><span class="p">,</span>
     <span class="n">headless</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_SEARCH_TIMEOUT</span><span class="p">,</span>
     <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
@@ -1472,6 +1478,9 @@
 <span class="sd">        topic: Libgen topic to search ("books", "fiction", "articles", ...).</span>
 <span class="sd">        max_candidates: How many ranked candidates to try before giving up.</span>
 <span class="sd">        results_per_page: How many results to fetch to rank.</span>
+<span class="sd">        search_attempts: How many times to re-run a search that came back empty</span>
+<span class="sd">            before accepting "not found". Libgen returns a spurious empty result</span>
+<span class="sd">            set often enough that a single empty answer is weak evidence.</span>
 <span class="sd">        headless: Headless browser mode.</span>
 <span class="sd">        timeout: Page load timeout in ms.</span>
 <span class="sd">        delay: Seconds between page loads (rate limiting).</span>
@@ -1493,18 +1502,24 @@
         <span class="n">surname</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">surnames</span><span class="p">(</span><span class="n">authors</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">)),</span> <span class="s2">""</span><span class="p">)</span>
         <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">surname</span><span class="si">}</span><span class="s2">"</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 
-    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Searching libgen for </span><span class="si">{</span><span class="n">query</span><span class="si">!r}</span><span class="s2">..."</span><span class="p">)</span>
-
-    <span class="n">results</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span>
-        <span class="n">query</span><span class="p">,</span>
-        <span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span>
-        <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">,</span>
-        <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">,</span>
-        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-        <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span><span class="p">,</span>
-        <span class="n">mirrors</span><span class="o">=</span><span class="n">mirrors</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">attempt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">search_attempts</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">suffix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" (attempt </span><span class="si">{</span><span class="n">attempt</span><span class="si">}</span><span class="s2">)"</span> <span class="k">if</span> <span class="n">attempt</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="s2">""</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Searching libgen for </span><span class="si">{</span><span class="n">query</span><span class="si">!r}{</span><span class="n">suffix</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span>
+            <span class="n">query</span><span class="p">,</span>
+            <span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span>
+            <span class="n">results_per_page</span><span class="o">=</span><span class="n">results_per_page</span><span class="p">,</span>
+            <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">,</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+            <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span><span class="p">,</span>
+            <span class="n">mirrors</span><span class="o">=</span><span class="n">mirrors</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">results</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="c1"># An empty answer is weak evidence — libgen serves spurious blanks — so</span>
+        <span class="c1"># ask again before concluding the book is not there.</span>
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> results; ranking against </span><span class="si">{</span><span class="n">title</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
