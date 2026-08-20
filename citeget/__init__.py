@@ -14,6 +14,11 @@ Usage::
     # Search and download top results
     search_and_download("python programming", download_dir="~/papers", max_downloads=5)
 
+    # Or acquire one copy of a *specific* book: ranked against title+author,
+    # validated as a complete book, falling through to the next candidate if not
+    from citeget import get_book
+    get_book("Crossing the Chasm", authors="Geoffrey A. Moore", download_dir="~/books")
+
     # Acquire all references from a document
     from citeget import parse_references_section, acquire_all_references, resolve_work_dir
 
@@ -51,10 +56,38 @@ from citeget.core import (
     search,
     download_results,
     download_one,
+    download_best,
+    get_book,
     search_and_download,
+    check_mirrors,
     TOPIC_ALIASES,
     DEFAULT_LIBGEN_MIRRORS,
     MirrorUnreachableError,
+)
+
+from citeget.rank import (
+    rank_results,
+    score_result,
+    dedupe_results,
+    ScoredResult,
+    ScoreWeights,
+    SizeBounds,
+)
+
+from citeget.validate import (
+    validate_download,
+    validate_bytes,
+    ValidationPolicy,
+    ValidationResult,
+    InvalidDownloadError,
+    DEFAULT_POLICY,
+    BOOK_POLICY,
+)
+
+from citeget.names import (
+    apa7_authors,
+    candidate_surnames,
+    surnames,
 )
 
 from citeget.acquire_references import (
@@ -116,10 +149,32 @@ __all__ = [
     "search",
     "download_results",
     "download_one",
+    "download_best",
+    "get_book",
     "search_and_download",
+    "check_mirrors",
     "TOPIC_ALIASES",
     "DEFAULT_LIBGEN_MIRRORS",
     "MirrorUnreachableError",
+    # Result ranking (pick the right book, not the first row)
+    "rank_results",
+    "score_result",
+    "dedupe_results",
+    "ScoredResult",
+    "ScoreWeights",
+    "SizeBounds",
+    # Download validation (is this really the file we asked for?)
+    "validate_download",
+    "validate_bytes",
+    "ValidationPolicy",
+    "ValidationResult",
+    "InvalidDownloadError",
+    "DEFAULT_POLICY",
+    "BOOK_POLICY",
+    # Author-name parsing
+    "apa7_authors",
+    "candidate_surnames",
+    "surnames",
     # Reference parsing (low-level)
     "parse_reference",
     "parse_references_section",

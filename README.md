@@ -30,6 +30,13 @@ citeget search "graph theory" --topic articles
 # Download top results
 citeget download "python programming" --download-dir ~/papers --max-downloads 3
 
+# Or get one copy of a *specific* book: ranked against title + author,
+# validated as a complete book, next candidate tried if it isn't one
+citeget get-book "Crossing the Chasm" --authors "Geoffrey A. Moore" --download-dir ~/books
+
+# Check which libgen mirrors are healthy today
+citeget check-mirrors
+
 # Acquire all references from a document (academic mode)
 citeget acquire my_paper.md
 
@@ -79,6 +86,77 @@ for r in results[:3]:
 
 # One-shot search + download
 search_and_download("python programming", download_dir="~/papers", max_downloads=5)
+```
+
+### Getting a specific book
+
+`search_and_download` takes libgen's own ordering, which for a known title is
+usually the same book in several formats, interleaved with summaries and
+download-spam listings. When you want *one copy of one book*, use `get_book`:
+
+```python
+from citeget import get_book
+
+path = get_book("Crossing the Chasm", authors="Geoffrey A. Moore",
+                download_dir="~/books")
+```
+
+It ranks every result against the title and author you asked for, downloads the
+best candidate, checks that what arrived is a complete book, and falls through
+to the next candidate if it isn't. The pieces are usable on their own:
+
+```python
+from citeget import search, rank_results, download_best, validate_download
+
+results = search("Crossing the Chasm Moore")
+ranked = rank_results(results, title="Crossing the Chasm",
+                      authors="Geoffrey A. Moore")
+ranked[0].score, ranked[0].is_decoy, ranked[0].title_match
+
+path = download_best(results, title="Crossing the Chasm",
+                     authors="Geoffrey A. Moore", download_dir="~/books")
+```
+
+Every knob is a keyword argument with a sensible default — format preference,
+language, scoring weights, size bounds, the decoy pattern:
+
+```python
+from citeget import get_book, ScoreWeights
+
+get_book("Some Book", authors="A. Author",
+         format_preference=("epub", "pdf"),        # e-reader workflow
+         weights=ScoreWeights(author=5.0))          # trust the author field more
+```
+
+### Download validation
+
+Nothing about a successful transfer says the bytes are a document. Every
+download path checks magic bytes, rejects HTML pages, enforces a realistic size
+floor, and compares against the size libgen advertised — so a captcha wall or a
+truncated transfer is a failure, not a book. Files are written to a temporary
+path and moved into place only after they validate, so a failed attempt never
+leaves a stub that a later run reads back as a cached success.
+
+Books get an extra tier of checking, because libgen catalogues excerpts,
+front-matter samples and reviews under the full work's title — files with valid
+PDF magic bytes, several megabytes in size, and 17 pages long:
+
+```python
+from citeget import download_one, validate_download, BOOK_POLICY
+
+download_one(result, download_dir="~/books", policy=BOOK_POLICY)  # page-count check on
+validate_download("suspect.pdf", policy=BOOK_POLICY)              # check one by hand
+```
+
+`BOOK_POLICY` is opt-in rather than the default because an 80-page floor is
+right for a book and badly wrong for a journal article. `get_book` uses it
+automatically. Build your own with `dataclasses.replace`:
+
+```python
+from dataclasses import replace
+from citeget import BOOK_POLICY, ValidationPolicy
+
+lenient = replace(BOOK_POLICY, min_pages=40)
 ```
 
 For bulk reference acquisition:
@@ -165,6 +243,11 @@ Files are named in APA 7 citation style:
 `{title} ({authors_apa7}, {year}).pdf` — e.g.,
 `Retiming synchronous circuitry (Leiserson & Saxe, 1991).pdf`
 
+Author parsing handles libgen's mixed conventions — `"Moore, Geoffrey A."`,
+`"Edward R. Tufte"`, `"Chris Voss & Tahl Raz"`, and role markers like
+`"(author)"` — via `citeget.names`, which is also what result ranking matches
+authors with, so the two never disagree.
+
 ## General-purpose fetch
 
 Not all "references" are papers. For lists of arbitrary web URLs, use
@@ -220,11 +303,38 @@ python -m citeget.article_pub.scripts.word_count draft.md --breakdown
 python -m citeget.article_pub.scripts.extract_references draft.md
 ```
 
+## Mirrors
+
+Libgen mirror domains rotate, so the shipped default list goes stale on its own
+schedule. `citeget` tries each mirror in order, retries one that merely timed
+out before failing over, and tells you which of the two failure modes happened
+if they all fail.
+
+When searches start failing, ask which mirrors are alive:
+
+```bash
+citeget check-mirrors
+```
+
+It prints a health table and a ready-to-use override for the working ones:
+
+```bash
+export CITEGET_LIBGEN_MIRRORS='https://libgen.vg,https://libgen.la'
+# or a single mirror
+export CITEGET_LIBGEN_BASE_URL='https://libgen.la'
+```
+
+Or pass `base_url=` / `mirrors=` to `search()` and friends. Only
+libgen.vg-family mirrors (the JS `#tablelibgen` layout) are compatible with the
+parser; the older libgen.is/.rs/.st forks use different HTML.
+
 ## How it works
 
 Library Genesis renders search results via JavaScript, so `citeget` uses
 Playwright (headless Chromium) to load pages. Ad domains are blocked for
-speed. Downloads use session keys extracted from intermediate pages.
+speed. Downloads use session keys extracted from intermediate pages — those
+keys are single-use, so a download is claimed on the first attempt or not at
+all.
 
 The acquisition log records every attempt in TSV format, making it easy to
 audit what was tried, what matched, and what failed.

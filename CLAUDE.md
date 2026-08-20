@@ -21,9 +21,12 @@ for AI agents (Claude Code skills) and humans (CLI + Python API).
 ```
 citeget/
 ├── __init__.py              # Public API
-├── cli.py                   # CLI entry points (search, download, acquire, fetch)
+├── cli.py                   # CLI: search, download, get-book, acquire, fetch, check-mirrors
 ├── __main__.py              # python -m citeget
 ├── core.py                  # Libgen search & download (requires playwright)
+├── names.py                 # Author-name parsing (SSOT for surnames/APA)
+├── rank.py                  # Score results against a requested title+author
+├── validate.py              # Is this file really the book we asked for?
 ├── acquire_references.py    # Multi-strategy academic-reference acquisition
 ├── resolve.py               # Composable resolver/downloader/strategy registries
 ├── fetch.py                 # General URL → file (md/pdf/original) routing
@@ -40,6 +43,7 @@ citeget/
 - `requests` + `beautifulsoup4` — direct downloads, sci-hub
 - `httpx` + `html2text` — general fetch (HTML→Markdown)
 - `argh` — CLI dispatch
+- `pypdf` — PDF page count, used to reject excerpts posing as full books
 - `pdfkit` (optional, `[fetch]` extra) + `wkhtmltopdf` system binary — HTML→PDF
 
 Install playwright browsers: `python -m playwright install chromium`
@@ -61,4 +65,10 @@ Install playwright browsers: `python -m playwright install chromium`
 - File naming: `{title} ({authors_apa7}, {year}).pdf`
 - Work dir resolution: from reference file, full path, or bare name
 - Rate limiting: 2s default between operations
-- Idempotent: existing downloads are skipped automatically
+- Idempotent: existing downloads are skipped automatically — but only after
+  re-validating, so a stub left by a failed attempt can't become permanent
+- Downloads land on a temp path and are moved into place only once valid
+- Libgen `get.php` keys are single-use: claim the download on the first
+  attempt (`page.goto` raising "Download is starting" is success, not failure)
+- Validation policy is injected, not hardcoded: `DEFAULT_POLICY` (integrity)
+  vs `BOOK_POLICY` (adds page-count/markup depth checks — wrong for articles)
