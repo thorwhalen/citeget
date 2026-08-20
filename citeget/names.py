@@ -77,8 +77,23 @@ def normalize_name(text: str) -> str:
 
 
 def _is_initial(token: str) -> bool:
-    """True for tokens like ``'R.'`` or ``'J'`` that are initials, not surnames."""
-    return len(token.rstrip(".")) <= 1
+    """True for tokens like ``'R.'``, ``'J'`` or ``'G.A.'`` that are initials.
+
+    The compound form matters: libgen writes plenty of authors as
+    ``"Moore G.A."``, and treating ``G.A.`` as a surname yields a filename
+    crediting the book to "G.A". A dotted token counts as initials only when
+    its letters are few and all uppercase, so a genuinely short surname like
+    "Hu" or an abbreviation like "St." is not swallowed.
+
+    >>> _is_initial("R."), _is_initial("G.A."), _is_initial("Hu")
+    (True, True, False)
+    """
+    if len(token.rstrip(".")) <= 1:
+        return True
+    if "." not in token:
+        return False
+    letters = [c for c in token if c.isalpha()]
+    return 0 < len(letters) <= 3 and all(c.isupper() for c in letters)
 
 
 def _is_suffix(token: str) -> bool:
@@ -118,6 +133,8 @@ def surname_of(chunk: str) -> str:
     'van der Linden'
     >>> surname_of("Martin Luther King Jr.")
     'King'
+    >>> surname_of("Moore G.A.")
+    'Moore'
     """
     chunk = (chunk or "").strip()
     if not chunk:

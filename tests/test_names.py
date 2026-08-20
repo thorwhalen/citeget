@@ -40,6 +40,30 @@ def test_issue_5_reproduction_table(authors, expected):
 @pytest.mark.parametrize(
     "authors, expected",
     [
+        # Surname first with compound initials and no comma — libgen uses this
+        # too, and it produced "Crossing the Chasm Revised edition (G.A, 1991)".
+        ("Moore G.A.", "Moore"),
+        ("Tufte E.R.", "Tufte"),
+        ("Voss C. & Raz T.", "Voss & Raz"),
+        # ...without swallowing genuinely short surnames.
+        ("Wu J.", "Wu"),
+        ("Hu, Tung-Hui", "Hu"),
+        ("Tung-Hui Hu", "Hu"),
+        # Or abbreviations that are part of the name.
+        ("St. John, Mary", "St. John"),
+    ],
+)
+def test_compound_initials_are_not_mistaken_for_surnames(authors, expected):
+    assert apa7_authors(authors) == expected
+
+
+def test_compound_initials_still_match_by_surname():
+    assert candidate_surnames("Moore G.A.") == {"moore"}
+
+
+@pytest.mark.parametrize(
+    "authors, expected",
+    [
         ("", "Unknown"),
         (None, "Unknown"),
         ("   ", "Unknown"),
