@@ -17,6 +17,11 @@ prefer the more general `/fetch-resources` skill — this skill is tuned for
 finding paper PDFs in libgen / arxiv / sci-hub, which won't help for web
 content.
 
+**For a list of book titles** (a reading list, "get me these books") use
+`/get-books`. This skill is built around a document's reference section; it
+does not know which book you asked for, so it cannot check that the file it
+got is that book. `/get-books` can.
+
 ## Working directory resolution
 
 The system needs a **work directory** where it puts downloads, logs, and
@@ -137,12 +142,48 @@ APA-style formatting (e.g. `Kodokan Judo (Kano)`) which matches how
 humans typically search.  If that fails, progressively broader queries
 are tried automatically.
 
-## Mirror fallbacks
+## What "downloaded" means
 
-When the primary libgen download path (ads.php → get.php) fails,
-`download_one` automatically tries external mirrors (Anna's Archive,
-library.lol, etc.).  Download errors are now logged with diagnostic
-details so failures can be investigated.
+Every download is validated before it counts as a success: magic bytes matching
+the extension, no HTML bodies, a size floor, and a truncation check against the
+size libgen advertised. A captcha wall, a Cloudflare interstitial or a
+half-transferred file is reported as a failure rather than saved under a paper's
+name. Files are written to a temporary path and moved into place only once
+valid, so a failed attempt leaves nothing behind.
+
+So a failure in the log can now mean *"we received something and it wasn't the
+paper"*, not only *"nothing arrived"*. The `error` column says which.
+
+Within one query, the top-scoring result is not the only one tried — up to
+three plausible candidates are attempted in order, because libgen catalogues
+excerpts and stubs under the real work's title.
+
+When the primary libgen path (ads.php → get.php) fails, `download_one` also
+tries external mirrors (Anna's Archive, library.lol, etc.), each validated the
+same way.
+
+Note the default policy checks *integrity*, not length — right for papers,
+which are legitimately short. The stricter page-count check that rejects
+excerpts is opt-in and belongs to `/get-books`.
+
+## An empty search result is weak evidence
+
+Libgen returns a blank result set for a query with real matches often enough to
+matter: in measured repeats of one query, roughly one run in four came back
+empty, and the same query gave 0 results then 21 a minute apart. `search()`
+retries each mirror and requires two mirrors to agree before returning `[]`,
+but that does not eliminate it.
+
+Practical consequences for this skill:
+
+- A reference landing in `missed_references.md` after `num_results: 0` may
+  simply have been unlucky. **Re-running the skill on the missed list is worth
+  doing before telling the user those references are unavailable** — the
+  acquisition is idempotent, so a re-run only retries the misses.
+- If an unusually large share of a batch missed, suspect the mirrors rather
+  than the references. Run `citeget check-mirrors`.
+- Result counts vary by mirror (the same query can return 21 or 9). A low
+  `num_results` is not itself a problem.
 
 ## Fetch fallback (for non-paper URLs)
 
@@ -169,13 +210,19 @@ the API is designed for the bulk-URL case.
   libgen/arxiv/sci-hub on URLs that will never resolve there.
 - **Rate limiting**: The default 2s delay between operations is respectful.
   Don't decrease it.
-- **Re-downloading**: Already-downloaded files are reported and skipped. To
-  force re-download, the user must rename or move the existing file.
+- **Re-downloading**: Already-downloaded files are skipped — but only after
+  being re-validated, so a stub or HTML page left by an earlier failed attempt
+  is discarded and retried automatically. To force re-download of a *good*
+  file, the user must rename or move it.
 - **Matching**: Results are scored on title word overlap (60%), author match
-  (25%), and year match (15%). Threshold is 0.4.
+  (25%), and year match (15%). Threshold is 0.4, and up to three results above
+  it are tried per query.
 - **Topics**: Use multi-topic search for best coverage.  For books, use
   ``libgen_topics=("books", "fiction", "articles")``.
-- **Download failures after match**: Check the acquisition log for error
-  details.  Common causes: timeout on ads.php, no get.php link found,
-  or file served in non-PDF format.  Mirror fallbacks handle most cases
-  automatically.
+- **Download failures after match**: Check the acquisition log's `error`
+  column. Common causes: a timeout on ads.php, no get.php link found, or the
+  bytes failing validation (an HTML page, a truncated transfer). Mirror
+  fallbacks and multi-candidate retries handle most cases automatically.
+- **Reporting results**: Give the user the miss list explicitly, and say
+  whether a miss was "nothing found" or "found but the file was not usable" —
+  they are different problems with different fixes.

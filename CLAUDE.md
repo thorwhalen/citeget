@@ -54,6 +54,7 @@ Install playwright browsers: `python -m playwright install chromium`
 |-------|---------|
 | `fetch-resources` | Download arbitrary URLs as Markdown / PDF (general) |
 | `acquire-references` | Bulk-acquire PDFs for academic references in a document |
+| `get-books` | Acquire one copy of each book in a list of titles (ranked + validated) |
 | `research-topic` | Deep literature research for article writing |
 | `review-article` | Expert peer-review style critique |
 | `check-submission-fit` | Journal venue recommendation |
@@ -72,3 +73,8 @@ Install playwright browsers: `python -m playwright install chromium`
   attempt (`page.goto` raising "Download is starting" is success, not failure)
 - Validation policy is injected, not hardcoded: `DEFAULT_POLICY` (integrity)
   vs `BOOK_POLICY` (adds page-count/markup depth checks — wrong for articles)
+- **Libgen returns spurious empty result sets** (~1 run in 4 for a query with
+  real matches). Defended in three layers — retry per mirror, require two
+  mirrors to agree, then `get_book` re-runs the whole search. Never treat one
+  empty answer as "not there", in code or in a message to the user. The skills
+  say this too; keep them in sync if the defence changes.

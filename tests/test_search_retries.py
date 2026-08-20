@@ -373,3 +373,45 @@ def test_a_dead_mirror_plus_an_empty_one_reports_no_results(scripted_browser):
         )
         == []
     )
+
+
+# --- an empty answer is weak evidence, so get_book asks again --------------
+
+
+def test_get_book_reruns_an_empty_search(monkeypatch):
+    """Even after per-mirror retries and cross-mirror confirmation, libgen
+    returns a spurious empty result set often enough that roughly one run in
+    four of a query with real matches came back with nothing."""
+    calls = []
+
+    def _fake_search(query, **kwargs):
+        calls.append(query)
+        return [] if len(calls) < 2 else [{"title": "hit", "size": "3 MB"}]
+
+    monkeypatch.setattr(core, "search", _fake_search)
+    monkeypatch.setattr(core, "download_best", lambda results, **kw: "/tmp/book.pdf")
+
+    assert core.get_book("Some Book", authors="A. Author", verbose=False)
+    assert len(calls) == 2
+
+
+def test_get_book_gives_up_after_the_configured_attempts(monkeypatch):
+    calls = []
+    monkeypatch.setattr(core, "search", lambda q, **kw: calls.append(q) or [])
+
+    assert core.get_book("Nothing Here", search_attempts=3, verbose=False) is None
+    assert len(calls) == 3
+
+
+def test_get_book_does_not_rerun_a_successful_search(monkeypatch):
+    calls = []
+
+    def _fake_search(query, **kwargs):
+        calls.append(query)
+        return [{"title": "hit", "size": "3 MB"}]
+
+    monkeypatch.setattr(core, "search", _fake_search)
+    monkeypatch.setattr(core, "download_best", lambda results, **kw: None)
+
+    core.get_book("Some Book", verbose=False)
+    assert len(calls) == 1
