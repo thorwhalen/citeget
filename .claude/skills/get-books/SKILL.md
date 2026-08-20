@@ -40,11 +40,15 @@ author field is the strongest disambiguating signal available.
 
 ## Do not use `search_and_download` for this
 
-`search_and_download(query, max_downloads=5)` downloads the first five rows of
-the results table. For a book search those rows are usually **the same book in
-five file formats**, and libgen's own ordering puts summaries and download-spam
-listings above the real book often enough to matter. That function is for
-"give me whatever matches this query", not "get me this book".
+`search_and_download(query, max_downloads=5)` takes libgen's own ordering. It
+does collapse the same edition across file formats now, so you get five
+distinct works rather than five copies of one — but they are still libgen's
+top five for a *query*, scored against nothing in particular. It does not know
+what you asked for, so it cannot prefer the book over a summary of it, and its
+downloads are checked for integrity only, not for being a complete book.
+
+That function answers "give me whatever matches this query". This skill answers
+"get me this book". Use `get_book`.
 
 ## Batch
 
