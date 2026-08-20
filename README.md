@@ -335,6 +335,19 @@ Or pass `base_url=` / `mirrors=` to `search()` and friends. Only
 libgen.vg-family mirrors (the JS `#tablelibgen` layout) are compatible with the
 parser; the older libgen.is/.rs/.st forks use different HTML.
 
+### Empty results are not always real
+
+Libgen serves a blank result set for queries that do have matches — measured at
+roughly one run in four for one such query, with the same query returning 0
+results and then 21 a minute apart. citeget defends in three layers: each
+mirror is retried, two mirrors must agree before `search()` returns `[]`, and
+`get_book` re-runs the whole search once more. Result *counts* also vary
+legitimately by mirror (21 vs 9 for the same query), so a lower-than-expected
+count is normal.
+
+If you are building on `search()` directly, treat one empty answer as weak
+evidence and ask again.
+
 ## How it works
 
 Library Genesis renders search results via JavaScript, so `citeget` uses

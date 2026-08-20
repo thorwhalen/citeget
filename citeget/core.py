@@ -80,6 +80,11 @@ RESULTS_TABLE_SELECTOR = "#tablelibgen"
 # results table simply has not rendered yet, so one mirror showing no table is
 # not evidence of "no results". This many mirrors must agree before we say so.
 DEFAULT_NO_TABLE_CONFIRMATIONS = 2
+# Even after per-mirror retries and cross-mirror confirmation, libgen returns a
+# blank result set for a query with real matches often enough to matter: in
+# measured repeats of one such query, roughly one run in four came back empty.
+# High-level callers re-run the whole search this many times before believing it.
+DEFAULT_SEARCH_ATTEMPTS = 2
 
 # Default single base URL (first mirror). Kept for backwards compatibility with
 # callers/tests that import ``BASE_URL`` directly.
@@ -1332,6 +1337,7 @@ def get_book(
     topic: str = "books",
     max_candidates: int = 5,
     results_per_page: int = 50,
+    search_attempts: int = DEFAULT_SEARCH_ATTEMPTS,
     headless: bool = True,
     timeout: int = DEFAULT_SEARCH_TIMEOUT,
     delay: float = 1.0,
@@ -1365,6 +1371,9 @@ def get_book(
         topic: Libgen topic to search ("books", "fiction", "articles", ...).
         max_candidates: How many ranked candidates to try before giving up.
         results_per_page: How many results to fetch to rank.
+        search_attempts: How many times to re-run a search that came back empty
+            before accepting "not found". Libgen returns a spurious empty result
+            set often enough that a single empty answer is weak evidence.
         headless: Headless browser mode.
         timeout: Page load timeout in ms.
         delay: Seconds between page loads (rate limiting).
@@ -1386,18 +1395,24 @@ def get_book(
         surname = next(iter(surnames(authors or "")), "")
         query = f"{title} {surname}".strip()
 
-    if verbose:
-        print(f"{_ts()} Searching libgen for {query!r}...")
-
-    results = search(
-        query,
-        topic=topic,
-        results_per_page=results_per_page,
-        headless=headless,
-        timeout=timeout,
-        base_url=base_url,
-        mirrors=mirrors,
-    )
+    results = []
+    for attempt in range(1, max(1, search_attempts) + 1):
+        if verbose:
+            suffix = f" (attempt {attempt})" if attempt > 1 else ""
+            print(f"{_ts()} Searching libgen for {query!r}{suffix}...")
+        results = search(
+            query,
+            topic=topic,
+            results_per_page=results_per_page,
+            headless=headless,
+            timeout=timeout,
+            base_url=base_url,
+            mirrors=mirrors,
+        )
+        if results:
+            break
+        # An empty answer is weak evidence — libgen serves spurious blanks — so
+        # ask again before concluding the book is not there.
 
     if verbose:
         print(f"{_ts()} Found {len(results)} results; ranking against {title!r}.")

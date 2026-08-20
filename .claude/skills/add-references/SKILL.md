@@ -302,6 +302,13 @@ This is a supplement to web search, not a replacement. Use it when:
 - You have a title or author and want to confirm it exists
 - The user's context is academic and they'll want the actual PDF later
 
+**An empty result is not proof the work does not exist.** Libgen returns a
+blank result set for a query with real matches often enough to matter — in
+measured repeats of one query, roughly one run in four came back with nothing.
+`search()` already retries internally, so run it again before drawing any
+conclusion, and never cite an empty libgen result as evidence against a source
+the user proposed.
+
 **3. Offer PDF acquisition (Step 6)**
 
 After delivering the referenced document, if citeget is available AND the context is
