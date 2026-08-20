@@ -226,3 +226,116 @@ def test_message_for_a_mix_says_so():
 def test_message_points_at_the_mirror_health_check():
     msg = _format_unreachable_message("q", [("https://libgen.vg", Exception("boom"))])
     assert "check-mirrors" in msg
+
+
+# --- a single empty mirror is not evidence of "no results" -----------------
+
+
+class _FakeTable:
+    """A results table element carrying a fixed number of data rows."""
+
+    def __init__(self, rows):
+        self._rows = rows
+
+    def query_selector_all(self, selector):
+        return self._rows
+
+
+class _ScriptedPage:
+    """Serves a scripted outcome per mirror, keyed by substring of the URL."""
+
+    def __init__(self, script):
+        self.script = script
+        self.visited = []
+
+    def _outcome(self, url):
+        for key, outcome in self.script.items():
+            if key in url:
+                return outcome
+        return None
+
+    def goto(self, url, **kwargs):
+        self.visited.append(url)
+        outcome = self._outcome(url)
+        if isinstance(outcome, Exception):
+            raise outcome
+
+    def wait_for_selector(self, selector, **kwargs):
+        if self._outcome(self.visited[-1]) is None:
+            raise TimeoutError("Timeout waiting for selector")
+
+    def query_selector(self, selector):
+        return self._outcome(self.visited[-1])
+
+
+@pytest.fixture
+def scripted_browser(monkeypatch):
+    """Run search() against scripted pages instead of a real browser."""
+
+    def _install(script):
+        page = _ScriptedPage(script)
+
+        class _Context:
+            def new_page(self):
+                return page
+
+        class _Browser:
+            def close(self):
+                pass
+
+        class _Playwright:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+        monkeypatch.setattr(
+            "playwright.sync_api.sync_playwright", lambda: _Playwright()
+        )
+        monkeypatch.setattr(
+            core, "_create_browser_context", lambda p, **kw: (_Browser(), _Context())
+        )
+        monkeypatch.setattr(core, "_parse_results_table", lambda t: [{"title": "hit"}])
+        return page
+
+    return _install
+
+
+def test_empty_first_mirror_falls_over_to_a_working_one(scripted_browser):
+    """The regression this guards: libgen.vg went slow, its table never
+    rendered, and a query with 21 real hits came back as "Found 0 results"."""
+    page = scripted_browser(
+        {"libgen.vg": None, "libgen.la": _FakeTable(["header", "row"])}
+    )
+    results = core.search("q", mirrors=["https://libgen.vg", "https://libgen.la"])
+    assert results == [{"title": "hit", "base_url": "https://libgen.la"}]
+    assert len(page.visited) == 2
+
+
+def test_two_empty_mirrors_agreeing_means_no_results(scripted_browser):
+    page = scripted_browser({"libgen": None})
+    mirrors = ["https://libgen.vg", "https://libgen.la", "https://libgen.li"]
+    assert core.search("q", mirrors=mirrors) == []
+    # Stops as soon as two mirrors agree; does not walk the whole list.
+    assert len(page.visited) == 2
+
+
+def test_unreachable_mirrors_still_raise_rather_than_returning_empty(
+    scripted_browser,
+):
+    scripted_browser({"libgen": Exception("net::ERR_NAME_NOT_RESOLVED")})
+    with pytest.raises(core.MirrorUnreachableError):
+        core.search("q", mirrors=["https://libgen.vg", "https://libgen.la"])
+
+
+def test_a_dead_mirror_plus_an_empty_one_reports_no_results(scripted_browser):
+    scripted_browser(
+        {
+            "libgen.vg": Exception("net::ERR_NAME_NOT_RESOLVED"),
+            "libgen.la": None,
+        }
+    )
+    # One mirror answered and had nothing; that is the honest answer even
+    # though the confirmation threshold was never reached.
+    assert core.search("q", mirrors=["https://libgen.vg", "https://libgen.la"]) == []

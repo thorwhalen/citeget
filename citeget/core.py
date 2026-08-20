@@ -76,6 +76,10 @@ DEFAULT_TABLE_TIMEOUT = 20000
 DEFAULT_ATTEMPTS_PER_MIRROR = 2
 DEFAULT_RETRY_BACKOFF = 2.0
 RESULTS_TABLE_SELECTOR = "#tablelibgen"
+# Libgen serves the same page shape whether a query has no matches or the
+# results table simply has not rendered yet, so one mirror showing no table is
+# not evidence of "no results". This many mirrors must agree before we say so.
+DEFAULT_NO_TABLE_CONFIRMATIONS = 2
 
 # Default single base URL (first mirror). Kept for backwards compatibility with
 # callers/tests that import ``BASE_URL`` directly.
@@ -517,6 +521,7 @@ def search(
     table_timeout: int = DEFAULT_TABLE_TIMEOUT,
     attempts_per_mirror: int = DEFAULT_ATTEMPTS_PER_MIRROR,
     retry_backoff: float = DEFAULT_RETRY_BACKOFF,
+    no_table_confirmations: int = DEFAULT_NO_TABLE_CONFIRMATIONS,
     base_url: str | None = None,
     mirrors: tuple | list | None = None,
 ) -> list:
@@ -526,8 +531,10 @@ def search(
     reachable, retrying a mirror that merely timed out before moving on. If
     every mirror fails, raises :class:`MirrorUnreachableError` with a message
     that says which failure mode it was, rather than a raw browser stack trace.
-    A mirror that loads but has no matching table is treated as an authoritative
-    "no results" (returns ``[]``), not a failure.
+    A mirror that loads but shows no results table is not on its own taken as
+    "no results": libgen serves the same page shape for a query with no matches
+    and for a page whose table has not rendered, so a second mirror has to agree
+    before ``[]`` is returned.
 
     Args:
         query: Search terms.
@@ -546,6 +553,8 @@ def search(
             never retried.
         retry_backoff: Seconds to wait before a retry, multiplied by the attempt
             number.
+        no_table_confirmations: How many mirrors must load without a results
+            table before the query is reported as having no results.
         base_url: Force a single mirror (e.g. ``https://libgen.vg``). Overrides
             env vars and the default list.
         mirrors: Explicit ordered list of mirror base URLs to try. Overrides
@@ -572,6 +581,7 @@ def search(
         build_kwargs = dict(topic=topic_code, results_per_page=results_per_page)
 
     attempts = []
+    empty_mirrors = 0
     with sync_playwright() as p:
         browser, context = _create_browser_context(p, headless=headless)
         try:
@@ -590,14 +600,24 @@ def search(
                     attempts.append((base, exc))
                     continue  # unreachable or persistently slow — next mirror
 
-                # Mirror is reachable — treat its response as authoritative.
                 if table is None:
-                    return []
+                    # Ambiguous: a query with no matches and a page whose table
+                    # has not rendered look identical. Ask another mirror rather
+                    # than reporting a false empty.
+                    empty_mirrors += 1
+                    if empty_mirrors >= no_table_confirmations:
+                        return []
+                    continue
+
                 results = _parse_results_table(table)
                 for r in results:
                     r["base_url"] = base
                 return results
 
+            # Ran out of mirrors. If any of them answered with an empty page,
+            # "no results" is the honest answer; otherwise none were reachable.
+            if empty_mirrors:
+                return []
             raise MirrorUnreachableError(_format_unreachable_message(query, attempts))
         finally:
             browser.close()
