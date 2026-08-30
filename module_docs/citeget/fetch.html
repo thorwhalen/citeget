@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.fetch &mdash; citeget 0.2.7 documentation</title>
+  <title>citeget.fetch &mdash; citeget 0.2.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=58050c01"></script>
+      <script src="../../_static/documentation_options.js?v=b01fafc3"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -61,6 +61,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#citeget.fetch.FetchResult.ok"><code class="docutils literal notranslate"><span class="pre">FetchResult.ok</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.HTML_TO_MARKDOWN_DEFAULTS"><code class="docutils literal notranslate"><span class="pre">HTML_TO_MARKDOWN_DEFAULTS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.NON_CONTENT_TAGS"><code class="docutils literal notranslate"><span class="pre">NON_CONTENT_TAGS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.UrlEntry"><code class="docutils literal notranslate"><span class="pre">UrlEntry</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.extract_urls_from_text"><code class="docutils literal notranslate"><span class="pre">extract_urls_from_text()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#citeget.fetch.fetch"><code class="docutils literal notranslate"><span class="pre">fetch()</span></code></a></li>
@@ -117,7 +119,7 @@ save it directly.</p></li>
 embedded direct-PDF link (arxiv <code class="docutils literal notranslate"><span class="pre">/pdf/</span></code>, GitHub <code class="docutils literal notranslate"><span class="pre">.pdf</span></code> assets, ACM
 <code class="docutils literal notranslate"><span class="pre">/doi/pdf/</span></code>, etc.) and try that first; otherwise convert HTML→PDF via
 <code class="docutils literal notranslate"><span class="pre">pdfkit</span></code> (requires <code class="docutils literal notranslate"><span class="pre">wkhtmltopdf</span></code>).</p></li>
-<li><p>Otherwise convert HTML→Markdown via <code class="docutils literal notranslate"><span class="pre">html2text</span></code>.</p></li>
+<li><p>Otherwise convert HTML→Markdown via <code class="docutils literal notranslate"><span class="pre">markdownify</span></code>.</p></li>
 <li><p>If the requested format fails, fall back to Markdown.</p></li>
 </ol>
 <p>Public API:</p>
@@ -142,6 +144,21 @@ with the existing <a class="reference internal" href="resolve.html#module-citege
 <dd><p>True if file was written or already existed (status in {ok, skipped}).</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="citeget.fetch.HTML_TO_MARKDOWN_DEFAULTS">
+<span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">HTML_TO_MARKDOWN_DEFAULTS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'bullets':</span> <span class="pre">'*',</span> <span class="pre">'escape_asterisks':</span> <span class="pre">False,</span> <span class="pre">'escape_underscores':</span> <span class="pre">False,</span> <span class="pre">'heading_style':</span> <span class="pre">'ATX',</span> <span class="pre">'strip':</span> <span class="pre">['img']}</span></span><a class="headerlink" href="#citeget.fetch.HTML_TO_MARKDOWN_DEFAULTS" title="Link to this definition"></a></dt>
+<dd><p>Defaults handed to <code class="docutils literal notranslate"><span class="pre">markdownify</span></code>’s <code class="docutils literal notranslate"><span class="pre">MarkdownConverter</span></code>. Override any of
+them by passing the same keyword to <a class="reference internal" href="#citeget.fetch.html_to_markdown" title="citeget.fetch.html_to_markdown"><code class="xref py py-func docutils literal notranslate"><span class="pre">html_to_markdown()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="citeget.fetch.NON_CONTENT_TAGS">
+<span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">NON_CONTENT_TAGS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('head',</span> <span class="pre">'script',</span> <span class="pre">'style',</span> <span class="pre">'noscript')</span></span><a class="headerlink" href="#citeget.fetch.NON_CONTENT_TAGS" title="Link to this definition"></a></dt>
+<dd><p>Tags whose <em>content</em> is never part of the document text. <code class="docutils literal notranslate"><span class="pre">markdownify</span></code>
+already drops <code class="docutils literal notranslate"><span class="pre">script</span></code>/<code class="docutils literal notranslate"><span class="pre">style</span></code>, but not <code class="docutils literal notranslate"><span class="pre">&lt;title&gt;</span></code>, so the whole head
+is removed before conversion.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -213,8 +230,34 @@ file already exists.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="citeget.fetch.html_to_markdown">
-<span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">html_to_markdown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">html</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/citeget/fetch.html#html_to_markdown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.fetch.html_to_markdown" title="Link to this definition"></a></dt>
-<dd><p>Convert <em>html</em> to clean Markdown via html2text.</p>
+<span class="sig-prename descclassname"><span class="pre">citeget.fetch.</span></span><span class="sig-name descname"><span class="pre">html_to_markdown</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">html</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">markdownify_options</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../_modules/citeget/fetch.html#html_to_markdown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.fetch.html_to_markdown" title="Link to this definition"></a></dt>
+<dd><p>Convert <em>html</em> to clean Markdown.</p>
+<p>Uses <code class="xref py py-mod docutils literal notranslate"><span class="pre">markdownify</span></code> (MIT). Long paragraphs are left unwrapped, code
+blocks become fenced blocks and tables become GitHub-flavoured tables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>html</strong> – The HTML source to convert.</p></li>
+<li><p><strong>source_url</strong> – If given, prepended as an HTML comment provenance line.</p></li>
+<li><p><strong>markdownify_options</strong> – Overrides for <a class="reference internal" href="#citeget.fetch.HTML_TO_MARKDOWN_DEFAULTS" title="citeget.fetch.HTML_TO_MARKDOWN_DEFAULTS"><code class="xref py py-data docutils literal notranslate"><span class="pre">HTML_TO_MARKDOWN_DEFAULTS</span></code></a>,
+passed to <code class="docutils literal notranslate"><span class="pre">markdownify</span></code>’s <code class="docutils literal notranslate"><span class="pre">MarkdownConverter</span></code>. Unknown option
+names raise <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>. Passing <code class="docutils literal notranslate"><span class="pre">convert=</span></code> drops the default
+<code class="docutils literal notranslate"><span class="pre">strip=[&quot;img&quot;]</span></code>, since markdownify accepts only one of the two.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">html_to_markdown</span><span class="p">(</span><span class="s2">"&lt;h1&gt;Hi&lt;/h1&gt;&lt;p&gt;A &lt;b&gt;bold&lt;/b&gt; word.&lt;/p&gt;"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+<span class="go"># Hi</span>
+
+<span class="go">A **bold** word.</span>
+</pre></div>
+</div>
+<p>Whitespace inside fenced code blocks is content, and is preserved:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">md</span> <span class="o">=</span> <span class="n">html_to_markdown</span><span class="p">(</span><span class="s2">"&lt;pre&gt;&lt;code&gt;def a(): ...</span><span class="se">\n\n\n</span><span class="s2">def b(): ...&lt;/code&gt;&lt;/pre&gt;"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s2">"</span><span class="se">\n\n\n</span><span class="s2">"</span> <span class="ow">in</span> <span class="n">md</span>
+<span class="go">True</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">

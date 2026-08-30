@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.fetch &mdash; citeget 0.2.7 documentation</title>
+  <title>citeget.fetch &mdash; citeget 0.2.8 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -14,7 +14,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=58050c01"></script>
+      <script src="../../_static/documentation_options.js?v=b01fafc3"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -101,7 +101,7 @@
 <span class="sd">   embedded direct-PDF link (arxiv ``/pdf/``, GitHub ``.pdf`` assets, ACM</span>
 <span class="sd">   ``/doi/pdf/``, etc.) and try that first; otherwise convert HTML→PDF via</span>
 <span class="sd">   ``pdfkit`` (requires ``wkhtmltopdf``).</span>
-<span class="sd">4. Otherwise convert HTML→Markdown via ``html2text``.</span>
+<span class="sd">4. Otherwise convert HTML→Markdown via ``markdownify``.</span>
 <span class="sd">5. If the requested format fails, fall back to Markdown.</span>
 
 <span class="sd">Public API:</span>
@@ -126,7 +126,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">unicodedata</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urljoin</span><span class="p">,</span> <span class="n">urlparse</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -325,29 +325,134 @@
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
 
+<span class="c1">#: Tags whose *content* is never part of the document text. ``markdownify``</span>
+<span class="c1">#: already drops ``script``/``style``, but not ``&lt;title&gt;``, so the whole head</span>
+<span class="c1">#: is removed before conversion.</span>
+<span class="n">NON_CONTENT_TAGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"head"</span><span class="p">,</span> <span class="s2">"script"</span><span class="p">,</span> <span class="s2">"style"</span><span class="p">,</span> <span class="s2">"noscript"</span><span class="p">)</span>
+
+<span class="c1">#: Defaults handed to ``markdownify``'s ``MarkdownConverter``. Override any of</span>
+<span class="c1">#: them by passing the same keyword to :func:`html_to_markdown`.</span>
+<span class="n">HTML_TO_MARKDOWN_DEFAULTS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"heading_style"</span><span class="p">:</span> <span class="s2">"ATX"</span><span class="p">,</span>  <span class="c1"># "# Title", not the underlined setext form</span>
+    <span class="s2">"strip"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"img"</span><span class="p">],</span>  <span class="c1"># images are noise in a saved-for-reading document</span>
+    <span class="s2">"bullets"</span><span class="p">:</span> <span class="s2">"*"</span><span class="p">,</span>
+    <span class="s2">"escape_underscores"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>  <span class="c1"># keeps identifiers like ``foo_bar`` readable</span>
+    <span class="s2">"escape_asterisks"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1">#: An opening (or closing) fence of a fenced code block, allowing markdown's</span>
+<span class="c1">#: three spaces of leading indentation.</span>
+<span class="n">_CODE_FENCE_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^ {0,3}(`{3,}|~{3,})"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_outside_code_fences</span><span class="p">(</span><span class="n">markdown</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Split *markdown* into ``(is_fenced_code, text)`` chunks.</span>
+
+<span class="sd">    An unterminated fence keeps everything after it marked as code, which is the</span>
+<span class="sd">    conservative choice: whitespace inside code is content.</span>
+
+<span class="sd">    &gt;&gt;&gt; list(_outside_code_fences("a\\n```\\nb\\n```\\nc\\n"))</span>
+<span class="sd">    [(False, 'a\\n'), (True, '```\\nb\\n```\\n'), (False, 'c\\n')]</span>
+<span class="sd">    """</span>
+    <span class="n">chunk</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">fence</span> <span class="o">=</span> <span class="s2">""</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">markdown</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">_CODE_FENCE_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">fence</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+                <span class="n">chunk</span><span class="p">,</span> <span class="n">fence</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="p">],</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">chunk</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">chunk</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">match</span> <span class="ow">and</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span> <span class="o">==</span> <span class="n">fence</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+                <span class="n">chunk</span><span class="p">,</span> <span class="n">fence</span> <span class="o">=</span> <span class="p">[],</span> <span class="s2">""</span>
+    <span class="k">yield</span> <span class="nb">bool</span><span class="p">(</span><span class="n">fence</span><span class="p">),</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_collapse_blank_runs</span><span class="p">(</span><span class="n">markdown</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Collapse runs of blank lines to a single one, *outside code blocks*.</span>
+
+<span class="sd">    Two blank lines between top-level ``def``s is PEP 8, so a global</span>
+<span class="sd">    ``re.sub(r"\\n{3,}", "\\n\\n", ...)`` silently rewrites the source code on</span>
+<span class="sd">    every technical page. Fenced regions are passed through untouched.</span>
+
+<span class="sd">    &gt;&gt;&gt; _collapse_blank_runs("a\\n\\n\\n\\nb\\n")</span>
+<span class="sd">    'a\\n\\nb\\n'</span>
+<span class="sd">    &gt;&gt;&gt; _collapse_blank_runs("```\\na\\n\\n\\n\\nb\\n```\\n")</span>
+<span class="sd">    '```\\na\\n\\n\\n\\nb\\n```\\n'</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="s2">""</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="n">text</span> <span class="k">if</span> <span class="n">is_code</span> <span class="k">else</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\n{3,}"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">is_code</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">_outside_code_fences</span><span class="p">(</span><span class="n">markdown</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_markdownify_options</span><span class="p">(</span><span class="n">overrides</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Merge *overrides* over :data:`HTML_TO_MARKDOWN_DEFAULTS`, validating names.</span>
+
+<span class="sd">    ``MarkdownConverter`` silently ignores unknown options, so a typo (or an</span>
+<span class="sd">    option name carried over from another converter) would be a quiet no-op.</span>
+<span class="sd">    Raise instead.</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">markdownify</span><span class="w"> </span><span class="kn">import</span> <span class="n">MarkdownConverter</span>
+
+    <span class="n">known</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">MarkdownConverter</span><span class="o">.</span><span class="n">DefaultOptions</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"_"</span><span class="p">)}</span>
+    <span class="n">unknown</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">overrides</span><span class="p">)</span> <span class="o">-</span> <span class="n">known</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Unknown markdownify option(s): </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="sa">f</span><span class="s2">"Valid options are: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">known</span><span class="p">))</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">HTML_TO_MARKDOWN_DEFAULTS</span><span class="p">,</span> <span class="o">**</span><span class="n">overrides</span><span class="p">}</span>
+    <span class="k">if</span> <span class="s2">"convert"</span> <span class="ow">in</span> <span class="n">overrides</span><span class="p">:</span>
+        <span class="c1"># markdownify rejects `strip` and `convert` together, and `strip` is</span>
+        <span class="c1"># ours, not the caller's -- an explicit `convert` supersedes it.</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"strip"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">options</span>
+
+
 <div class="viewcode-block" id="html_to_markdown">
 <a class="viewcode-back" href="../../module_docs/citeget/fetch.html#citeget.html_to_markdown">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">html_to_markdown</span><span class="p">(</span><span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">source_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Convert *html* to clean Markdown via html2text."""</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="kn">import</span><span class="w"> </span><span class="nn">html2text</span>
-    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
-            <span class="s2">"HTML→Markdown conversion requires html2text. "</span>
-            <span class="s2">"Install with: pip install html2text"</span>
-        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">html_to_markdown</span><span class="p">(</span><span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">source_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="o">**</span><span class="n">markdownify_options</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Convert *html* to clean Markdown.</span>
 
-    <span class="n">h</span> <span class="o">=</span> <span class="n">html2text</span><span class="o">.</span><span class="n">HTML2Text</span><span class="p">()</span>
-    <span class="n">h</span><span class="o">.</span><span class="n">body_width</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">h</span><span class="o">.</span><span class="n">ignore_links</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">h</span><span class="o">.</span><span class="n">ignore_images</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">h</span><span class="o">.</span><span class="n">ignore_emphasis</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="n">h</span><span class="o">.</span><span class="n">protect_links</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">h</span><span class="o">.</span><span class="n">unicode_snob</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">h</span><span class="o">.</span><span class="n">skip_internal_links</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">h</span><span class="o">.</span><span class="n">ignore_tables</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="sd">    Uses :mod:`markdownify` (MIT). Long paragraphs are left unwrapped, code</span>
+<span class="sd">    blocks become fenced blocks and tables become GitHub-flavoured tables.</span>
 
-    <span class="n">md</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
+<span class="sd">    Args:</span>
+<span class="sd">        html: The HTML source to convert.</span>
+<span class="sd">        source_url: If given, prepended as an HTML comment provenance line.</span>
+<span class="sd">        markdownify_options: Overrides for :data:`HTML_TO_MARKDOWN_DEFAULTS`,</span>
+<span class="sd">            passed to ``markdownify``'s ``MarkdownConverter``. Unknown option</span>
+<span class="sd">            names raise ``TypeError``. Passing ``convert=`` drops the default</span>
+<span class="sd">            ``strip=["img"]``, since markdownify accepts only one of the two.</span>
+
+<span class="sd">    &gt;&gt;&gt; print(html_to_markdown("&lt;h1&gt;Hi&lt;/h1&gt;&lt;p&gt;A &lt;b&gt;bold&lt;/b&gt; word.&lt;/p&gt;").strip())</span>
+<span class="sd">    # Hi</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">    A **bold** word.</span>
+
+<span class="sd">    Whitespace inside fenced code blocks is content, and is preserved:</span>
+
+<span class="sd">    &gt;&gt;&gt; md = html_to_markdown("&lt;pre&gt;&lt;code&gt;def a(): ...\\n\\n\\ndef b(): ...&lt;/code&gt;&lt;/pre&gt;")</span>
+<span class="sd">    &gt;&gt;&gt; "\\n\\n\\n" in md</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">bs4</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeautifulSoup</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">markdownify</span><span class="w"> </span><span class="kn">import</span> <span class="n">MarkdownConverter</span>
+
+    <span class="n">options</span> <span class="o">=</span> <span class="n">_resolve_markdownify_options</span><span class="p">(</span><span class="n">markdownify_options</span><span class="p">)</span>
+
+    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="s2">"html.parser"</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="n">NON_CONTENT_TAGS</span><span class="p">):</span>
+        <span class="n">tag</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span>
+
+    <span class="n">md</span> <span class="o">=</span> <span class="n">MarkdownConverter</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span><span class="o">.</span><span class="n">convert_soup</span><span class="p">(</span><span class="n">soup</span><span class="p">)</span>
+    <span class="n">md</span> <span class="o">=</span> <span class="n">_collapse_blank_runs</span><span class="p">(</span><span class="n">md</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span>
+
     <span class="k">if</span> <span class="n">source_url</span><span class="p">:</span>
         <span class="n">md</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"&lt;!-- Source: </span><span class="si">{</span><span class="n">source_url</span><span class="si">}</span><span class="s2"> --&gt;</span><span class="se">\n\n</span><span class="si">{</span><span class="n">md</span><span class="si">}</span><span class="s2">"</span>
     <span class="k">return</span> <span class="n">md</span></div>
