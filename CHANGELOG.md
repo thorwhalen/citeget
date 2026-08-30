@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- **HTML→Markdown conversion now uses `markdownify` (MIT) instead of
+  `html2text` (GPL-3.0-or-later).** `html2text` was a *core* dependency of
+  this Apache-2.0 package, so `pip install citeget` pulled a copyleft
+  distribution. `markdownify` replaces it as a core dependency; it brings no
+  new transitive weight (`beautifulsoup4` was already required).
+
+  `html_to_markdown()` keeps its signature and still returns unwrapped
+  Markdown, but the *output text differs in detail*: code blocks are now
+  fenced rather than indented, tables are GitHub-flavoured, `<title>` and
+  other head content is dropped, and intra-page `#anchor` links are kept as
+  links rather than flattened to plain text. Callers that diff or pattern-match
+  the generated Markdown may need to re-baseline.
+
+  The function also gained a `**markdownify_options` pass-through, overriding
+  the new `HTML_TO_MARKDOWN_DEFAULTS`.
+
 ## 0.2.0
 
 ### Fixed

@@ -41,7 +41,9 @@ citeget/
 
 - `playwright` — headless browser for libgen (JS-rendered pages)
 - `requests` + `beautifulsoup4` — direct downloads, sci-hub
-- `httpx` + `html2text` — general fetch (HTML→Markdown)
+- `httpx` + `markdownify` — general fetch (HTML→Markdown). `markdownify` is MIT;
+  the previous converter (`html2text`) is GPL-3.0-or-later and was dropped so that
+  an Apache-2.0 package pulls no copyleft code.
 - `argh` — CLI dispatch
 - `pypdf` — PDF page count, used to reject excerpts posing as full books
 - `pdfkit` (optional, `[fetch]` extra) + `wkhtmltopdf` system binary — HTML→PDF

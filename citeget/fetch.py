@@ -14,7 +14,7 @@ Pipeline per URL:
    embedded direct-PDF link (arxiv ``/pdf/``, GitHub ``.pdf`` assets, ACM
    ``/doi/pdf/``, etc.) and try that first; otherwise convert HTML→PDF via
    ``pdfkit`` (requires ``wkhtmltopdf``).
-4. Otherwise convert HTML→Markdown via ``html2text``.
+4. Otherwise convert HTML→Markdown via ``markdownify``.
 5. If the requested format fails, fall back to Markdown.
 
 Public API:
@@ -226,27 +226,50 @@ def _find_pdf_link(url: str, html: str) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 
-def html_to_markdown(html: str, *, source_url: str = "") -> str:
-    """Convert *html* to clean Markdown via html2text."""
-    try:
-        import html2text
-    except ImportError as e:
-        raise ImportError(
-            "HTML→Markdown conversion requires html2text. "
-            "Install with: pip install html2text"
-        ) from e
+#: Tags whose *content* is never part of the document text. ``markdownify``
+#: already drops ``script``/``style``, but not ``<title>``, so the whole head
+#: is removed before conversion.
+NON_CONTENT_TAGS = ("head", "script", "style", "noscript")
 
-    h = html2text.HTML2Text()
-    h.body_width = 0
-    h.ignore_links = False
-    h.ignore_images = True
-    h.ignore_emphasis = False
-    h.protect_links = True
-    h.unicode_snob = True
-    h.skip_internal_links = True
-    h.ignore_tables = False
+#: Defaults handed to :func:`markdownify.markdownify`. Override any of them by
+#: passing the same keyword to :func:`html_to_markdown`.
+HTML_TO_MARKDOWN_DEFAULTS = {
+    "heading_style": "ATX",  # "# Title", not the underlined setext form
+    "strip": ["img"],  # images are noise in a saved-for-reading document
+    "bullets": "*",
+    "escape_underscores": False,  # keeps identifiers like ``foo_bar`` readable
+    "escape_asterisks": False,
+}
 
-    md = h.handle(html)
+
+def html_to_markdown(html: str, *, source_url: str = "", **markdownify_options) -> str:
+    """Convert *html* to clean Markdown.
+
+    Uses :mod:`markdownify` (MIT). Long paragraphs are left unwrapped, code
+    blocks become fenced blocks and tables become GitHub-flavoured tables.
+
+    Args:
+        html: The HTML source to convert.
+        source_url: If given, prepended as an HTML comment provenance line.
+        markdownify_options: Overrides for :data:`HTML_TO_MARKDOWN_DEFAULTS`,
+            passed straight through to ``markdownify``.
+
+    >>> print(html_to_markdown("<h1>Hi</h1><p>A <b>bold</b> word.</p>").strip())
+    # Hi
+    <BLANKLINE>
+    A **bold** word.
+    """
+    from bs4 import BeautifulSoup
+    from markdownify import MarkdownConverter
+
+    soup = BeautifulSoup(html, "html.parser")
+    for tag in soup.find_all(NON_CONTENT_TAGS):
+        tag.decompose()
+
+    options = {**HTML_TO_MARKDOWN_DEFAULTS, **markdownify_options}
+    md = MarkdownConverter(**options).convert_soup(soup)
+    md = re.sub(r"\n{3,}", "\n\n", md).strip() + "\n"
+
     if source_url:
         md = f"<!-- Source: {source_url} -->\n\n{md}"
     return md

@@ -36,7 +36,7 @@ dependencies = [
     "requests",
     "beautifulsoup4",
     "httpx",
-    "html2text",
+    "markdownify",
     "argh",
     "pypdf",
 ]
