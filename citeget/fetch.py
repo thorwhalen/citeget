@@ -39,7 +39,7 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Literal, Optional, Union
+from typing import Iterable, Iterator, Literal, Mapping, Optional, Tuple, Union
 from urllib.parse import urljoin, urlparse
 
 logger = logging.getLogger(__name__)
@@ -231,8 +231,8 @@ def _find_pdf_link(url: str, html: str) -> Optional[str]:
 #: is removed before conversion.
 NON_CONTENT_TAGS = ("head", "script", "style", "noscript")
 
-#: Defaults handed to :func:`markdownify.markdownify`. Override any of them by
-#: passing the same keyword to :func:`html_to_markdown`.
+#: Defaults handed to ``markdownify``'s ``MarkdownConverter``. Override any of
+#: them by passing the same keyword to :func:`html_to_markdown`.
 HTML_TO_MARKDOWN_DEFAULTS = {
     "heading_style": "ATX",  # "# Title", not the underlined setext form
     "strip": ["img"],  # images are noise in a saved-for-reading document
@@ -240,6 +240,79 @@ HTML_TO_MARKDOWN_DEFAULTS = {
     "escape_underscores": False,  # keeps identifiers like ``foo_bar`` readable
     "escape_asterisks": False,
 }
+
+#: An opening (or closing) fence of a fenced code block, allowing markdown's
+#: three spaces of leading indentation.
+_CODE_FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
+
+
+def _outside_code_fences(markdown: str) -> Iterator[Tuple[bool, str]]:
+    """Split *markdown* into ``(is_fenced_code, text)`` chunks.
+
+    An unterminated fence keeps everything after it marked as code, which is the
+    conservative choice: whitespace inside code is content.
+
+    >>> list(_outside_code_fences("a\\n```\\nb\\n```\\nc\\n"))
+    [(False, 'a\\n'), (True, '```\\nb\\n```\\n'), (False, 'c\\n')]
+    """
+    chunk: list = []
+    fence = ""
+    for line in markdown.splitlines(keepends=True):
+        match = _CODE_FENCE_RE.match(line)
+        if not fence:
+            if match:
+                yield False, "".join(chunk)
+                chunk, fence = [line], match.group(1)[0] * 3
+            else:
+                chunk.append(line)
+        else:
+            chunk.append(line)
+            if match and match.group(1)[0] * 3 == fence:
+                yield True, "".join(chunk)
+                chunk, fence = [], ""
+    yield bool(fence), "".join(chunk)
+
+
+def _collapse_blank_runs(markdown: str) -> str:
+    """Collapse runs of blank lines to a single one, *outside code blocks*.
+
+    Two blank lines between top-level ``def``s is PEP 8, so a global
+    ``re.sub(r"\\n{3,}", "\\n\\n", ...)`` silently rewrites the source code on
+    every technical page. Fenced regions are passed through untouched.
+
+    >>> _collapse_blank_runs("a\\n\\n\\n\\nb\\n")
+    'a\\n\\nb\\n'
+    >>> _collapse_blank_runs("```\\na\\n\\n\\n\\nb\\n```\\n")
+    '```\\na\\n\\n\\n\\nb\\n```\\n'
+    """
+    return "".join(
+        text if is_code else re.sub(r"\n{3,}", "\n\n", text)
+        for is_code, text in _outside_code_fences(markdown)
+    )
+
+
+def _resolve_markdownify_options(overrides: Mapping) -> dict:
+    """Merge *overrides* over :data:`HTML_TO_MARKDOWN_DEFAULTS`, validating names.
+
+    ``MarkdownConverter`` silently ignores unknown options, so a typo (or an
+    option name carried over from another converter) would be a quiet no-op.
+    Raise instead.
+    """
+    from markdownify import MarkdownConverter
+
+    known = {k for k in vars(MarkdownConverter.DefaultOptions) if not k.startswith("_")}
+    unknown = sorted(set(overrides) - known)
+    if unknown:
+        raise TypeError(
+            f"Unknown markdownify option(s): {', '.join(unknown)}. "
+            f"Valid options are: {', '.join(sorted(known))}."
+        )
+    options = {**HTML_TO_MARKDOWN_DEFAULTS, **overrides}
+    if "convert" in overrides:
+        # markdownify rejects `strip` and `convert` together, and `strip` is
+        # ours, not the caller's -- an explicit `convert` supersedes it.
+        options.pop("strip", None)
+    return options
 
 
 def html_to_markdown(html: str, *, source_url: str = "", **markdownify_options) -> str:
@@ -252,23 +325,32 @@ def html_to_markdown(html: str, *, source_url: str = "", **markdownify_options) 
         html: The HTML source to convert.
         source_url: If given, prepended as an HTML comment provenance line.
         markdownify_options: Overrides for :data:`HTML_TO_MARKDOWN_DEFAULTS`,
-            passed straight through to ``markdownify``.
+            passed to ``markdownify``'s ``MarkdownConverter``. Unknown option
+            names raise ``TypeError``. Passing ``convert=`` drops the default
+            ``strip=["img"]``, since markdownify accepts only one of the two.
 
     >>> print(html_to_markdown("<h1>Hi</h1><p>A <b>bold</b> word.</p>").strip())
     # Hi
     <BLANKLINE>
     A **bold** word.
+
+    Whitespace inside fenced code blocks is content, and is preserved:
+
+    >>> md = html_to_markdown("<pre><code>def a(): ...\\n\\n\\ndef b(): ...</code></pre>")
+    >>> "\\n\\n\\n" in md
+    True
     """
     from bs4 import BeautifulSoup
     from markdownify import MarkdownConverter
+
+    options = _resolve_markdownify_options(markdownify_options)
 
     soup = BeautifulSoup(html, "html.parser")
     for tag in soup.find_all(NON_CONTENT_TAGS):
         tag.decompose()
 
-    options = {**HTML_TO_MARKDOWN_DEFAULTS, **markdownify_options}
     md = MarkdownConverter(**options).convert_soup(soup)
-    md = re.sub(r"\n{3,}", "\n\n", md).strip() + "\n"
+    md = _collapse_blank_runs(md).strip() + "\n"
 
     if source_url:
         md = f"<!-- Source: {source_url} -->\n\n{md}"

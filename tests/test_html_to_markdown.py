@@ -54,3 +54,36 @@ def test_source_url_is_recorded_as_a_comment():
 def test_defaults_can_be_overridden():
     md = html_to_markdown("<p>a</p><ul><li>b</li></ul>", bullets="-")
     assert "- b" in md
+
+
+def test_blank_lines_inside_code_blocks_are_preserved():
+    """PEP 8 puts two blank lines between top-level defs -- keep them.
+
+    A blanket ``re.sub(r"\n{3,}", "\n\n", md)`` over the whole document would
+    silently rewrite the source code on every technical page scraped.
+    """
+    html = (
+        "<pre><code>def func(x):\n    return x + 1\n\n\n"
+        "def test_answer():\n    assert func(3) == 5\n</code></pre>"
+    )
+    md = html_to_markdown(html)
+    assert "return x + 1\n\n\ndef test_answer():" in md
+
+
+def test_blank_line_runs_outside_code_blocks_are_collapsed():
+    md = html_to_markdown("<p>a</p><div><br><br><br><br></div><p>b</p>")
+    assert "\n\n\n" not in md
+
+
+def test_unknown_options_raise_rather_than_being_ignored():
+    """``MarkdownConverter`` swallows unknown options, so a typo would no-op."""
+    import pytest
+
+    with pytest.raises(TypeError, match="bulletz"):
+        html_to_markdown("<p>a</p>", bulletz="-")
+
+
+def test_convert_option_supersedes_the_default_strip():
+    """markdownify accepts ``strip`` or ``convert``, never both."""
+    md = html_to_markdown("<p>a</p><h1>b</h1>", convert=["p"])
+    assert "a" in md

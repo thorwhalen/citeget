@@ -83,7 +83,7 @@ URLs are extracted in three forms (deduped, first match wins):
 3. If HTML and `prefer="pdf"` → look for embedded direct-PDF link
    (arxiv `/pdf/`, GitHub `.pdf`, `/doi/pdf/`, etc.); if found, fetch that.
    Otherwise try HTML→PDF via `pdfkit`/`wkhtmltopdf`.
-4. Otherwise convert HTML→Markdown via `html2text` (clean, link-preserving).
+4. Otherwise convert HTML→Markdown via `markdownify` (clean, link-preserving).
 5. If a PDF route fails, fall back to Markdown automatically.
 
 ### Filename inference
@@ -155,7 +155,7 @@ results = fetch(
 
 - Network/HTTP errors are logged and the URL is marked `failed` in the
   result; other URLs still proceed.
-- For JS-heavy pages where html2text gives poor output, suggest re-running
+- For JS-heavy pages where markdownify gives poor output, suggest re-running
   with `--prefer pdf` (renders the page) or use the `WebFetch` tool as a
   second opinion.
 - For paywalled academic content, switch to `/acquire-references` — it has
