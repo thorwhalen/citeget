@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>citeget.cli &mdash; citeget 0.2.8 documentation</title>
+  <title>citeget.cli &mdash; citeget 0.2.9 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
       <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
@@ -15,7 +15,7 @@
   
       <script src="../../_static/jquery.js?v=5d32c60e"></script>
       <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-      <script src="../../_static/documentation_options.js?v=b01fafc3"></script>
+      <script src="../../_static/documentation_options.js?v=14672bda"></script>
       <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
       <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
       <script src="../../_static/toggleprompt.js?v=d7ede5d2"></script>
@@ -100,7 +100,7 @@
 <span id="citeget-cli"></span><h1>citeget.cli<a class="headerlink" href="#module-citeget.cli" title="Link to this heading"></a></h1>
 <p>CLI entry points for citeget.</p>
 <p>Provides search, download, and reference acquisition commands.
-Can be used standalone or dispatched via argh.</p>
+Can be used standalone or dispatched via cw.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="citeget.cli.acquire">
 <span class="sig-prename descclassname"><span class="pre">citeget.cli.</span></span><span class="sig-name descname"><span class="pre">acquire</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">work_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_refs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extractor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strategy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preview</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/cli.html#acquire"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.cli.acquire" title="Link to this definition"></a></dt>
@@ -216,7 +216,10 @@ falling through to the next one if it turns out to be an excerpt or a stub.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="citeget.cli.main">
 <span class="sig-prename descclassname"><span class="pre">citeget.cli.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/citeget/cli.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#citeget.cli.main" title="Link to this definition"></a></dt>
-<dd><p>CLI dispatcher.</p>
+<dd><p>CLI dispatcher. Returns the exit code.</p>
+<p><code class="docutils literal notranslate"><span class="pre">cw.dispatch</span></code> returns the exit code rather than exiting, so the caller
+turns it into a process status: the console script does <code class="docutils literal notranslate"><span class="pre">sys.exit(main())</span></code>
+and <code class="docutils literal notranslate"><span class="pre">citeget/__main__.py</span></code> does <code class="docutils literal notranslate"><span class="pre">raise</span> <span class="pre">SystemExit(main())</span></code>.</p>
 </dd></dl>
 
 <dl class="py function">
