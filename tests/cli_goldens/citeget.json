@@ -1,0 +1,148 @@
+{
+  "cases": [
+    {
+      "argv": [],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: citeget [-h] {search,download,get-book,acquire,fetch,check-mirrors} ...\n",
+      "tier": 1,
+      "usage": "usage: citeget [-h] {search,download,get-book,acquire,fetch,check-mirrors} ..."
+    },
+    {
+      "argv": [
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: citeget [-h] {search,download,get-book,acquire,fetch,check-mirrors} ...\n\npositional arguments:\n  {search,download,get-book,acquire,fetch,check-mirrors}\n    search              Search libgen and print results as a numbered table. Args: query: Search\n                        terms. topic: \"books\", \"articles\", \"fiction\", \"comics\", \"magazines\",\n                        \"standards\". results_per_page: Results per page (25, 50, or 100).\n                        base_url: Force a single mirror (e.g. https://libgen.vg). mirrors: Comma-\n                        separated ordered list of mirror base URLs to try.\n    download            Search libgen and download top results. Counts distinct works towards\n                        --max-downloads, since libgen lists one edition once per format. To\n                        acquire one copy of a specific book, use ``citeget get-book`` instead,\n                        which ranks results against title and author. Args: query: Search terms.\n                        topic: \"books\", \"articles\", \"fiction\", etc. download_dir: Directory to\n                        save files into. max_downloads: Max number of files to download (0 = all).\n                        delay: Seconds between downloads (rate limiting). no_distinct: Take\n                        libgen's raw result order, including the same edition repeated once per\n                        file format. base_url: Force a single mirror (e.g. https://libgen.vg).\n                        mirrors: Comma-separated ordered list of mirror base URLs to try.\n    get-book            Acquire one copy of a specific book, ranked against title and author.\n                        Unlike ``download``, which takes libgen's own top results (usually the\n                        same book in several formats), this ranks every result against what you\n                        asked for and downloads the best candidate that validates as a complete\n                        book, falling through to the next one if it turns out to be an excerpt or\n                        a stub. Args: title: The book's title. authors: The author(s), if known —\n                        strongly improves matching. download_dir: Directory to save the file into.\n                        query: Override the libgen search string (defaults to title + surname).\n                        topic: \"books\", \"fiction\", \"articles\", etc. max_candidates: How many\n                        ranked candidates to try before giving up. base_url: Force a single mirror\n                        (e.g. https://libgen.vg). mirrors: Comma-separated ordered list of mirror\n                        base URLs to try.\n    acquire             Acquire PDFs for all references in a document. Extracts references (tries\n                        headers, then broad [N] scan, then bold), then acquires PDFs via direct\n                        URL, libgen, arxiv, and sci-hub. Args: reference_file: Path to a document\n                        containing references. work_dir: Working directory (default: derived from\n                        reference_file). delay: Seconds between operations (rate limiting).\n                        max_refs: Max references to process (0 = all). extractor: Named extractor\n                        to use (default, standard, broad, bold, ai). strategy: Named acquisition\n                        strategy (default, direct, doi, arxiv_search, semantic_scholar, libgen,\n                        scihub). Empty uses legacy chain. preview: Show extracted references and\n                        ask for confirmation. auto: Skip confirmation even in preview mode.\n    fetch               Fetch URLs and save them as Markdown (default), PDF, or original. *source*\n                        may be a URL, a file path containing URLs, or a string with prose /\n                        markdown / reference-style citations. Multiple URLs are extracted\n                        automatically. Args: source: A URL, file path, or text containing URLs.\n                        output_dir: Where to save files (default: ~/Downloads). prefer: \"md\"\n                        (default), \"pdf\", \"original\", or \"auto\". PDF requires the `[fetch]` extra\n                        (`pip install citeget[fetch]`) and a `wkhtmltopdf` system binary for\n                        HTML→PDF conversion. timeout: HTTP timeout per request, in seconds.\n                        skip_existing: If true (default), skip URLs whose output exists. manifest:\n                        Optional path to write a JSON manifest of results.\n    check-mirrors       Probe the configured libgen mirrors and report which are healthy. Mirror\n                        domains rotate, so the shipped default list goes stale on its own\n                        schedule. Run this when searches start failing: it tells you whether the\n                        problem is your network or the mirror list, and prints a ready-to-use\n                        CITEGET_LIBGEN_MIRRORS value for the ones that work. Args: mirrors: Comma-\n                        separated mirrors to probe (defaults to the configured list). query:\n                        Search terms to probe with (should be something with results).\n\noptions:\n  -h, --help            show this help message and exit\n",
+      "tier": 3,
+      "usage": "usage: citeget [-h] {search,download,get-book,acquire,fetch,check-mirrors} ..."
+    },
+    {
+      "argv": [
+        "-h"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: citeget [-h] {search,download,get-book,acquire,fetch,check-mirrors} ...\n\npositional arguments:\n  {search,download,get-book,acquire,fetch,check-mirrors}\n    search              Search libgen and print results as a numbered table. Args: query: Search\n                        terms. topic: \"books\", \"articles\", \"fiction\", \"comics\", \"magazines\",\n                        \"standards\". results_per_page: Results per page (25, 50, or 100).\n                        base_url: Force a single mirror (e.g. https://libgen.vg). mirrors: Comma-\n                        separated ordered list of mirror base URLs to try.\n    download            Search libgen and download top results. Counts distinct works towards\n                        --max-downloads, since libgen lists one edition once per format. To\n                        acquire one copy of a specific book, use ``citeget get-book`` instead,\n                        which ranks results against title and author. Args: query: Search terms.\n                        topic: \"books\", \"articles\", \"fiction\", etc. download_dir: Directory to\n                        save files into. max_downloads: Max number of files to download (0 = all).\n                        delay: Seconds between downloads (rate limiting). no_distinct: Take\n                        libgen's raw result order, including the same edition repeated once per\n                        file format. base_url: Force a single mirror (e.g. https://libgen.vg).\n                        mirrors: Comma-separated ordered list of mirror base URLs to try.\n    get-book            Acquire one copy of a specific book, ranked against title and author.\n                        Unlike ``download``, which takes libgen's own top results (usually the\n                        same book in several formats), this ranks every result against what you\n                        asked for and downloads the best candidate that validates as a complete\n                        book, falling through to the next one if it turns out to be an excerpt or\n                        a stub. Args: title: The book's title. authors: The author(s), if known —\n                        strongly improves matching. download_dir: Directory to save the file into.\n                        query: Override the libgen search string (defaults to title + surname).\n                        topic: \"books\", \"fiction\", \"articles\", etc. max_candidates: How many\n                        ranked candidates to try before giving up. base_url: Force a single mirror\n                        (e.g. https://libgen.vg). mirrors: Comma-separated ordered list of mirror\n                        base URLs to try.\n    acquire             Acquire PDFs for all references in a document. Extracts references (tries\n                        headers, then broad [N] scan, then bold), then acquires PDFs via direct\n                        URL, libgen, arxiv, and sci-hub. Args: reference_file: Path to a document\n                        containing references. work_dir: Working directory (default: derived from\n                        reference_file). delay: Seconds between operations (rate limiting).\n                        max_refs: Max references to process (0 = all). extractor: Named extractor\n                        to use (default, standard, broad, bold, ai). strategy: Named acquisition\n                        strategy (default, direct, doi, arxiv_search, semantic_scholar, libgen,\n                        scihub). Empty uses legacy chain. preview: Show extracted references and\n                        ask for confirmation. auto: Skip confirmation even in preview mode.\n    fetch               Fetch URLs and save them as Markdown (default), PDF, or original. *source*\n                        may be a URL, a file path containing URLs, or a string with prose /\n                        markdown / reference-style citations. Multiple URLs are extracted\n                        automatically. Args: source: A URL, file path, or text containing URLs.\n                        output_dir: Where to save files (default: ~/Downloads). prefer: \"md\"\n                        (default), \"pdf\", \"original\", or \"auto\". PDF requires the `[fetch]` extra\n                        (`pip install citeget[fetch]`) and a `wkhtmltopdf` system binary for\n                        HTML→PDF conversion. timeout: HTTP timeout per request, in seconds.\n                        skip_existing: If true (default), skip URLs whose output exists. manifest:\n                        Optional path to write a JSON manifest of results.\n    check-mirrors       Probe the configured libgen mirrors and report which are healthy. Mirror\n                        domains rotate, so the shipped default list goes stale on its own\n                        schedule. Run this when searches start failing: it tells you whether the\n                        problem is your network or the mirror list, and prints a ready-to-use\n                        CITEGET_LIBGEN_MIRRORS value for the ones that work. Args: mirrors: Comma-\n                        separated mirrors to probe (defaults to the configured list). query:\n                        Search terms to probe with (should be something with results).\n\noptions:\n  -h, --help            show this help message and exit\n",
+      "tier": 3,
+      "usage": "usage: citeget [-h] {search,download,get-book,acquire,fetch,check-mirrors} ..."
+    },
+    {
+      "argv": [
+        "search",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: citeget search [-h] [-t TOPIC] [-r RESULTS_PER_PAGE] [-b BASE_URL] [-m MIRRORS] query\n\nSearch libgen and print results as a numbered table.\n\nArgs:\n    query: Search terms.\n    topic: \"books\", \"articles\", \"fiction\", \"comics\", \"magazines\", \"standards\".\n    results_per_page: Results per page (25, 50, or 100).\n    base_url: Force a single mirror (e.g. https://libgen.vg).\n    mirrors: Comma-separated ordered list of mirror base URLs to try.\n\npositional arguments:\n  query                 -\n\noptions:\n  -h, --help            show this help message and exit\n  -t TOPIC, --topic TOPIC\n                        'books'\n  -r RESULTS_PER_PAGE, --results-per-page RESULTS_PER_PAGE\n                        100\n  -b BASE_URL, --base-url BASE_URL\n                        ''\n  -m MIRRORS, --mirrors MIRRORS\n                        ''\n",
+      "tier": 3,
+      "usage": "usage: citeget search [-h] [-t TOPIC] [-r RESULTS_PER_PAGE] [-b BASE_URL] [-m MIRRORS] query"
+    },
+    {
+      "argv": [
+        "download",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: citeget download [-h] [-t TOPIC] [--download-dir DOWNLOAD_DIR]\n                        [--max-downloads MAX_DOWNLOADS] [--delay DELAY] [-n] [-b BASE_URL]\n                        [--mirrors MIRRORS]\n                        query\n\nSearch libgen and download top results.\n\nCounts distinct works towards --max-downloads, since libgen lists one\nedition once per format. To acquire one copy of a specific book, use\n``citeget get-book`` instead, which ranks results against title and author.\n\nArgs:\n    query: Search terms.\n    topic: \"books\", \"articles\", \"fiction\", etc.\n    download_dir: Directory to save files into.\n    max_downloads: Max number of files to download (0 = all).\n    delay: Seconds between downloads (rate limiting).\n    no_distinct: Take libgen's raw result order, including the same\n        edition repeated once per file format.\n    base_url: Force a single mirror (e.g. https://libgen.vg).\n    mirrors: Comma-separated ordered list of mirror base URLs to try.\n\npositional arguments:\n  query                 -\n\noptions:\n  -h, --help            show this help message and exit\n  -t TOPIC, --topic TOPIC\n                        'books'\n  --download-dir DOWNLOAD_DIR\n                        '.'\n  --max-downloads MAX_DOWNLOADS\n                        5\n  --delay DELAY         2.0\n  -n, --no-distinct     False\n  -b BASE_URL, --base-url BASE_URL\n                        ''\n  --mirrors MIRRORS     ''\n",
+      "tier": 3,
+      "usage": "usage: citeget download [-h] [-t TOPIC] [--download-dir DOWNLOAD_DIR] [--max-downloads MAX_DOWNLOADS] [--delay DELAY] [-n] [-b BASE_URL] [--mirrors MIRRORS] query"
+    },
+    {
+      "argv": [
+        "get-book",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: citeget get-book [-h] [-a AUTHORS] [-d DOWNLOAD_DIR] [-q QUERY] [-t TOPIC]\n                        [--max-candidates MAX_CANDIDATES] [-b BASE_URL] [--mirrors MIRRORS]\n                        title\n\nAcquire one copy of a specific book, ranked against title and author.\n\nUnlike ``download``, which takes libgen's own top results (usually the same\nbook in several formats), this ranks every result against what you asked\nfor and downloads the best candidate that validates as a complete book,\nfalling through to the next one if it turns out to be an excerpt or a stub.\n\nArgs:\n    title: The book's title.\n    authors: The author(s), if known — strongly improves matching.\n    download_dir: Directory to save the file into.\n    query: Override the libgen search string (defaults to title + surname).\n    topic: \"books\", \"fiction\", \"articles\", etc.\n    max_candidates: How many ranked candidates to try before giving up.\n    base_url: Force a single mirror (e.g. https://libgen.vg).\n    mirrors: Comma-separated ordered list of mirror base URLs to try.\n\npositional arguments:\n  title                 -\n\noptions:\n  -h, --help            show this help message and exit\n  -a AUTHORS, --authors AUTHORS\n                        ''\n  -d DOWNLOAD_DIR, --download-dir DOWNLOAD_DIR\n                        '.'\n  -q QUERY, --query QUERY\n                        ''\n  -t TOPIC, --topic TOPIC\n                        'books'\n  --max-candidates MAX_CANDIDATES\n                        5\n  -b BASE_URL, --base-url BASE_URL\n                        ''\n  --mirrors MIRRORS     ''\n",
+      "tier": 3,
+      "usage": "usage: citeget get-book [-h] [-a AUTHORS] [-d DOWNLOAD_DIR] [-q QUERY] [-t TOPIC] [--max-candidates MAX_CANDIDATES] [-b BASE_URL] [--mirrors MIRRORS] title"
+    },
+    {
+      "argv": [
+        "acquire",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: citeget acquire [-h] [-w WORK_DIR] [-d DELAY] [-m MAX_REFS] [-e EXTRACTOR] [-s STRATEGY]\n                       [-p] [-a]\n                       reference-file\n\nAcquire PDFs for all references in a document.\n\nExtracts references (tries headers, then broad [N] scan, then bold),\nthen acquires PDFs via direct URL, libgen, arxiv, and sci-hub.\n\nArgs:\n    reference_file: Path to a document containing references.\n    work_dir: Working directory (default: derived from reference_file).\n    delay: Seconds between operations (rate limiting).\n    max_refs: Max references to process (0 = all).\n    extractor: Named extractor to use (default, standard, broad, bold, ai).\n    strategy: Named acquisition strategy (default, direct, doi, arxiv_search,\n        semantic_scholar, libgen, scihub). Empty uses legacy chain.\n    preview: Show extracted references and ask for confirmation.\n    auto: Skip confirmation even in preview mode.\n\npositional arguments:\n  reference-file        -\n\noptions:\n  -h, --help            show this help message and exit\n  -w WORK_DIR, --work-dir WORK_DIR\n                        ''\n  -d DELAY, --delay DELAY\n                        2.0\n  -m MAX_REFS, --max-refs MAX_REFS\n                        0\n  -e EXTRACTOR, --extractor EXTRACTOR\n                        'default'\n  -s STRATEGY, --strategy STRATEGY\n                        ''\n  -p, --preview         False\n  -a, --auto            False\n",
+      "tier": 3,
+      "usage": "usage: citeget acquire [-h] [-w WORK_DIR] [-d DELAY] [-m MAX_REFS] [-e EXTRACTOR] [-s STRATEGY] [-p] [-a] reference-file"
+    },
+    {
+      "argv": [
+        "fetch",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: citeget fetch [-h] [-o OUTPUT_DIR] [-p PREFER] [-t TIMEOUT] [-s] [-m MANIFEST] source\n\nFetch URLs and save them as Markdown (default), PDF, or original.\n\n*source* may be a URL, a file path containing URLs, or a string with\nprose / markdown / reference-style citations. Multiple URLs are extracted\nautomatically.\n\nArgs:\n    source: A URL, file path, or text containing URLs.\n    output_dir: Where to save files (default: ~/Downloads).\n    prefer: \"md\" (default), \"pdf\", \"original\", or \"auto\".\n        PDF requires the `[fetch]` extra (`pip install citeget[fetch]`)\n        and a `wkhtmltopdf` system binary for HTML→PDF conversion.\n    timeout: HTTP timeout per request, in seconds.\n    skip_existing: If true (default), skip URLs whose output exists.\n    manifest: Optional path to write a JSON manifest of results.\n\npositional arguments:\n  source                -\n\noptions:\n  -h, --help            show this help message and exit\n  -o OUTPUT_DIR, --output-dir OUTPUT_DIR\n                        '~/Downloads'\n  -p PREFER, --prefer PREFER\n                        'md'\n  -t TIMEOUT, --timeout TIMEOUT\n                        30\n  -s, --skip-existing   True\n  -m MANIFEST, --manifest MANIFEST\n                        ''\n",
+      "tier": 3,
+      "usage": "usage: citeget fetch [-h] [-o OUTPUT_DIR] [-p PREFER] [-t TIMEOUT] [-s] [-m MANIFEST] source"
+    },
+    {
+      "argv": [
+        "check-mirrors",
+        "--help"
+      ],
+      "returncode": 0,
+      "stderr": "",
+      "stdout": "usage: citeget check-mirrors [-h] [-m MIRRORS] [-q QUERY]\n\nProbe the configured libgen mirrors and report which are healthy.\n\nMirror domains rotate, so the shipped default list goes stale on its own\nschedule. Run this when searches start failing: it tells you whether the\nproblem is your network or the mirror list, and prints a ready-to-use\nCITEGET_LIBGEN_MIRRORS value for the ones that work.\n\nArgs:\n    mirrors: Comma-separated mirrors to probe (defaults to the configured list).\n    query: Search terms to probe with (should be something with results).\n\noptions:\n  -h, --help            show this help message and exit\n  -m MIRRORS, --mirrors MIRRORS\n                        ''\n  -q QUERY, --query QUERY\n                        'design of everyday things'\n",
+      "tier": 3,
+      "usage": "usage: citeget check-mirrors [-h] [-m MIRRORS] [-q QUERY]"
+    },
+    {
+      "argv": [
+        "no-such-command"
+      ],
+      "returncode": 2,
+      "stderr": "usage: citeget [-h] {search,download,get-book,acquire,fetch,check-mirrors} ...\nciteget: error: argument {search,download,get-book,acquire,fetch,check-mirrors}: invalid choice: 'no-such-command' (choose from search, download, get-book, acquire, fetch, check-mirrors)\n",
+      "stdout": "",
+      "tier": 1,
+      "usage": "usage: citeget [-h] {search,download,get-book,acquire,fetch,check-mirrors} ... citeget: error: argument {search,download,get-book,acquire,fetch,check-mirrors}: invalid choice: 'no-such-command' (choose from search, download, get-book, acquire, fetch, check-mirrors)"
+    },
+    {
+      "argv": [
+        "search",
+        "--no-such-flag"
+      ],
+      "returncode": 2,
+      "stderr": "usage: citeget search [-h] [-t TOPIC] [-r RESULTS_PER_PAGE] [-b BASE_URL] [-m MIRRORS] query\nciteget search: error: the following arguments are required: query\n",
+      "stdout": "",
+      "tier": 1,
+      "usage": "usage: citeget search [-h] [-t TOPIC] [-r RESULTS_PER_PAGE] [-b BASE_URL] [-m MIRRORS] query citeget search: error: the following arguments are required: query"
+    },
+    {
+      "argv": [
+        "search"
+      ],
+      "returncode": 2,
+      "stderr": "usage: citeget search [-h] [-t TOPIC] [-r RESULTS_PER_PAGE] [-b BASE_URL] [-m MIRRORS] query\nciteget search: error: the following arguments are required: query\n",
+      "stdout": "",
+      "tier": 1,
+      "usage": "usage: citeget search [-h] [-t TOPIC] [-r RESULTS_PER_PAGE] [-b BASE_URL] [-m MIRRORS] query citeget search: error: the following arguments are required: query"
+    }
+  ],
+  "cw_golden": 1,
+  "env": {
+    "COLUMNS": "100",
+    "NO_COLOR": "1",
+    "PYTHONHASHSEED": "0",
+    "PYTHONIOENCODING": "utf-8",
+    "PYTHONUTF8": "1",
+    "TERM": "dumb"
+  },
+  "newlines": "lf",
+  "note": "Recorded from the argh implementation (citeget/cli.py at main, before the cw migration) with cw.testing.characterize, via the console script.",
+  "prog": [
+    "citeget"
+  ],
+  "recorded_with": {
+    "implementation": "CPython",
+    "platform": "Darwin",
+    "python": "3.12.12"
+  }
+}

@@ -1,10 +1,10 @@
 """CLI entry points for citeget.
 
 Provides search, download, and reference acquisition commands.
-Can be used standalone or dispatched via argh.
+Can be used standalone or dispatched via cw.
 """
 
-import argh
+import cw
 from datetime import datetime
 
 
@@ -394,10 +394,20 @@ def check_mirrors(*, mirrors: str = "", query: str = "design of everyday things"
         )
 
 
+# The commands the CLI dispatches. Named so a test can assert on the list
+# itself rather than re-deriving it from the parser.
+COMMANDS = [search, download, get_book, acquire, fetch, check_mirrors]
+
+
 def main():
-    """CLI dispatcher."""
-    argh.dispatch_commands([search, download, get_book, acquire, fetch, check_mirrors])
+    """CLI dispatcher. Returns the exit code.
+
+    ``cw.dispatch`` returns the exit code rather than exiting, so the caller
+    turns it into a process status: the console script does ``sys.exit(main())``
+    and ``citeget/__main__.py`` does ``raise SystemExit(main())``.
+    """
+    return cw.dispatch(COMMANDS)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
