@@ -50,7 +50,7 @@ citeget/
 
 Install playwright browsers: `python -m playwright install chromium`
 
-## Skills (in .claude/skills/)
+## Skills (real files in `skills/`, symlinked from `.claude/skills/`)
 
 | Skill | Purpose |
 |-------|---------|

@@ -196,9 +196,16 @@ write_references_md(successes, work_dir / "references", work_dir / "references.m
 
 ### AI agent usage (Claude Code skills)
 
-`citeget` ships with Claude Code skills — structured prompts that let an
-AI agent use the tools interactively. The skills live in `.claude/skills/`
-inside this repository.
+`citeget` ships with AI agent skills — structured prompts that let an
+agent use the tools interactively. The real files live in `skills/` at the
+repository root, with per-skill symlinks in `.claude/skills/` so Claude Code
+finds them too.
+
+**To install one into another project**:
+
+```
+gh skill install thorwhalen/citeget acquire-references
+```
 
 **To use in Claude Code**, either work in the citeget project directory
 (skills are auto-discovered), or copy the skill folders into your project's
