@@ -1,0 +1,21 @@
+# citeget
+
+> Find, acquire, and manage academic references — for AI agents and humans.
+
+
+## Pages in this subsection
+
+- [citeget](citeget.html.md): citeget — Find, acquire, and manage academic references.
+- [citeget.acquire_references](citeget.acquire_references.html.md): Tools for acquiring academic references as PDFs.
+- [citeget.article_pub](citeget.article_pub.html.md): Article publication toolkit — journal profiling, checking, and formatting.
+- [citeget.cli](citeget.cli.html.md): CLI entry points for citeget.
+- [citeget.core](citeget.core.html.md): Core search and download logic for libgen (libgen.vg-family mirrors).
+- [citeget.extract](citeget.extract.html.md): Composable reference extraction from documents.
+- [citeget.names](citeget.names.html.md): Author-name parsing for libgen metadata.
+- [citeget.rank](citeget.rank.html.md): Rank libgen search results against a requested title and author.
+- [citeget.resolve](citeget.resolve.html.md): Composable download and URL-resolution for academic references.
+- [citeget.validate](citeget.validate.html.md): Validate that a downloaded file is actually the book or paper it claims to be.
+
+## Optional
+
+- [Top-level llms.txt](../llms.txt): Complete documentation index.

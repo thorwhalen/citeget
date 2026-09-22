@@ -1,0 +1,29 @@
+# citeget
+
+> Find, acquire, and manage academic references — for AI agents and humans.
+
+
+## Pages
+
+- [citeget](index.html.md): Find, acquire, and manage academic references — for AI agents and humans.
+- [API reference](api.html.md): | &#96;citeget&#96;   | citeget — Find, acquire, and manage academic references.   |
+- [citeget](_autosummary/citeget.html.md): citeget — Find, acquire, and manage academic references.
+- [citeget.acquire_references](_autosummary/citeget.acquire_references.html.md): Tools for acquiring academic references as PDFs.
+- [citeget.article_pub](_autosummary/citeget.article_pub.html.md): Article publication toolkit — journal profiling, checking, and formatting.
+- [citeget.cli](_autosummary/citeget.cli.html.md): CLI entry points for citeget.
+- [citeget.core](_autosummary/citeget.core.html.md): Core search and download logic for libgen (libgen.vg-family mirrors).
+- [citeget.extract](_autosummary/citeget.extract.html.md): Composable reference extraction from documents.
+- [citeget.names](_autosummary/citeget.names.html.md): Author-name parsing for libgen metadata.
+- [citeget.rank](_autosummary/citeget.rank.html.md): Rank libgen search results against a requested title and author.
+- [citeget.resolve](_autosummary/citeget.resolve.html.md): Composable download and URL-resolution for academic references.
+- [citeget.validate](_autosummary/citeget.validate.html.md): Validate that a downloaded file is actually the book or paper it claims to be.
+- [For AI agents](ai-agents.html.md): &#96;citeget&#96; ships artifacts for coding agents alongside its code. This page lists
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-09-22 13:26 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+
+## Optional
+
+- [citeget.md](citeget.md): Complete documentation in a single file.
+
+## Build
+
+- [build_info.json](build_info.json): build provenance (commit, version, tool versions, whether the docs match the package)

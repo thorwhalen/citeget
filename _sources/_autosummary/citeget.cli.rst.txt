@@ -1,0 +1,18 @@
+citeget.cli
+===========
+
+.. automodule:: citeget.cli
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      acquire
+      check_mirrors
+      download
+      fetch
+      get_book
+      main
+      search
+   

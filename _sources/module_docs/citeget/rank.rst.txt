@@ -1,4 +1,0 @@
-citeget.rank
-============
-.. automodule:: citeget.rank
-   :members:

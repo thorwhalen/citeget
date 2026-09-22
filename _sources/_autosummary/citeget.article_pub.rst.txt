@@ -1,0 +1,6 @@
+citeget.article\_pub
+====================
+
+.. automodule:: citeget.article_pub
+
+   

@@ -1,4 +1,0 @@
-citeget.extract
-===============
-.. automodule:: citeget.extract
-   :members:

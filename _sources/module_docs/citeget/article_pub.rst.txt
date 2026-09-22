@@ -1,4 +1,0 @@
-citeget.article_pub
-===================
-.. automodule:: citeget.article_pub
-   :members:

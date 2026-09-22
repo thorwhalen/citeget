@@ -1,0 +1,17 @@
+citeget.names
+=============
+
+.. automodule:: citeget.names
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      split_author_chunks
+      surname_of
+      surnames
+      candidate_surnames
+      apa7_authors
+      normalize_name
+   

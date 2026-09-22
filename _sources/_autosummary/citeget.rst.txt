@@ -1,0 +1,95 @@
+﻿citeget
+=======
+
+.. automodule:: citeget
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      search
+      download_results
+      download_one
+      download_best
+      get_book
+      search_and_download
+      check_mirrors
+      rank_results
+      score_result
+      dedupe_results
+      validate_download
+      validate_bytes
+      apa7_authors
+      candidate_surnames
+      surnames
+      parse_reference
+      parse_references_section
+      extract_references
+      regex_extractor
+      chain_extractors
+      merge_extractors
+      register_extractor
+      list_extractors
+      resolve_reference
+      url_rewriter
+      resolve_and_download
+      chain_strategies
+      chain_resolvers
+      register_resolver
+      register_downloader
+      register_strategy
+      list_resolvers
+      list_downloaders
+      list_strategies
+      acquire_reference
+      acquire_all_references
+      generate_search_queries
+      resolve_work_dir
+      check_existing_downloads
+      write_references_md
+      write_missed_references_md
+      fetch
+      fetch_one
+      extract_urls_from_text
+      infer_filename
+      html_to_markdown
+      html_to_pdf
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ScoredResult
+      ScoreWeights
+      SizeBounds
+      ValidationPolicy
+      ValidationResult
+      ExtractionResult
+      Reference
+      AcquisitionResult
+      FetchResult
+      UrlEntry
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      MirrorUnreachableError
+      InvalidDownloadError
+   
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree:
+   :recursive:
+
+   acquire_references
+   article_pub
+   cli
+   core
+   extract
+   names
+   rank
+   resolve
+   validate

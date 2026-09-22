@@ -1,0 +1,25 @@
+citeget.rank
+============
+
+.. automodule:: citeget.rank
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      score_result
+      rank_results
+      dedupe_results
+      dedupe_key
+      parse_size
+      candidate_surnames
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ScoreWeights
+      SizeBounds
+      ScoredResult
+   

@@ -1,0 +1,27 @@
+citeget.acquire\_references
+===========================
+
+.. automodule:: citeget.acquire_references
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      acquire_all_references
+      acquire_reference
+      check_existing_downloads
+      generate_search_queries
+      parse_reference
+      parse_references_section
+      resolve_work_dir
+      write_missed_references_md
+      write_references_md
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AcquisitionResult
+      Reference
+   

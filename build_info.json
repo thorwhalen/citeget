@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "built_at": "2026-09-22T13:26:42Z",
+  "package": {
+    "name": "citeget",
+    "version": "0.2.11",
+    "display_name": "citeget",
+    "source": "pyproject.toml"
+  },
+  "git": {
+    "available": true,
+    "commit": "c1c5c860b07bf112304bdddd390394fa16882aaf",
+    "short_commit": "c1c5c86",
+    "branch": "main",
+    "tags": [
+      "0.2.11"
+    ],
+    "dirty": false,
+    "remote_url": "https://github.com/thorwhalen/citeget",
+    "commit_url": "https://github.com/thorwhalen/citeget/commit/c1c5c860b07bf112304bdddd390394fa16882aaf",
+    "error": null
+  },
+  "ci": {
+    "provider": "github",
+    "repository": "thorwhalen/citeget",
+    "sha": "28a1bbc2670ceac16bcb1a773ffbf53831dbf8b6",
+    "sha_in_history": true,
+    "ref": "refs/heads/main",
+    "ref_name": "main",
+    "run_id": "35733235312",
+    "run_url": "https://github.com/thorwhalen/citeget/actions/runs/35733235312",
+    "server_url": "https://github.com"
+  },
+  "tools": {
+    "epythet": "0.2.12",
+    "sphinx": "9.1.0",
+    "docutils": "0.22.4",
+    "python": "3.12.14"
+  },
+  "config": {
+    "theme": "auto",
+    "html_theme": "sphinxawesome_theme",
+    "accent": "#7c397d",
+    "mode": "auto",
+    "api_generator": "autosummary",
+    "ignore": [
+      "tests/",
+      "scrap/",
+      "examples/"
+    ],
+    "agent_outputs": true,
+    "aggregates": [
+      "md"
+    ],
+    "ai_artifacts": true,
+    "provenance": true,
+    "docs_dir": "docsrc"
+  },
+  "site": {
+    "modules_documented": 10,
+    "objects_documented": 166
+  },
+  "pypi": {
+    "checked": true,
+    "latest": "0.2.11",
+    "relation": "same",
+    "error": null
+  },
+  "reproduce": "git clone https://github.com/thorwhalen/citeget && cd citeget\ngit checkout c1c5c860b07bf112304bdddd390394fa16882aaf\npip install \"epythet==0.2.12\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "warnings": [],
+  "alignment": {
+    "aligned": true,
+    "notes": []
+  }
+}

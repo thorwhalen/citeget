@@ -1,4 +1,0 @@
-citeget.acquire_references
-==========================
-.. automodule:: citeget.acquire_references
-   :members:

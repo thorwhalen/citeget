@@ -1,4 +1,0 @@
-citeget.core
-============
-.. automodule:: citeget.core
-   :members:

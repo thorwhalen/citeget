@@ -1,0 +1,39 @@
+citeget.resolve
+===============
+
+.. automodule:: citeget.resolve
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      arxiv_search_resolver
+      chain
+      chain_resolvers
+      doi_resolver
+      get_downloader
+      get_resolver
+      get_strategy
+      libgen_strategy
+      list_downloaders
+      list_resolvers
+      list_strategies
+      register_downloader
+      register_resolver
+      register_strategy
+      resolve_and_download
+      resolve_reference
+      scihub_strategy
+      semantic_scholar_resolver
+      url_rewriter
+      with_logging
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AcquisitionStrategy
+      Downloader
+      UrlResolver
+   

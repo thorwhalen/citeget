@@ -1,0 +1,35 @@
+citeget.extract
+===============
+
+.. automodule:: citeget.extract
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      ai_extractor
+      chain
+      extract_references
+      get_extractor
+      list_extractors
+      load_extractors
+      markdown_link_extractor
+      merge
+      regex_extractor
+      register
+      save_extractors
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ExtractionResult
+      Extractor
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      AIExtractionRequested
+   

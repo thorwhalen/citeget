@@ -1,0 +1,36 @@
+citeget.validate
+================
+
+.. automodule:: citeget.validate
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      BOOK_POLICY
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      validate_bytes
+      validate_download
+      looks_like_html
+      detect_format
+      pdf_page_count
+      epub_markup_bytes
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ValidationPolicy
+      ValidationResult
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      InvalidDownloadError
+   

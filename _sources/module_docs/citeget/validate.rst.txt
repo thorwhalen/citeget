@@ -1,4 +1,0 @@
-citeget.validate
-================
-.. automodule:: citeget.validate
-   :members:

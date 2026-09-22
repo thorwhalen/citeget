@@ -1,0 +1,24 @@
+citeget.core
+============
+
+.. automodule:: citeget.core
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      check_mirrors
+      download_best
+      download_one
+      download_results
+      get_book
+      search
+      search_and_download
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      MirrorUnreachableError
+   
