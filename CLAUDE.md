@@ -56,6 +56,7 @@ Install playwright browsers: `python -m playwright install chromium`
 |-------|---------|
 | `fetch-resources` | Download arbitrary URLs as Markdown / PDF (general) |
 | `acquire-references` | Bulk-acquire PDFs for academic references in a document |
+| `add-references` | Find and add citations/sources to a piece of written content |
 | `get-books` | Acquire one copy of each book in a list of titles (ranked + validated) |
 | `research-topic` | Deep literature research for article writing |
 | `review-article` | Expert peer-review style critique |
