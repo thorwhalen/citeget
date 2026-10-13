@@ -7,7 +7,8 @@ docs, specs, web pages) saved as Markdown (default), PDF, or original bytes.
 
 Pipeline per URL:
 
-1. Fetch the URL (httpx, follows redirects).
+1. Fetch the URL through :mod:`citeget.netguard` (follows redirects, refuses
+   loopback / private / link-local / metadata destinations on every hop).
 2. If the response is a PDF and the user wants ``"pdf"`` or ``"original"``,
    save it directly.
 3. If the response is HTML and the user wants ``"pdf"``, scan for an
@@ -41,6 +42,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Iterator, Literal, Mapping, Optional, Tuple, Union
 from urllib.parse import urljoin, urlparse
+
+from citeget import netguard
 
 logger = logging.getLogger(__name__)
 
@@ -167,20 +170,19 @@ _HEADERS = {
 
 
 def _http_get(url: str, *, timeout: int = 30):
-    """Fetch *url* via httpx with redirect-following. Returns response or ``None``."""
+    """Fetch *url*, following redirects. Returns the response or ``None``.
+
+    Goes through :func:`citeget.netguard.get`, so a destination outside the
+    public internet raises :class:`~citeget.netguard.UnsafeURLError` instead of
+    being fetched. That one is raised, not swallowed: "refused" is an answer
+    the caller should report, not a transient failure.
+    """
     try:
-        import httpx
-    except ImportError as e:
-        raise ImportError(
-            "citeget.fetch requires httpx. Install with: pip install httpx"
-        ) from e
-    try:
-        with httpx.Client(
-            follow_redirects=True, timeout=timeout, headers=_HEADERS
-        ) as client:
-            resp = client.get(url)
-            resp.raise_for_status()
-            return resp
+        resp = netguard.get(url, timeout=timeout, headers=_HEADERS)
+        resp.raise_for_status()
+        return resp
+    except netguard.UnsafeURLError:
+        raise
     except Exception as e:
         logger.warning("Failed to fetch %s: %s", url, e)
         return None
@@ -357,10 +359,79 @@ def html_to_markdown(html: str, *, source_url: str = "", **markdownify_options) 
     return md
 
 
-def html_to_pdf(url: str, *, html: str = "") -> Optional[bytes]:
-    """Render *url* (or *html* fallback) to PDF bytes via pdfkit/wkhtmltopdf.
+#: Elements that make wkhtmltopdf load something (a frame, an image, a style
+#: sheet, a script, an object, a redirect). Removed before an offline render.
+RESOURCE_LOADING_TAGS = (
+    "script", "noscript", "iframe", "frame", "frameset", "object", "embed",
+    "applet", "link", "style", "img", "picture", "source", "video", "audio",
+    "track", "svg", "math", "image", "input", "meta", "base", "portal", "template",
+)
 
-    Returns ``None`` if pdfkit / wkhtmltopdf is unavailable or rendering fails.
+#: Attributes that can make wkhtmltopdf load something. Removed everywhere.
+RESOURCE_LOADING_ATTRS = frozenset({
+    "src", "srcset", "srcdoc", "background", "poster", "data", "style",
+    "lowsrc", "dynsrc", "longdesc", "formaction", "action", "ping",
+    "xlink:href", "codebase", "archive", "manifest", "cite", "profile",
+})
+
+#: wkhtmltopdf options for rendering HTML we fetched ourselves, offline:
+#: no JavaScript, no local files, and every load it still attempts goes to a
+#: proxy that is not there. The HTML is also stripped of everything that loads
+#: (:func:`_offline_html`); the options are the second wall, not the first.
+OFFLINE_PDF_OPTIONS = {
+    "quiet": "",
+    "encoding": "UTF-8",
+    "disable-javascript": "",
+    "disable-local-file-access": "",
+    "proxy": "http://0.0.0.0:9",
+    "load-error-handling": "ignore",
+    "load-media-error-handling": "ignore",
+}
+
+#: wkhtmltopdf options when the network guard is off (a desktop opt-out):
+#: wkhtmltopdf fetches the URL and its resources itself, for a faithful page.
+ONLINE_PDF_OPTIONS = {
+    "quiet": "",
+    "no-stop-slow-scripts": "",
+    "encoding": "UTF-8",
+}
+
+
+def _offline_html(html: str) -> str:
+    """*html* with every element and attribute that loads a resource removed.
+
+    >>> _offline_html('<p style="x">Hi<img src="http://10.0.0.1/"></p><iframe src="x"></iframe>')
+    '<p>Hi</p>'
+    """
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(html, "html.parser")
+    for tag in soup.find_all(RESOURCE_LOADING_TAGS):
+        tag.decompose()
+    for tag in soup.find_all(True):
+        for attr in list(tag.attrs):
+            if attr.lower() in RESOURCE_LOADING_ATTRS or attr.lower().startswith("on"):
+                del tag.attrs[attr]
+        if tag.name != "a" and "href" in tag.attrs:
+            del tag.attrs["href"]
+    return str(soup)
+
+
+def html_to_pdf(
+    url: str, *, html: str = "", policy: Optional[netguard.NetPolicy] = None
+) -> Optional[bytes]:
+    """Render *url* to PDF bytes via pdfkit/wkhtmltopdf.
+
+    wkhtmltopdf is a browser and would fetch whatever the page points it at,
+    past :mod:`citeget.netguard`. So by default it never gets a URL: the page
+    is fetched through the guard (or *html* is used if given), stripped of
+    everything that loads a resource, and rendered offline. The PDF keeps the
+    text and structure, not images or styles. With the guard switched off
+    (``policy.allow_private``, or ``CITEGET_ALLOW_PRIVATE_NETWORK=1``),
+    wkhtmltopdf renders the live URL, resources and all.
+
+    Returns ``None`` if pdfkit / wkhtmltopdf is unavailable, the fetch is
+    refused or fails, or rendering fails.
     """
     try:
         import pdfkit
@@ -371,21 +442,35 @@ def html_to_pdf(url: str, *, html: str = "") -> Optional[bytes]:
         )
         return None
 
-    options = {
-        "quiet": "",
-        "no-stop-slow-scripts": "",
-        "encoding": "UTF-8",
-        "enable-local-file-access": "",
-    }
-    try:
-        return pdfkit.from_url(url, False, options=options)
-    except Exception as e:
-        logger.debug("pdfkit.from_url failed for %s: %s", url, e)
-        if html:
+    policy = policy or netguard.default_policy()
+    if policy.allow_private:
+        try:
+            return pdfkit.from_url(
+                netguard.check_url(url, policy=policy), False, options=ONLINE_PDF_OPTIONS
+            )
+        except Exception as e:
+            logger.debug("pdfkit.from_url failed for %s: %s", url, e)
+            if not html:
+                return None
             try:
-                return pdfkit.from_string(html, False, options=options)
+                return pdfkit.from_string(html, False, options=ONLINE_PDF_OPTIONS)
             except Exception as e2:
                 logger.debug("pdfkit.from_string also failed: %s", e2)
+                return None
+
+    if not html:
+        try:
+            resp = _http_get(url)
+        except netguard.UnsafeURLError as e:
+            logger.warning("%s", e)
+            return None
+        if resp is None:
+            return None
+        html = resp.text
+    try:
+        return pdfkit.from_string(_offline_html(html), False, options=OFFLINE_PDF_OPTIONS)
+    except Exception as e:
+        logger.debug("pdfkit.from_string failed for %s: %s", url, e)
         return None
 
 
@@ -445,7 +530,11 @@ def fetch_one(
         url=entry.url, status="failed", title=entry.title, ref=entry.ref
     )
 
-    resp = _http_get(entry.url, timeout=timeout)
+    try:
+        resp = _http_get(entry.url, timeout=timeout)
+    except netguard.UnsafeURLError as e:
+        result.error = str(e)
+        return result
     if resp is None:
         result.error = "fetch_failed"
         return result
@@ -471,7 +560,11 @@ def fetch_one(
         pdf_url = _find_pdf_link(entry.url, html)
         if pdf_url:
             logger.info("Found embedded PDF link: %s", pdf_url)
-            pdf_resp = _http_get(pdf_url, timeout=timeout)
+            try:
+                pdf_resp = _http_get(pdf_url, timeout=timeout)
+            except netguard.UnsafeURLError as e:
+                logger.warning("%s", e)
+                pdf_resp = None
             if pdf_resp is not None and _is_pdf_response(pdf_resp):
                 return _save_bytes(
                     entry,
@@ -669,7 +762,11 @@ def _html_to_pdf_downloader(url: str, filepath: Path, *, timeout: int = 30) -> b
 
 def _html_to_md_downloader(url: str, filepath: Path, *, timeout: int = 30) -> bool:
     """Downloader: fetch *url* (HTML) and save Markdown at *filepath*."""
-    resp = _http_get(url, timeout=timeout)
+    try:
+        resp = _http_get(url, timeout=timeout)
+    except netguard.UnsafeURLError as e:
+        logger.warning("%s", e)
+        return False
     if resp is None:
         return False
     md = html_to_markdown(resp.text, source_url=url)

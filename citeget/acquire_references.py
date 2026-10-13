@@ -369,7 +369,7 @@ def _arxiv_pdf_url(url: str) -> str:
 
 def _download_url(url: str, filepath: Path, *, timeout: int = 30) -> bool:
     """Try to download a URL as a PDF. Returns True on success."""
-    import requests
+    from citeget import netguard
 
     try:
         headers = {
@@ -378,7 +378,7 @@ def _download_url(url: str, filepath: Path, *, timeout: int = 30) -> bool:
                 "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             )
         }
-        resp = requests.get(url, headers=headers, timeout=timeout, stream=True)
+        resp = netguard.get(url, headers=headers, timeout=timeout, stream=True)
         if resp.status_code != 200:
             return False
 
@@ -763,7 +763,7 @@ def _try_arxiv_search(
     log_entries: list,
 ) -> Optional[str]:
     """Search arxiv API for the paper and download if found."""
-    import requests
+    from citeget import netguard
     from xml.etree import ElementTree as ET
 
     surname = _first_author_surname(ref.authors)
@@ -787,7 +787,7 @@ def _try_arxiv_search(
 
     timestamp = datetime.now().isoformat(timespec="seconds")
     try:
-        resp = requests.get(url, timeout=15)
+        resp = netguard.get(url, timeout=15)
         if resp.status_code != 200:
             return None
 
@@ -851,7 +851,7 @@ def _try_scihub_via_doi(
     log_entries: list,
 ) -> Optional[str]:
     """Look up DOI via Crossref, then try Sci-Hub."""
-    import requests
+    from citeget import netguard
     from bs4 import BeautifulSoup
 
     headers = {
@@ -868,7 +868,7 @@ def _try_scihub_via_doi(
 
     doi = ""
     try:
-        resp = requests.get(
+        resp = netguard.get(
             f"https://api.crossref.org/works?query={crossref_query}&rows=3",
             headers=headers,
             timeout=15,
@@ -893,7 +893,7 @@ def _try_scihub_via_doi(
     # Step 2: Try Sci-Hub with DOI
     try:
         scihub_url = f"https://sci-hub.ru/{doi}"
-        resp = requests.get(
+        resp = netguard.get(
             scihub_url, headers=headers, timeout=30, allow_redirects=True
         )
         if resp.status_code != 200:
@@ -912,7 +912,7 @@ def _try_scihub_via_doi(
             if pdf_link.startswith("/"):
                 pdf_link = "https://sci-hub.ru" + pdf_link
 
-            pdf_resp = requests.get(pdf_link, headers=headers, timeout=60)
+            pdf_resp = netguard.get(pdf_link, headers=headers, timeout=60)
             if pdf_resp.status_code == 200 and len(pdf_resp.content) > 1000:
                 filepath.parent.mkdir(parents=True, exist_ok=True)
                 filepath.write_bytes(pdf_resp.content)
@@ -1212,6 +1212,8 @@ def acquire_all_references(
     verbose: bool = True,
     convert_to_pdf: bool = False,
     fetch_fallback: bool = True,
+    concurrency_key: Optional[str] = "auto",
+    max_concurrent_jobs: Optional[int] = None,
 ) -> tuple:
     """Acquire files for a list of references.
 
@@ -1244,11 +1246,65 @@ def acquire_all_references(
         fetch_fallback: If True (default), fall back to fetching ``ref.url``
             as Markdown when all academic strategies fail (catches non-paper
             references like blog posts, docs, product pages).
+        concurrency_key: Who this run counts against for the concurrent-run
+            cap (see :mod:`citeget.joblimit`). ``"auto"`` (default) uses the
+            parent of ``work_dir``, so runs whose work dirs sit side by side
+            (a hosted app's per-user ``jobs/`` directory) share one cap; with
+            no ``work_dir`` there is no cap. Pass a string (a user id) to
+            choose the key, or ``None`` to switch the cap off.
+        max_concurrent_jobs: The cap for that key. Defaults to the
+            ``CITEGET_MAX_CONCURRENT_JOBS`` environment variable, else
+            :data:`citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS`; ``0`` means
+            no cap.
+
+    Raises:
+        citeget.joblimit.JobLimitExceeded: the key already has
+            ``max_concurrent_jobs`` runs in progress. Raised before any work.
 
     Returns:
         (successes, failures, log_entries) where successes and failures
         are lists of AcquisitionResult.
     """
+    from citeget.joblimit import job_slot
+
+    if concurrency_key == "auto":
+        concurrency_key = (
+            str(Path(work_dir).resolve().parent) if work_dir is not None else None
+        )
+    slot = (
+        job_slot(concurrency_key, max_concurrent=max_concurrent_jobs)
+        if concurrency_key
+        else contextlib.nullcontext()
+    )
+    with slot:
+        return _acquire_all_references(
+            references,
+            download_dir,
+            work_dir=work_dir,
+            log_file=log_file,
+            strategy=strategy,
+            libgen_topics=libgen_topics,
+            delay=delay,
+            verbose=verbose,
+            convert_to_pdf=convert_to_pdf,
+            fetch_fallback=fetch_fallback,
+        )
+
+
+def _acquire_all_references(
+    references: list,
+    download_dir,
+    *,
+    work_dir,
+    log_file,
+    strategy,
+    libgen_topics: tuple,
+    delay: float,
+    verbose: bool,
+    convert_to_pdf: bool,
+    fetch_fallback: bool,
+) -> tuple:
+    """The body of :func:`acquire_all_references`, run inside its job slot."""
     download_dir = Path(download_dir)
     download_dir.mkdir(parents=True, exist_ok=True)
 

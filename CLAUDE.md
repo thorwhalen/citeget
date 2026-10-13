@@ -30,6 +30,8 @@ citeget/
 ├── acquire_references.py    # Multi-strategy academic-reference acquisition
 ├── resolve.py               # Composable resolver/downloader/strategy registries
 ├── fetch.py                 # General URL → file (md/pdf/original) routing
+├── netguard.py              # SSRF guard: every outbound HTTP request goes through it
+├── joblimit.py              # Per-owner cap on concurrent acquisitions (flock slots)
 ├── extract.py               # Reference-text parsers
 ├── data/                    # Reference docs
 └── article_pub/             # Article publication toolkit
@@ -41,7 +43,7 @@ citeget/
 
 - `playwright` — headless browser for libgen (JS-rendered pages)
 - `requests` + `beautifulsoup4` — direct downloads, sci-hub
-- `httpx` + `markdownify` — general fetch (HTML→Markdown). `markdownify` is MIT;
+- `requests` (through `netguard`) + `markdownify` — general fetch (HTML→Markdown). `markdownify` is MIT;
   the previous converter (`html2text`) is GPL-3.0-or-later and was dropped so that
   an Apache-2.0 package pulls no copyleft code.
 - `cw` — CLI dispatch
@@ -81,3 +83,8 @@ Install playwright browsers: `python -m playwright install chromium`
   mirrors to agree, then `get_book` re-runs the whole search. Never treat one
   empty answer as "not there", in code or in a message to the user. The skills
   say this too; keep them in sync if the defence changes.
+- **Never call `requests.get` / `httpx` directly.** Use `citeget.netguard.get`
+  (or `guarded_session`): it refuses non-public destinations at connect time,
+  on every redirect hop, and is what makes the hosted app safe from SSRF.
+  `wkhtmltopdf` is never given a URL while the guard is on; it renders
+  fetched HTML offline. Opt-out for desktops: `CITEGET_ALLOW_PRIVATE_NETWORK=1`.

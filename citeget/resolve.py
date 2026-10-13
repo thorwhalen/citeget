@@ -241,10 +241,10 @@ _DEFAULT_HEADERS = {
 
 def _pdf_downloader(url: str, filepath: Path, *, timeout: int = 30) -> bool:
     """Download *url*, validate as PDF (``%PDF`` magic or content-type)."""
-    import requests
+    from citeget import netguard
 
     try:
-        resp = requests.get(url, headers=_DEFAULT_HEADERS, timeout=timeout, stream=True)
+        resp = netguard.get(url, headers=_DEFAULT_HEADERS, timeout=timeout, stream=True)
         if resp.status_code != 200:
             return False
 
@@ -270,10 +270,10 @@ def _pdf_downloader(url: str, filepath: Path, *, timeout: int = 30) -> bool:
 
 def _any_downloader(url: str, filepath: Path, *, timeout: int = 30) -> bool:
     """Download *url* without format validation (HTML, PDF, anything)."""
-    import requests
+    from citeget import netguard
 
     try:
-        resp = requests.get(url, headers=_DEFAULT_HEADERS, timeout=timeout, stream=True)
+        resp = netguard.get(url, headers=_DEFAULT_HEADERS, timeout=timeout, stream=True)
         if resp.status_code != 200:
             return False
 
@@ -421,7 +421,7 @@ def url_rewriter(
 
 def _lookup_doi_crossref(ref: Reference) -> str:
     """Look up a DOI via Crossref text search.  Returns DOI string or ``""``."""
-    import requests
+    from citeget import netguard
 
     clean_title = re.sub(r"[\"':;,.!?(){}[\]—–\-]", " ", ref.title)
     clean_title = re.sub(r"\s+", " ", clean_title).strip()
@@ -436,7 +436,7 @@ def _lookup_doi_crossref(ref: Reference) -> str:
         return ""
 
     try:
-        resp = requests.get(
+        resp = netguard.get(
             f"https://api.crossref.org/works?query={query}&rows=3",
             headers=_DEFAULT_HEADERS,
             timeout=15,
@@ -461,10 +461,10 @@ def _unpaywall_pdf(doi: str, *, email: str = "") -> str:
     """Query Unpaywall for an open-access PDF URL.  Returns URL or ``""``."""
     if not email:
         return ""
-    import requests
+    from citeget import netguard
 
     try:
-        resp = requests.get(
+        resp = netguard.get(
             f"https://api.unpaywall.org/v2/{doi}?email={email}",
             timeout=10,
         )
@@ -509,7 +509,7 @@ def arxiv_search_resolver() -> UrlResolver:
     """Search the arxiv API by author + title, return PDF URLs."""
 
     def _resolve(ref: Reference) -> list[str]:
-        import requests
+        from citeget import netguard
         from xml.etree import ElementTree as ET
 
         surname = ""
@@ -536,7 +536,7 @@ def arxiv_search_resolver() -> UrlResolver:
         )
 
         try:
-            resp = requests.get(api_url, timeout=15)
+            resp = netguard.get(api_url, timeout=15)
             if resp.status_code != 200:
                 return []
             root = ET.fromstring(resp.text)
@@ -576,7 +576,7 @@ def semantic_scholar_resolver() -> UrlResolver:
     """Query the Semantic Scholar API for open-access PDF links."""
 
     def _resolve(ref: Reference) -> list[str]:
-        import requests
+        from citeget import netguard
 
         if not ref.title:
             return []
@@ -587,7 +587,7 @@ def semantic_scholar_resolver() -> UrlResolver:
                 "limit": "3",
                 "fields": "openAccessPdf,title",
             }
-            resp = requests.get(
+            resp = netguard.get(
                 "https://api.semanticscholar.org/graph/v1/paper/search",
                 params=params,
                 timeout=15,
