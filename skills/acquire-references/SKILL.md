@@ -203,6 +203,11 @@ When the entire reference list is non-papers, skip this skill and use
 `/fetch-resources` directly — it's faster (no libgen / arxiv attempts) and
 the API is designed for the bulk-URL case.
 
+## Refusals that are not failures
+
+- **Internal URLs are refused.** A reference URL that points at loopback, a private network, a link-local or cloud-metadata address (or redirects to one) is never fetched; see `citeget.netguard`. On a desktop, `CITEGET_ALLOW_PRIVATE_NETWORK=1` lifts this.
+- **Concurrent runs are capped.** `acquire_all_references` raises `citeget.joblimit.JobLimitExceeded` before doing any work when the owner already has `CITEGET_MAX_CONCURRENT_JOBS` (default 2) runs going. By default the owner is the parent of `work_dir`. Wait for a run to finish rather than retrying in a loop; pass `concurrency_key=None` to opt out in a single-user script.
+
 ## Tips
 
 - **Skip non-papers**: For lists that are *all* web pages (Wikipedia,

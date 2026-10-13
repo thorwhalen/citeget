@@ -894,7 +894,7 @@ def _try_mirror_download(
         policy: Validation policy (see :mod:`citeget.validate`).
         validate: Set False to accept whatever the mirror returns.
     """
-    import requests
+    from citeget import netguard
 
     headers = {
         "User-Agent": (
@@ -902,7 +902,7 @@ def _try_mirror_download(
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         )
     }
-    resp = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
+    resp = netguard.get(url, headers=headers, timeout=timeout, allow_redirects=True)
     if resp.status_code != 200:
         raise RuntimeError(f"HTTP {resp.status_code} from {url}")
 

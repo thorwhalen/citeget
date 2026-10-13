@@ -77,12 +77,19 @@ URLs are extracted in three forms (deduped, first match wins):
 
 ### Per-URL pipeline
 
-1. Fetch via httpx (follows redirects).
+1. Fetch through `citeget.netguard` (follows redirects). URLs that point at
+   loopback, private, link-local or metadata addresses are **refused**, on
+   every redirect hop; the result is `failed` with `error` starting
+   `Refused`. That is deliberate, not a network fault: do not retry it. To
+   fetch from the user's own LAN or localhost on a desktop, set
+   `CITEGET_ALLOW_PRIVATE_NETWORK=1`.
 2. If the response is a PDF and `prefer in {"pdf", "original", "auto"}` →
    save as `.pdf`.
 3. If HTML and `prefer="pdf"` → look for embedded direct-PDF link
    (arxiv `/pdf/`, GitHub `.pdf`, `/doi/pdf/`, etc.); if found, fetch that.
-   Otherwise try HTML→PDF via `pdfkit`/`wkhtmltopdf`.
+   Otherwise try HTML→PDF via `pdfkit`/`wkhtmltopdf`. With the network
+   guard on (the default) the page is rendered offline, as text: no images
+   or styles in the PDF.
 4. Otherwise convert HTML→Markdown via `markdownify` (clean, link-preserving).
 5. If a PDF route fails, fall back to Markdown automatically.
 

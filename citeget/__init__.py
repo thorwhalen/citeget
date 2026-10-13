@@ -144,6 +144,9 @@ from citeget.fetch import (
     UrlEntry,
 )
 
+from citeget.netguard import NetPolicy, UnsafeURLError
+from citeget.joblimit import JobLimitExceeded, job_slot
+
 __all__ = [
     # Core search/download
     "search",
@@ -222,4 +225,9 @@ __all__ = [
     "html_to_pdf",
     "FetchResult",
     "UrlEntry",
+    # Network guard and concurrency cap
+    "NetPolicy",
+    "UnsafeURLError",
+    "JobLimitExceeded",
+    "job_slot",
 ]
