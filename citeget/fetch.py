@@ -362,17 +362,56 @@ def html_to_markdown(html: str, *, source_url: str = "", **markdownify_options) 
 #: Elements that make wkhtmltopdf load something (a frame, an image, a style
 #: sheet, a script, an object, a redirect). Removed before an offline render.
 RESOURCE_LOADING_TAGS = (
-    "script", "noscript", "iframe", "frame", "frameset", "object", "embed",
-    "applet", "link", "style", "img", "picture", "source", "video", "audio",
-    "track", "svg", "math", "image", "input", "meta", "base", "portal", "template",
+    "script",
+    "noscript",
+    "iframe",
+    "frame",
+    "frameset",
+    "object",
+    "embed",
+    "applet",
+    "link",
+    "style",
+    "img",
+    "picture",
+    "source",
+    "video",
+    "audio",
+    "track",
+    "svg",
+    "math",
+    "image",
+    "input",
+    "meta",
+    "base",
+    "portal",
+    "template",
 )
 
 #: Attributes that can make wkhtmltopdf load something. Removed everywhere.
-RESOURCE_LOADING_ATTRS = frozenset({
-    "src", "srcset", "srcdoc", "background", "poster", "data", "style",
-    "lowsrc", "dynsrc", "longdesc", "formaction", "action", "ping",
-    "xlink:href", "codebase", "archive", "manifest", "cite", "profile",
-})
+RESOURCE_LOADING_ATTRS = frozenset(
+    {
+        "src",
+        "srcset",
+        "srcdoc",
+        "background",
+        "poster",
+        "data",
+        "style",
+        "lowsrc",
+        "dynsrc",
+        "longdesc",
+        "formaction",
+        "action",
+        "ping",
+        "xlink:href",
+        "codebase",
+        "archive",
+        "manifest",
+        "cite",
+        "profile",
+    }
+)
 
 #: wkhtmltopdf options for rendering HTML we fetched ourselves, offline:
 #: no JavaScript, no local files, and every load it still attempts goes to a
@@ -456,7 +495,9 @@ def html_to_pdf(
     if policy.allow_private:
         try:
             return pdfkit.from_url(
-                netguard.check_url(url, policy=policy), False, options=ONLINE_PDF_OPTIONS
+                netguard.check_url(url, policy=policy),
+                False,
+                options=ONLINE_PDF_OPTIONS,
             )
         except Exception as e:
             logger.debug("pdfkit.from_url failed for %s: %s", url, e)
@@ -485,7 +526,10 @@ def html_to_pdf(
     config = pdfkit.configuration(meta_tag_prefix=f"citeget-{secrets.token_hex(16)}-")
     try:
         return pdfkit.from_string(
-            _offline_html(html), False, options=OFFLINE_PDF_OPTIONS, configuration=config
+            _offline_html(html),
+            False,
+            options=OFFLINE_PDF_OPTIONS,
+            configuration=config,
         )
     except Exception as e:
         logger.debug("pdfkit.from_string failed for %s: %s", url, e)

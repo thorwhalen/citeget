@@ -76,8 +76,7 @@ def max_concurrent_jobs(value: Optional[int] = None) -> int:
         return int(raw)
     except ValueError as e:
         raise ValueError(
-            f"{MAX_CONCURRENT_ENV_VAR}={raw!r} is not an integer "
-            "(use 0 for no cap)"
+            f"{MAX_CONCURRENT_ENV_VAR}={raw!r} is not an integer (use 0 for no cap)"
         ) from e
 
 

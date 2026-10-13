@@ -195,9 +195,7 @@ def check_url(url: str, *, policy: Optional[NetPolicy] = None) -> str:
     return url
 
 
-def resolve_public(
-    host: str, port: int, *, policy: Optional[NetPolicy] = None
-) -> list:
+def resolve_public(host: str, port: int, *, policy: Optional[NetPolicy] = None) -> list:
     """Resolve *host* and return its addresses, refusing if any is not public.
 
     Every address must pass: a name with one public and one private record is
