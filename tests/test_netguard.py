@@ -361,3 +361,266 @@ def test_pdfkit_reads_no_options_out_of_fetched_html(net, monkeypatch):
     for flag in ("--allow", "--header-html", "--cookie-jar"):
         assert flag not in seen["argv"]
     assert "--disable-local-file-access" in seen["argv"]
+
+
+# --- response-size ceiling -----------------------------------------------------
+
+
+def _capped(n):
+    return NetPolicy(max_response_bytes=n)
+
+
+def test_a_body_over_the_declared_limit_is_refused_before_reading(net):
+    net.transport.responses[PUBLIC_IP] = _response(200, b"x" * 2000)
+    with pytest.raises(netguard.ResponseTooLargeError, match="2,000 bytes"):
+        netguard.get("http://good.example/big", policy=_capped(1000))
+
+
+def test_a_body_without_a_length_is_cut_off_at_the_limit(net):
+    chunked = (
+        b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n"
+        + b"".join(b"400\r\n" + b"y" * 1024 + b"\r\n" for _ in range(8))
+        + b"0\r\n\r\n"
+    )
+    net.transport.responses[PUBLIC_IP] = chunked
+    with pytest.raises(netguard.ResponseTooLargeError, match="passed"):
+        netguard.get("http://good.example/stream", policy=_capped(4096))
+
+
+def test_a_compressed_bomb_is_measured_decoded(net):
+    import gzip
+
+    bomb = gzip.compress(b"\0" * 1_000_000)
+    net.transport.responses[PUBLIC_IP] = _response(
+        200, bomb, headers=[("Content-Encoding", "gzip")]
+    )
+    with pytest.raises(netguard.ResponseTooLargeError):
+        netguard.get("http://good.example/bomb", policy=_capped(100_000))
+
+
+def test_a_huge_redirect_body_is_capped_too(net):
+    net.transport.responses[PUBLIC_IP] = _response(
+        302, b"z" * 5000, headers=[("Location", "/next")]
+    )
+    with pytest.raises(netguard.ResponseTooLargeError):
+        netguard.get("http://good.example/", policy=_capped(1000))
+
+
+def test_a_body_under_the_limit_reads_normally_streamed_or_not(net):
+    net.transport.responses[PUBLIC_IP] = _response(200, b"%PDF-1.4 small")
+    assert netguard.get("http://good.example/", policy=_capped(1000)).content == b"%PDF-1.4 small"
+    net.transport.responses[PUBLIC_IP] = _response(200, b"%PDF-1.4 small")
+    resp = netguard.get("http://good.example/", policy=_capped(1000), stream=True)
+    assert b"".join(resp.iter_content(4)) == b"%PDF-1.4 small"
+
+
+def test_the_limit_comes_from_the_environment(monkeypatch):
+    monkeypatch.setenv(netguard.MAX_RESPONSE_BYTES_ENV_VAR, "1234")
+    assert netguard.default_policy().max_response_bytes == 1234
+    monkeypatch.setenv(netguard.MAX_RESPONSE_BYTES_ENV_VAR, "0")
+    assert not netguard.default_policy().max_response_bytes
+    monkeypatch.setenv(netguard.MAX_RESPONSE_BYTES_ENV_VAR, "lots")
+    with pytest.raises(ValueError, match=netguard.MAX_RESPONSE_BYTES_ENV_VAR):
+        netguard.default_policy()
+
+
+def test_zero_means_no_limit(net):
+    net.transport.responses[PUBLIC_IP] = _response(200, b"x" * 5000)
+    assert len(netguard.get("http://good.example/", policy=_capped(0)).content) == 5000
+
+
+def test_fetch_one_reports_an_oversized_page_as_refused(net, tmp_path, monkeypatch):
+    from citeget.fetch import fetch_one
+
+    monkeypatch.setenv(netguard.MAX_RESPONSE_BYTES_ENV_VAR, "100")
+    net.transport.responses[PUBLIC_IP] = _response(200, b"<p>" + b"a" * 500 + b"</p>")
+    result = fetch_one("http://good.example/huge", output_dir=tmp_path)
+    assert result.status == "failed" and "limit" in result.error
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_the_browser_route_aborts_an_oversized_response(net, monkeypatch):
+    from tests.test_browserguard import FakeRequest, FakeRoute
+
+    monkeypatch.setenv(netguard.MAX_RESPONSE_BYTES_ENV_VAR, "100")
+    net.transport.responses[PUBLIC_IP] = _response(200, b"b" * 500)
+    route = FakeRoute(FakeRequest("http://good.example/get.php"))
+    netguard.browser_route_handler()(route)
+    assert route.outcome == ("abort", "blockedbyclient")
+
+
+def test_a_body_too_big_to_parse_as_text_is_refused_at_text(net):
+    net.transport.responses[PUBLIC_IP] = _response(200, b"<p>" + b"a" * 3000 + b"</p>")
+    resp = netguard.get(
+        "http://good.example/", policy=NetPolicy(max_text_bytes=1000)
+    )
+    assert len(resp.content) > 1000  # the bytes are fine: a download may keep them
+    with pytest.raises(netguard.ResponseTooLargeError, match="text"):
+        resp.text
+    with pytest.raises(netguard.ResponseTooLargeError, match="text"):
+        resp.json()
+
+
+def test_a_trickled_body_is_cut_off_at_the_deadline(net, monkeypatch):
+    import itertools
+    import time
+
+    clock = itertools.count(0, 400)  # every read "takes" 400 seconds
+    monkeypatch.setattr(time, "monotonic", lambda: next(clock))
+    net.transport.responses[PUBLIC_IP] = _response(200, b"d" * 200_000)
+    with pytest.raises(netguard.ResponseTooLargeError, match="took over"):
+        netguard.get("http://good.example/", policy=NetPolicy(max_response_seconds=600))
+
+
+def test_stacked_content_encodings_are_refused(net):
+    net.transport.responses[PUBLIC_IP] = _response(
+        200, b"x", headers=[("Content-Encoding", "gzip, gzip")]
+    )
+    with pytest.raises(netguard.ResponseTooLargeError, match="stacked"):
+        netguard.get("http://good.example/")
+
+
+@pytest.mark.parametrize(
+    "var",
+    [
+        netguard.MAX_RESPONSE_BYTES_ENV_VAR,
+        netguard.MAX_TEXT_BYTES_ENV_VAR,
+        netguard.MAX_RESPONSE_SECONDS_ENV_VAR,
+    ],
+)
+def test_negative_limits_are_an_informative_error(monkeypatch, var):
+    monkeypatch.setenv(var, "-1")
+    with pytest.raises(ValueError, match=var):
+        netguard.default_policy()
+
+
+def test_fetch_one_refuses_a_page_too_big_to_convert(net, tmp_path, monkeypatch):
+    from citeget.fetch import fetch_one
+
+    monkeypatch.setenv(netguard.MAX_TEXT_BYTES_ENV_VAR, "100")
+    net.transport.responses[PUBLIC_IP] = _response(
+        200, b"<p>" + b"a" * 500 + b"</p>", headers=[("Content-Type", "text/html")]
+    )
+    result = fetch_one("http://good.example/huge-page", output_dir=tmp_path)
+    assert result.status == "failed" and "text" in result.error
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_a_streamed_body_is_capped_as_the_caller_reads(net):
+    net.transport.responses[PUBLIC_IP] = (
+        b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n"
+        + b"".join(b"400\r\n" + b"s" * 1024 + b"\r\n" for _ in range(8))
+        + b"0\r\n\r\n"
+    )
+    resp = netguard.get("http://good.example/", policy=_capped(4096), stream=True)
+    assert not resp._content_consumed  # nothing buffered up front
+    with pytest.raises(netguard.ResponseTooLargeError):
+        for _ in resp.iter_content(1024):
+            pass
+
+
+def test_an_oversized_browser_download_leaves_no_temp_file(net, monkeypatch, tmp_path):
+    import os
+    import tempfile
+
+    from tests.test_browserguard import FakeRequest, FakeRoute
+
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    monkeypatch.setenv(netguard.MAX_RESPONSE_BYTES_ENV_VAR, "100")
+    net.transport.responses[PUBLIC_IP] = (
+        b"HTTP/1.1 200 OK\r\nContent-Type: application/pdf\r\n"
+        b"Transfer-Encoding: chunked\r\nConnection: close\r\n\r\n"
+        + b"".join(b"40\r\n" + b"p" * 64 + b"\r\n" for _ in range(4))
+        + b"0\r\n\r\n"
+    )
+    handler = netguard.browser_route_handler()
+    route = FakeRoute(FakeRequest("http://good.example/get.php"))
+    handler(route)
+    assert route.outcome == ("abort", "blockedbyclient")
+    assert not handler.downloads._paths
+    assert os.listdir(netguard.spool_dir()) == []
+
+
+def test_the_size_budget_is_per_response_not_per_iteration(net):
+    net.transport.responses[PUBLIC_IP] = (
+        b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n"
+        + b"".join(b"400\r\n" + b"r" * 1024 + b"\r\n" for _ in range(8))
+        + b"0\r\n\r\n"
+    )
+    resp = netguard.get("http://good.example/", policy=_capped(7500), stream=True)
+    first = resp.iter_content(1024)
+    next(first)
+    with pytest.raises(netguard.ResponseTooLargeError):
+        resp.content  # a second reader shares the budget of the first
+
+
+def test_the_deadline_runs_from_the_request_not_from_each_read(net, monkeypatch):
+    import time
+
+    now = [0.0]
+    monkeypatch.setattr(time, "monotonic", lambda: now[0])
+    net.transport.responses[PUBLIC_IP] = _response(200, b"q" * 200_000)
+    resp = netguard.get(
+        "http://good.example/", policy=NetPolicy(max_response_seconds=10), stream=True
+    )
+    now[0] = 11.0  # the caller waited before reading
+    with pytest.raises(netguard.ResponseTooLargeError, match="took over"):
+        resp.content
+
+
+def test_a_refused_body_cannot_be_reread_as_empty(net):
+    import requests
+
+    net.transport.responses[PUBLIC_IP] = _response(200, b"x" * 2000)
+    resp = netguard.get(
+        "http://good.example/", policy=NetPolicy(max_response_bytes=0, max_text_bytes=0),
+        stream=True,
+    )
+    resp._citeget_policy = _capped(1000)
+    with pytest.raises(netguard.ResponseTooLargeError):
+        resp.content
+    with pytest.raises((RuntimeError, requests.exceptions.StreamConsumedError)):
+        resp.content  # "already consumed", never a silent b"" with status 200
+
+
+def test_decode_unicode_is_honoured_when_streaming(net):
+    net.transport.responses[PUBLIC_IP] = _response(
+        200, "héllo\nwörld".encode(), headers=[("Content-Type", "text/plain; charset=utf-8")]
+    )
+    resp = netguard.get("http://good.example/", stream=True)
+    assert list(resp.iter_lines(decode_unicode=True)) == ["héllo", "wörld"]
+
+
+def test_guarded_responses_pickle(net):
+    import pickle
+
+    net.transport.responses[PUBLIC_IP] = _response(200, b"ok")
+    assert pickle.loads(pickle.dumps(netguard.get("http://good.example/"))).content == b"ok"
+
+
+def test_a_timeout_is_always_set(net, monkeypatch):
+    seen = {}
+    import requests
+
+    original = requests.Session.request
+
+    def spy(self, method, url, **kw):
+        seen.update(kw)
+        return original(self, method, url, **kw)
+
+    monkeypatch.setattr(requests.Session, "request", spy)
+    net.transport.responses[PUBLIC_IP] = _response(200, b"ok")
+    netguard.get("http://good.example/")
+    assert seen["timeout"] == netguard.DEFAULT_TIMEOUT
+
+
+def test_the_browser_route_bounds_pages_by_the_text_ceiling(net, monkeypatch):
+    from tests.test_browserguard import FakeRequest, FakeRoute
+
+    monkeypatch.setenv(netguard.MAX_TEXT_BYTES_ENV_VAR, "100")
+    net.transport.responses[PUBLIC_IP] = _response(
+        200, b"<p>" + b"h" * 500, headers=[("Content-Type", "text/html")]
+    )
+    route = FakeRoute(FakeRequest("http://good.example/"))
+    netguard.browser_route_handler()(route)
+    assert route.outcome == ("abort", "blockedbyclient")

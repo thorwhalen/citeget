@@ -512,12 +512,12 @@ def html_to_pdf(
     if not html:
         try:
             resp = _http_get(url)
+            if resp is None:
+                return None
+            html = resp.text
         except netguard.UnsafeURLError as e:
             logger.warning("%s", e)
             return None
-        if resp is None:
-            return None
-        html = resp.text
     # pdfkit turns ``<meta name="<prefix>...">`` tags in a string source into
     # wkhtmltopdf command-line options (``--allow``, ``--header-html``...). The
     # sanitizer removes meta tags; a prefix nobody can guess makes sure.
@@ -615,7 +615,11 @@ def fetch_one(
             result=result,
         )
 
-    html = resp.text
+    try:
+        html = resp.text
+    except netguard.UnsafeURLError as e:  # over the text ceiling
+        result.error = str(e)
+        return result
 
     # --- prefer=pdf: try direct PDF link, then HTML→PDF --------------------
     if prefer == "pdf":
@@ -826,12 +830,13 @@ def _html_to_md_downloader(url: str, filepath: Path, *, timeout: int = 30) -> bo
     """Downloader: fetch *url* (HTML) and save Markdown at *filepath*."""
     try:
         resp = _http_get(url, timeout=timeout)
+        if resp is None:
+            return False
+        html = resp.text
     except netguard.UnsafeURLError as e:
         logger.warning("%s", e)
         return False
-    if resp is None:
-        return False
-    md = html_to_markdown(resp.text, source_url=url)
+    md = html_to_markdown(html, source_url=url)
     filepath.parent.mkdir(parents=True, exist_ok=True)
     filepath.write_text(md, encoding="utf-8")
     return filepath.stat().st_size > 100
