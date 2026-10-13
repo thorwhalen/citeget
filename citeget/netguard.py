@@ -132,7 +132,9 @@ def default_policy() -> NetPolicy:
     flag = os.environ.get(ALLOW_PRIVATE_ENV_VAR, "").strip().lower()
     return NetPolicy(
         allow_private=flag in _TRUTHY,
-        max_response_bytes=_env_limit(MAX_RESPONSE_BYTES_ENV_VAR, DEFAULT_MAX_RESPONSE_BYTES),
+        max_response_bytes=_env_limit(
+            MAX_RESPONSE_BYTES_ENV_VAR, DEFAULT_MAX_RESPONSE_BYTES
+        ),
         max_text_bytes=_env_limit(MAX_TEXT_BYTES_ENV_VAR, DEFAULT_MAX_TEXT_BYTES),
         max_response_seconds=_env_limit(
             MAX_RESPONSE_SECONDS_ENV_VAR, DEFAULT_MAX_RESPONSE_SECONDS
@@ -358,7 +360,9 @@ def guarded_session(*, policy: Optional[NetPolicy] = None):
                 check_url(urljoin(resp.url, target), policy=policy)
                 # requests reads a redirect's body in full before following it;
                 # read it here instead, under the same ceiling.
-                _read_capped(resp, policy, deadline=getattr(self, "_citeget_deadline", None))
+                _read_capped(
+                    resp, policy, deadline=getattr(self, "_citeget_deadline", None)
+                )
             return target
 
     session = _GuardedSession()
@@ -420,7 +424,10 @@ class GuardedResponse(_requests.Response if _requests else object):
                 self._refuse_body(
                     f"response passed the {limit:,}-byte limit ({MAX_RESPONSE_BYTES_ENV_VAR})"
                 )
-            if self._citeget_deadline is not None and time.monotonic() > self._citeget_deadline:
+            if (
+                self._citeget_deadline is not None
+                and time.monotonic() > self._citeget_deadline
+            ):
                 self._refuse_body(
                     f"response took over {self._citeget_policy.max_response_seconds:g}s "
                     f"to arrive ({MAX_RESPONSE_SECONDS_ENV_VAR})"
@@ -770,7 +777,9 @@ def _read_at_most(resp, limit: Optional[int]) -> bytes:
     declared = resp.headers.get("Content-Length", "")
     if limit and declared.isdigit() and int(declared) > limit:
         resp.close()
-        raise _too_large(resp.url, f"{int(declared):,} bytes is over the {limit:,}-byte limit")
+        raise _too_large(
+            resp.url, f"{int(declared):,} bytes is over the {limit:,}-byte limit"
+        )
     buf = io.BytesIO()
     for chunk in resp.iter_content(_READ_CHUNK_BYTES):
         buf.write(chunk)
