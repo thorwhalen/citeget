@@ -1445,7 +1445,9 @@ def _acquire_all_references(
             # have written a file), not just the file it reports.
             after = _file_sizes(download_dir)
             new = after.keys() - before.keys()
-            grown = sum(max(after[p] - before[p], 0) for p in after.keys() & before.keys())
+            grown = sum(
+                max(after[p] - before[p], 0) for p in after.keys() & before.keys()
+            )
             cost = grown + sum(after[p] for p in new)
             if spent + cost > budget:
                 # Over budget: remove the file this reference reports, and only
@@ -1459,8 +1461,12 @@ def _acquire_all_references(
                         os.remove(result.filepath)
                 result = _budget_refusal(ref, spent + cost, budget)
                 log_entries.append(
-                    {"ref_number": ref.number, "ref_title": ref.title,
-                     "matched": False, "error": result.notes}
+                    {
+                        "ref_number": ref.number,
+                        "ref_title": ref.title,
+                        "matched": False,
+                        "error": result.notes,
+                    }
                 )
                 spent = budget
             else:
