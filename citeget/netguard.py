@@ -64,6 +64,8 @@ _TRUTHY = frozenset({"1", "true", "yes", "on"})
 _NAT64_PREFIX = ipaddress.IPv6Network("64:ff9b::/96")
 #: Local-use NAT64 prefix (RFC 8215).
 _NAT64_LOCAL_PREFIX = ipaddress.IPv6Network("64:ff9b:1::/48")
+#: IPv4-translated addresses (SIIT, RFC 2765): ``::ffff:0:a.b.c.d``.
+_SIIT_PREFIX = ipaddress.IPv6Network("::ffff:0:0:0/96")
 
 
 class UnsafeURLError(ValueError):
@@ -109,7 +111,7 @@ def _embedded_ipv4s(ip: ipaddress.IPv6Address) -> list:
         return [ip.sixtofour]
     if ip.teredo is not None:
         return list(ip.teredo)  # (server, client): both must be public
-    if ip in _NAT64_PREFIX or ip in _NAT64_LOCAL_PREFIX:
+    if ip in _NAT64_PREFIX or ip in _NAT64_LOCAL_PREFIX or ip in _SIIT_PREFIX:
         return [ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF)]
     # IPv4-compatible (deprecated, ::a.b.c.d); ``::`` and ``::1`` stay IPv6.
     if int(ip) >> 32 == 0 and int(ip) > 1:
@@ -118,11 +120,16 @@ def _embedded_ipv4s(ip: ipaddress.IPv6Address) -> list:
 
 
 def _is_public(ip) -> bool:
-    if ip.is_multicast or not ip.is_global:
+    if ip.is_multicast:
         return False
     if isinstance(ip, ipaddress.IPv6Address):
-        return all(_is_public(inner) for inner in _embedded_ipv4s(ip))
-    return True
+        embedded = _embedded_ipv4s(ip)
+        if embedded:
+            # A transition form is exactly as public as what it carries.
+            return all(_is_public(inner) for inner in embedded)
+        if ip.is_site_local or ip.is_reserved:
+            return False
+    return ip.is_global
 
 
 def is_public_address(address: str) -> bool:
@@ -133,6 +140,10 @@ def is_public_address(address: str) -> bool:
     >>> is_public_address("2002:7f00:1::")  # 6to4 wrapping 127.0.0.1
     False
     >>> is_public_address("64:ff9b::a9fe:a9fe")  # NAT64 wrapping 169.254.169.254
+    False
+    >>> is_public_address("::ffff:0:7f00:1")  # SIIT wrapping 127.0.0.1
+    False
+    >>> is_public_address("fec0::1")  # deprecated site-local
     False
     """
     try:

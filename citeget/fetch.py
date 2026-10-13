@@ -386,6 +386,7 @@ OFFLINE_PDF_OPTIONS = {
     "proxy": "http://0.0.0.0:9",
     "load-error-handling": "ignore",
     "load-media-error-handling": "ignore",
+    "no-images": "",
 }
 
 #: wkhtmltopdf options when the network guard is off (a desktop opt-out):
@@ -402,10 +403,19 @@ def _offline_html(html: str) -> str:
 
     >>> _offline_html('<p style="x">Hi<img src="http://10.0.0.1/"></p><iframe src="x"></iframe>')
     '<p>Hi</p>'
+    >>> _offline_html('<!--><img src="http://10.0.0.1/">--><p>ok</p>')
+    '<p>ok</p>'
     """
-    from bs4 import BeautifulSoup
+    from bs4 import BeautifulSoup, NavigableString
 
     soup = BeautifulSoup(html, "html.parser")
+    # Comments, CDATA, processing instructions and doctypes go first: browsers
+    # and html.parser disagree on where some of them end (``<!-->``,
+    # ``--!>``), so whatever bs4 sees inside one may be live markup to
+    # wkhtmltopdf, and pdfkit reads ``<meta name="pdfkit-...">`` out of them.
+    for node in soup.find_all(string=True):
+        if type(node) is not NavigableString:
+            node.extract()
     for tag in soup.find_all(RESOURCE_LOADING_TAGS):
         tag.decompose()
     for tag in soup.find_all(True):
@@ -467,8 +477,16 @@ def html_to_pdf(
         if resp is None:
             return None
         html = resp.text
+    # pdfkit turns ``<meta name="<prefix>...">`` tags in a string source into
+    # wkhtmltopdf command-line options (``--allow``, ``--header-html``...). The
+    # sanitizer removes meta tags; a prefix nobody can guess makes sure.
+    import secrets
+
+    config = pdfkit.configuration(meta_tag_prefix=f"citeget-{secrets.token_hex(16)}-")
     try:
-        return pdfkit.from_string(_offline_html(html), False, options=OFFLINE_PDF_OPTIONS)
+        return pdfkit.from_string(
+            _offline_html(html), False, options=OFFLINE_PDF_OPTIONS, configuration=config
+        )
     except Exception as e:
         logger.debug("pdfkit.from_string failed for %s: %s", url, e)
         return None

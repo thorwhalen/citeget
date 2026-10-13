@@ -9,6 +9,10 @@ import pytest
 from citeget import joblimit
 from citeget.joblimit import JobLimitExceeded, job_slot
 
+pytestmark = pytest.mark.skipif(
+    joblimit.fcntl is None, reason="the cap is not enforced without fcntl (Windows)"
+)
+
 
 @pytest.fixture(autouse=True)
 def _isolated(monkeypatch, tmp_path):

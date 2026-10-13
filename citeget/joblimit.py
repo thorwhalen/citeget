@@ -18,8 +18,8 @@ Configuration, most specific first:
 - :data:`DEFAULT_MAX_CONCURRENT_JOBS`.
 
 ``0`` (or a negative number) means "no cap". Lock files live under
-``CITEGET_JOB_LOCK_DIR`` if set, else a ``citeget-job-slots`` directory in the
-system temp dir. On a platform without ``fcntl`` (Windows) the cap is not
+``CITEGET_JOB_LOCK_DIR`` if set, else a ``citeget-job-slots-<uid>`` directory
+in the system temp dir. On a platform without ``fcntl`` (Windows) the cap is not
 enforced.
 
 >>> import tempfile
@@ -87,7 +87,10 @@ def _lock_dir(lock_dir: Union[str, Path, None]) -> Path:
     env = os.environ.get(LOCK_DIR_ENV_VAR)
     if env:
         return Path(env).expanduser()
-    return Path(tempfile.gettempdir()) / _LOCK_DIR_NAME
+    # Per uid, so another account on the machine cannot pre-create (and own)
+    # the directory this one needs.
+    uid = os.getuid() if hasattr(os, "getuid") else "user"
+    return Path(tempfile.gettempdir()) / f"{_LOCK_DIR_NAME}-{uid}"
 
 
 @contextlib.contextmanager
@@ -112,7 +115,8 @@ def job_slot(
     owner_dir = _lock_dir(lock_dir) / digest
     owner_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     for slot in range(cap):
-        fd = os.open(owner_dir / f"slot-{slot}.lock", os.O_RDWR | os.O_CREAT, 0o600)
+        flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
+        fd = os.open(owner_dir / f"slot-{slot}.lock", flags, 0o600)
         try:
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:

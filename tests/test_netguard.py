@@ -119,6 +119,9 @@ def net(monkeypatch):
         "64:ff9b::7f00:1",  # NAT64 wrapping 127.0.0.1
         "64:ff9b::a9fe:a9fe",
         "ff02::1",
+        "::ffff:0:7f00:1",  # SIIT wrapping 127.0.0.1
+        "::ffff:0:a9fe:a9fe",
+        "fec0::1",  # site-local
         "not-an-ip",
     ],
 )
@@ -126,7 +129,10 @@ def test_non_public_addresses_are_refused(address):
     assert not netguard.is_public_address(address)
 
 
-@pytest.mark.parametrize("address", ["93.184.216.34", "1.1.1.1", "2606:4700::1111"])
+@pytest.mark.parametrize(
+    "address",
+    ["93.184.216.34", "1.1.1.1", "2606:4700::1111", "::ffff:8.8.8.8", "64:ff9b::808:808"],
+)
 def test_public_addresses_pass(address):
     assert netguard.is_public_address(address)
 
@@ -359,6 +365,7 @@ def test_html_to_pdf_never_hands_wkhtmltopdf_a_url_by_default(net, monkeypatch):
     fake = types.SimpleNamespace(
         from_url=lambda *a, **k: calls.append(("url", a, k)) or b"%PDF",
         from_string=lambda *a, **k: calls.append(("string", a, k)) or b"%PDF",
+        configuration=lambda **k: k,
     )
     monkeypatch.setitem(sys.modules, "pdfkit", fake)
     from citeget.fetch import html_to_pdf
@@ -372,3 +379,57 @@ def test_html_to_pdf_never_hands_wkhtmltopdf_a_url_by_default(net, monkeypatch):
     assert kind == "string" and "passwd" not in args[0]
     assert "disable-local-file-access" in kwargs["options"]
     assert "enable-local-file-access" not in kwargs["options"]
+
+
+@pytest.mark.parametrize(
+    "html",
+    [
+        '<!-- <meta name="pdfkit-allow" content="/etc"> --><p>x</p>',
+        '<!--><meta name="pdfkit-header-html" content="file:///etc/hostname">--><p>x</p>',
+        '<!---><img src="http://10.0.0.1/b">--><p>x</p>',
+        '<![CDATA[<img src="http://10.0.0.1/">]]><p>x</p>',
+        '<?xml-stylesheet href="http://10.0.0.1/s.css"?><p>x</p>',
+        '<!DOCTYPE html SYSTEM "http://10.0.0.1/dtd"><p>x</p>',
+    ],
+)
+def test_offline_html_drops_comments_and_other_non_markup(html):
+    from citeget.fetch import _offline_html
+
+    out = _offline_html(html)
+    assert "10.0.0.1" not in out and "pdfkit-" not in out and "/etc" not in out
+    assert "x" in out
+
+
+def test_pdfkit_reads_no_options_out_of_fetched_html(net, monkeypatch):
+    """pdfkit turns <meta name="pdfkit-*"> into wkhtmltopdf flags; none get through.
+
+    Builds the real wkhtmltopdf argv with pdfkit and inspects it; nothing runs.
+    """
+    import sys
+
+    pdfkit = pytest.importorskip("pdfkit")
+    from pdfkit.configuration import Configuration
+
+    seen = {}
+
+    def argv_only(source, output, *, options, configuration):
+        kit = pdfkit.PDFKit(source, "string", options=options, configuration=configuration)
+        seen["argv"] = " ".join(kit.command())
+        return b"%PDF"
+
+    # Any existing file satisfies pdfkit's "is wkhtmltopdf installed" check.
+    monkeypatch.setattr(
+        pdfkit, "configuration", lambda **k: Configuration(wkhtmltopdf=sys.executable, **k)
+    )
+    monkeypatch.setattr(pdfkit, "from_string", argv_only)
+    from citeget.fetch import html_to_pdf
+
+    hostile = (
+        '<meta name="pdfkit-allow" content="/etc">'
+        '<!-- <meta name="pdfkit-cookie-jar" content="/tmp/x"> -->'
+        '<p title=\'<meta name="pdfkit-header-html" content="file:///etc/hostname">\'>x</p>'
+    )
+    assert html_to_pdf("http://good.example/", html=hostile) == b"%PDF"
+    for flag in ("--allow", "--header-html", "--cookie-jar"):
+        assert flag not in seen["argv"]
+    assert "--disable-local-file-access" in seen["argv"]
