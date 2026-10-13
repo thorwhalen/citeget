@@ -504,3 +504,37 @@ def test_fetch_one_refuses_a_page_too_big_to_convert(net, tmp_path, monkeypatch)
     result = fetch_one("http://good.example/huge-page", output_dir=tmp_path)
     assert result.status == "failed" and "text" in result.error
     assert list(tmp_path.iterdir()) == []
+
+
+def test_a_streamed_body_is_capped_as_the_caller_reads(net):
+    net.transport.responses[PUBLIC_IP] = (
+        b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n"
+        + b"".join(b"400\r\n" + b"s" * 1024 + b"\r\n" for _ in range(8))
+        + b"0\r\n\r\n"
+    )
+    resp = netguard.get("http://good.example/", policy=_capped(4096), stream=True)
+    assert not resp._content_consumed  # nothing buffered up front
+    with pytest.raises(netguard.ResponseTooLargeError):
+        for _ in resp.iter_content(1024):
+            pass
+
+
+def test_an_oversized_browser_download_leaves_no_temp_file(net, monkeypatch, tmp_path):
+    import tempfile
+
+    from tests.test_browserguard import FakeRequest, FakeRoute
+
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    monkeypatch.setenv(netguard.MAX_RESPONSE_BYTES_ENV_VAR, "100")
+    net.transport.responses[PUBLIC_IP] = (
+        b"HTTP/1.1 200 OK\r\nContent-Type: application/pdf\r\n"
+        b"Transfer-Encoding: chunked\r\nConnection: close\r\n\r\n"
+        + b"".join(b"40\r\n" + b"p" * 64 + b"\r\n" for _ in range(4))
+        + b"0\r\n\r\n"
+    )
+    handler = netguard.browser_route_handler()
+    route = FakeRoute(FakeRequest("http://good.example/get.php"))
+    handler(route)
+    assert route.outcome == ("abort", "blockedbyclient")
+    assert handler.downloads.take() is None
+    assert list(tmp_path.iterdir()) == []

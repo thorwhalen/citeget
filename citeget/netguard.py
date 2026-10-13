@@ -407,34 +407,30 @@ def _guarded_response_class():
 _GuardedResponse = None
 
 
-def _read_capped(resp, policy: NetPolicy):
-    """Read *resp*'s body into memory under *policy*'s size and time ceilings.
-
-    The body is stored where ``requests`` keeps a read body, so ``.content``,
-    ``.text`` and ``iter_content()`` all work afterwards, ``stream=True`` or not.
-    Decoded bytes are counted, so a small compressed bomb is caught too, and
-    stacked encodings (``gzip, gzip``) are refused outright.
-    """
-    import io
-    import time
-
-    global _GuardedResponse
-    limit, deadline_s = policy.max_response_bytes, policy.max_response_seconds
+def _check_declared(resp, policy: NetPolicy) -> None:
+    """Refuse *resp* on its headers alone: stacked encodings, a declared size over the cap."""
+    limit = policy.max_response_bytes
     if "," in resp.headers.get("Content-Encoding", ""):
         resp.close()
         raise _too_large(resp.url, "stacked content encodings are not accepted")
-    if limit:
-        declared = resp.headers.get("Content-Length", "")
-        if declared.isdigit() and int(declared) > limit:
-            resp.close()
-            raise _too_large(
-                resp.url,
-                f"response is {int(declared):,} bytes, over the {limit:,}-byte "
-                f"limit ({MAX_RESPONSE_BYTES_ENV_VAR})",
-            )
+    declared = resp.headers.get("Content-Length", "")
+    if limit and declared.isdigit() and int(declared) > limit:
+        resp.close()
+        raise _too_large(
+            resp.url,
+            f"response is {int(declared):,} bytes, over the {limit:,}-byte "
+            f"limit ({MAX_RESPONSE_BYTES_ENV_VAR})",
+        )
+
+
+def _capped_chunks(resp, policy: NetPolicy, iter_content, chunk_size):
+    """*resp*'s decoded body in chunks, refusing past the size or time ceiling."""
+    import time
+
+    limit, deadline_s = policy.max_response_bytes, policy.max_response_seconds
     deadline = time.monotonic() + deadline_s if deadline_s else None
-    buf, total = io.BytesIO(), 0
-    for chunk in resp.iter_content(_READ_CHUNK_BYTES):
+    total = 0
+    for chunk in iter_content(chunk_size):
         total += len(chunk)
         if limit and total > limit:
             resp.close()
@@ -449,9 +445,26 @@ def _read_capped(resp, policy: NetPolicy):
                 f"response took over {deadline_s:g}s to arrive "
                 f"({MAX_RESPONSE_SECONDS_ENV_VAR})",
             )
-        buf.write(chunk)
-    resp._content = buf.getvalue()
-    resp._content_consumed = True
+        yield chunk
+
+
+def _guard_response(resp, policy: NetPolicy):
+    """Make *resp* honour *policy*'s ceilings however its body is read.
+
+    ``iter_content`` (and so ``.content``, which reads through it) is capped by
+    size and time, and ``.text`` / ``.json()`` by the text ceiling. Decoded
+    bytes are counted, so a small compressed bomb is caught too.
+    """
+    global _GuardedResponse
+    _check_declared(resp, policy)
+    raw_iter = resp.iter_content
+
+    def iter_content(chunk_size=1, decode_unicode=False):
+        if resp._content_consumed:  # already read (and capped): replay it
+            return raw_iter(chunk_size, decode_unicode)
+        return _capped_chunks(resp, policy, raw_iter, chunk_size or _READ_CHUNK_BYTES)
+
+    resp.iter_content = iter_content
     if _GuardedResponse is None:
         _GuardedResponse = _guarded_response_class()
     resp.__class__ = _GuardedResponse
@@ -459,10 +472,25 @@ def _read_capped(resp, policy: NetPolicy):
     return resp
 
 
+def _read_capped(resp, policy: NetPolicy):
+    """Read *resp*'s whole body now, under *policy*'s ceilings (one buffer)."""
+    import io
+
+    _guard_response(resp, policy)
+    buf = io.BytesIO()
+    for chunk in resp.iter_content(_READ_CHUNK_BYTES):
+        buf.write(chunk)
+    resp._content = buf.getvalue()
+    resp._content_consumed = True
+    return resp
+
+
 def request(method: str, url: str, *, policy: Optional[NetPolicy] = None, **kwargs):
     """``requests.request`` with the destination guard. Same arguments and return.
 
-    The body is read before returning, up to ``policy.max_response_bytes``.
+    The body is read before returning (or, with ``stream=True``, as the caller
+    iterates), up to ``policy.max_response_bytes`` and within
+    ``policy.max_response_seconds``.
 
     Raises :class:`UnsafeURLError` if the URL, a redirect target, or an address
     a host resolves to is refused, or ``proxies=`` is given;
@@ -474,10 +502,12 @@ def request(method: str, url: str, *, policy: Optional[NetPolicy] = None, **kwar
     if kwargs.get("proxies") and not policy.allow_private:
         raise _refuse(url, "requests through a proxy are not allowed")
     check_url(url, policy=policy)
-    kwargs["stream"] = True  # read here, under the size ceiling
+    stream = kwargs.pop("stream", False)
     with guarded_session(policy=policy) as session:
-        resp = session.request(method, url, **kwargs)
-        return _read_capped(resp, policy)
+        resp = session.request(method, url, stream=True, **kwargs)
+        # stream=True: the caller reads, through a capped iterator, at constant
+        # memory. Otherwise the body is read here, capped, like requests does.
+        return _guard_response(resp, policy) if stream else _read_capped(resp, policy)
 
 
 def get(url: str, *, policy: Optional[NetPolicy] = None, **kwargs):
