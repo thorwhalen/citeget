@@ -370,19 +370,36 @@ CHROMIUM_GUARD_ARGS = (
 #: Resource types refused outright: nothing citeget reads needs them, and every
 #: request the route serves holds up the page (the handler runs on Playwright's
 #: one thread), so ad frames, long polls and beacons are not worth a fetch.
-BLOCKED_RESOURCE_TYPES = frozenset({
-    "image", "media", "font", "sub_frame", "ping", "eventsource", "csp_report",
-    "manifest", "texttrack", "other",
-})
+BLOCKED_RESOURCE_TYPES = frozenset(
+    {
+        "image",
+        "media",
+        "font",
+        "sub_frame",
+        "ping",
+        "eventsource",
+        "csp_report",
+        "manifest",
+        "texttrack",
+        "other",
+    }
+)
 
 #: Timeouts (connect, read), in seconds, for a page itself and for what it loads.
 DOCUMENT_TIMEOUT = (10, 60)
 SUBRESOURCE_TIMEOUT = (5, 10)
 
 #: Content types a navigation renders; any other navigation is a download.
-_RENDERED_TYPES = frozenset({
-    "text/html", "application/xhtml+xml", "text/plain", "text/xml", "application/xml", "",
-})
+_RENDERED_TYPES = frozenset(
+    {
+        "text/html",
+        "application/xhtml+xml",
+        "text/plain",
+        "text/xml",
+        "application/xml",
+        "",
+    }
+)
 
 #: Removed from every page before its scripts run: a SharedWorker's requests and
 #: WebRTC's TURN-over-TCP do not pass through routes (the dead proxy stops them,
@@ -395,16 +412,31 @@ for (const name of ["SharedWorker", "RTCPeerConnection", "webkitRTCPeerConnectio
 """
 
 #: Request headers not forwarded from the browser (requests sets its own).
-_HOP_BY_HOP_REQUEST_HEADERS = frozenset({
-    "host", "content-length", "connection", "keep-alive", "proxy-connection",
-    "transfer-encoding", "upgrade", "te", "accept-encoding",
-})
+_HOP_BY_HOP_REQUEST_HEADERS = frozenset(
+    {
+        "host",
+        "content-length",
+        "connection",
+        "keep-alive",
+        "proxy-connection",
+        "transfer-encoding",
+        "upgrade",
+        "te",
+        "accept-encoding",
+    }
+)
 #: Response headers dropped before fulfilling: the body is already decoded and
 #: re-framed, so these would describe bytes the browser never gets.
-_DROPPED_RESPONSE_HEADERS = frozenset({
-    "content-encoding", "content-length", "transfer-encoding", "connection",
-    "keep-alive", "set-cookie",
-})
+_DROPPED_RESPONSE_HEADERS = frozenset(
+    {
+        "content-encoding",
+        "content-length",
+        "transfer-encoding",
+        "connection",
+        "keep-alive",
+        "set-cookie",
+    }
+)
 
 
 def _safe_header_value(value: str) -> bool:
@@ -462,7 +494,10 @@ def remove_stale_spools(*, max_age: float = STALE_SPOOL_SECONDS) -> None:
     with os.scandir(spool_dir()) as entries:
         for entry in entries:
             try:
-                if entry.is_file(follow_symlinks=False) and entry.stat().st_mtime < cutoff:
+                if (
+                    entry.is_file(follow_symlinks=False)
+                    and entry.stat().st_mtime < cutoff
+                ):
                     os.unlink(entry.path)
             except OSError:
                 pass
@@ -557,7 +592,9 @@ def browser_route_handler(
 
     log = logging.getLogger(__name__)
     policy = policy or default_policy()
-    fetch = fetch or (lambda method, url, **kw: request(method, url, policy=policy, **kw))
+    fetch = fetch or (
+        lambda method, url, **kw: request(method, url, policy=policy, **kw)
+    )
     downloads = downloads if downloads is not None else BrowserDownloads()
 
     def handler(route):
@@ -569,7 +606,8 @@ def browser_route_handler(
             headers = {
                 k: v
                 for k, v in req.all_headers().items()
-                if not k.startswith(":") and k.lower() not in _HOP_BY_HOP_REQUEST_HEADERS
+                if not k.startswith(":")
+                and k.lower() not in _HOP_BY_HOP_REQUEST_HEADERS
             }
             resp = fetch(
                 req.method,
@@ -583,11 +621,18 @@ def browser_route_handler(
             fulfill_headers = _fulfill_headers(resp, request_url=req.url)
             if is_document and resp.ok and _is_download(resp):
                 downloads.add(req.url, _spool(resp))
-                disposition = {k.lower(): k for k in fulfill_headers}.get("content-disposition")
-                if disposition is None or "attachment" not in fulfill_headers[disposition].lower():
+                disposition = {k.lower(): k for k in fulfill_headers}.get(
+                    "content-disposition"
+                )
+                if (
+                    disposition is None
+                    or "attachment" not in fulfill_headers[disposition].lower()
+                ):
                     fulfill_headers.pop(disposition, None)
                     fulfill_headers["Content-Disposition"] = "attachment"
-                return route.fulfill(status=resp.status_code, headers=fulfill_headers, body=b"")
+                return route.fulfill(
+                    status=resp.status_code, headers=fulfill_headers, body=b""
+                )
             body = resp.content
         except UnsafeURLError as e:
             log.warning("Browser request refused: %s", e)
@@ -595,7 +640,9 @@ def browser_route_handler(
         except Exception as e:
             log.debug("Browser request failed: %s: %s", req.url, e)
             return route.abort("failed")
-        return route.fulfill(status=resp.status_code, headers=fulfill_headers, body=body)
+        return route.fulfill(
+            status=resp.status_code, headers=fulfill_headers, body=body
+        )
 
     handler.downloads = downloads
     return handler
@@ -622,7 +669,9 @@ def adopt_browser_download(context, url: str, dest) -> bool:
     return True
 
 
-def guard_browser_context(context, *, policy: Optional[NetPolicy] = None, **handler_kwargs):
+def guard_browser_context(
+    context, *, policy: Optional[NetPolicy] = None, **handler_kwargs
+):
     """Route all of a Playwright ``BrowserContext``'s traffic through the guard.
 
     The context should come from a browser launched with
@@ -649,13 +698,17 @@ def guard_browser_context(context, *, policy: Optional[NetPolicy] = None, **hand
     return context
 
 
-def launch_guarded_chromium(playwright, *, headless: bool = True, policy=None, **context_kwargs):
+def launch_guarded_chromium(
+    playwright, *, headless: bool = True, policy=None, **context_kwargs
+):
     """Launch Chromium with no network of its own and return ``(browser, context)``.
 
     Every request the context makes is fetched through the guard.
     """
     remove_stale_spools()
-    browser = playwright.chromium.launch(headless=headless, args=list(CHROMIUM_GUARD_ARGS))
+    browser = playwright.chromium.launch(
+        headless=headless, args=list(CHROMIUM_GUARD_ARGS)
+    )
     context = browser.new_context(service_workers="block", **context_kwargs)
     return browser, guard_browser_context(context, policy=policy)
 
