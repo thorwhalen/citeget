@@ -88,3 +88,10 @@ Install playwright browsers: `python -m playwright install chromium`
   on every redirect hop, and is what makes the hosted app safe from SSRF.
   `wkhtmltopdf` is never given a URL while the guard is on; it renders
   fetched HTML offline. Opt-out for desktops: `CITEGET_ALLOW_PRIVATE_NETWORK=1`.
+- **The browser has no network of its own.** `_create_browser_context` launches
+  Chromium via `netguard.launch_guarded_chromium`: a dead proxy (loopback bypass
+  removed), service workers blocked, WebSockets never connected, and a
+  `context.route("**/*")` that fetches every request through netguard and
+  fulfills it (redirects are followed in Python: a route only sees the first
+  URL of a chain). Navigate with `core._goto` (refuses `file:`/`data:`), and
+  never use `page.request`, which bypasses routes.

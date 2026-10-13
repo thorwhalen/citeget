@@ -76,6 +76,10 @@ class _FakeResponse:
     def body(self):
         return self._body
 
+    @property
+    def content(self):
+        return self._body
+
 
 class _FakeRequest:
     def __init__(self, page):
@@ -86,6 +90,11 @@ class _FakeRequest:
         if self._page.request_body is None:
             raise RuntimeError("request failed")
         return _FakeResponse(self._page.request_body)
+
+
+class _FakeContext:
+    def cookies(self, urls=None):
+        return []
 
 
 class FakePage:
@@ -101,6 +110,8 @@ class FakePage:
         self.goto_calls = []
         self.request_calls = []
         self.request = _FakeRequest(self)
+        self.context = _FakeContext()
+        FakePage.last = self
 
     def expect_download(self, timeout=None):
         return _FakeExpectDownload(self)
@@ -109,6 +120,15 @@ class FakePage:
         self.goto_calls.append(url)
         if self.goto_error:
             raise Exception(self.goto_error)
+
+
+@pytest.fixture(autouse=True)
+def _guarded_fetch_hits_the_fake_page(monkeypatch):
+    """The HTTP fallback goes through netguard (``pg.request`` bypasses the
+    browser's guard routes); point it at the page under test's recorder."""
+    monkeypatch.setattr(
+        core.netguard, "get", lambda url, **kw: FakePage.last.request.get(url, **kw)
+    )
 
 
 @pytest.fixture
