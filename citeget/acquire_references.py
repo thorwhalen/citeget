@@ -138,6 +138,17 @@ class Reference:
         return f"[{self.number}] {self.title} ({self.year})"
 
 
+#: Environment variable for the per-job byte budget (``0``: no budget).
+MAX_JOB_BYTES_ENV_VAR = "CITEGET_MAX_JOB_BYTES"
+#: Most bytes one :func:`acquire_all_references` run may write into its download
+#: directory. The per-response ceiling (``CITEGET_MAX_RESPONSE_BYTES``) bounds one
+#: file; this bounds a job of many references, on a disk shared by every user of
+#: a hosted deployment (#22). Twenty full-size responses.
+DEFAULT_MAX_JOB_BYTES = 2 * 1024 * 1024 * 1024
+#: The note on a reference refused because the job's byte budget was spent.
+JOB_BUDGET_NOTE = "job byte budget reached"
+
+
 @dataclass
 class AcquisitionResult:
     """Result of trying to acquire a reference."""
@@ -1214,6 +1225,7 @@ def acquire_all_references(
     fetch_fallback: bool = True,
     concurrency_key: Optional[str] = "auto",
     max_concurrent_jobs: Optional[int] = None,
+    max_job_bytes: Optional[int] = None,
 ) -> tuple:
     """Acquire files for a list of references.
 
@@ -1256,6 +1268,14 @@ def acquire_all_references(
             ``CITEGET_MAX_CONCURRENT_JOBS`` environment variable, else
             :data:`citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS`; ``0`` means
             no cap.
+        max_job_bytes: Most bytes this run may add to ``download_dir``.
+            Defaults to the ``CITEGET_MAX_JOB_BYTES`` environment variable, else
+            :data:`DEFAULT_MAX_JOB_BYTES`; ``0`` means no budget. Once it is
+            spent, the remaining references fail with :data:`JOB_BUDGET_NOTE`
+            instead of being fetched. A reference whose files would overshoot it
+            is refused the same way and its new files are removed, so the
+            directory never ends a run over budget. Files already there before
+            the run do not count.
 
     Raises:
         citeget.joblimit.JobLimitExceeded: the key already has
@@ -1276,6 +1296,12 @@ def acquire_all_references(
         if concurrency_key
         else contextlib.nullcontext()
     )
+    if max_job_bytes is None:
+        from citeget.netguard import env_limit
+
+        max_job_bytes = env_limit(MAX_JOB_BYTES_ENV_VAR, DEFAULT_MAX_JOB_BYTES)
+    elif max_job_bytes < 0:
+        raise ValueError(f"max_job_bytes={max_job_bytes} must be >= 0 (0 for none)")
     with slot:
         return _acquire_all_references(
             references,
@@ -1288,7 +1314,34 @@ def acquire_all_references(
             verbose=verbose,
             convert_to_pdf=convert_to_pdf,
             fetch_fallback=fetch_fallback,
+            max_job_bytes=max_job_bytes,
         )
+
+
+def _file_sizes(directory: Path) -> dict:
+    """``{path: size}`` of every regular file under *directory* (symlinks skipped)."""
+    sizes = {}
+    for root, _dirs, files in os.walk(directory):
+        for name in files:
+            path = os.path.join(root, name)
+            try:
+                if not os.path.islink(path):
+                    sizes[path] = os.path.getsize(path)
+            except OSError:
+                pass  # vanished between the walk and the stat
+    return sizes
+
+
+def _budget_refusal(ref, spent: int, budget: int) -> "AcquisitionResult":
+    return AcquisitionResult(
+        reference=ref,
+        success=False,
+        method="failed",
+        notes=(
+            f"{JOB_BUDGET_NOTE}: {spent:,} of {budget:,} bytes used "
+            f"({MAX_JOB_BYTES_ENV_VAR})"
+        ),
+    )
 
 
 def _acquire_all_references(
@@ -1303,6 +1356,7 @@ def _acquire_all_references(
     verbose: bool,
     convert_to_pdf: bool,
     fetch_fallback: bool,
+    max_job_bytes: int = 0,
 ) -> tuple:
     """The body of :func:`acquire_all_references`, run inside its job slot."""
     download_dir = Path(download_dir)
@@ -1357,12 +1411,20 @@ def _acquire_all_references(
             )
         )
 
+    budget, spent = max_job_bytes, 0
     for i, ref in enumerate(to_acquire):
         if verbose:
             print(
                 f"\n{_ts()} [{i + 1}/{len(to_acquire)}] Ref [{ref.number}]: {ref.title[:60]}..."
             )
 
+        if budget and spent >= budget:
+            failures.append(_budget_refusal(ref, spent, budget))
+            if verbose:
+                print(f"  {_ts()} SKIPPED: {failures[-1].notes}")
+            continue  # nothing fetched, so no rate-limit delay either
+
+        before = _file_sizes(download_dir) if budget else {}
         result = acquire_reference(
             ref,
             download_dir,
@@ -1373,6 +1435,22 @@ def _acquire_all_references(
             convert_to_pdf=convert_to_pdf,
             fetch_fallback=fetch_fallback,
         )
+        if budget:
+            # Count whatever this reference added (a failed attempt may still
+            # have written a file), not just the file it reports.
+            after = _file_sizes(download_dir)
+            new = after.keys() - before.keys()
+            grown = sum(max(after[p] - before[p], 0) for p in after.keys() & before.keys())
+            cost = grown + sum(after[p] for p in new)
+            if spent + cost > budget:
+                # Over budget: take back the files it created. Growth of files
+                # that were already there cannot be undone, so it still counts.
+                for path in new:
+                    with contextlib.suppress(OSError):
+                        os.remove(path)
+                cost = grown
+                result = _budget_refusal(ref, spent + cost, budget)
+            spent += cost
 
         if result.success:
             successes.append(result)
