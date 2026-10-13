@@ -35,6 +35,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from citeget import netguard
 from citeget.names import apa7_authors, surnames
 from citeget.rank import dedupe_results, parse_size, rank_results
 from citeget.validate import (
@@ -450,13 +451,29 @@ def _parse_results_table(table) -> list:
     return results
 
 
+#: User-Agent for the requests citeget makes outside the browser.
+_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
+
+
 def _create_browser_context(playwright, *, headless=True):
-    """Create a browser and context with ad blocking."""
-    browser = playwright.chromium.launch(headless=headless)
-    context = browser.new_context()
-    # Block ad domains
+    """Create a browser and context with no network of its own, and ad blocking.
+
+    Every request the pages make (navigations, frames, scripts, the downloads
+    themselves) is fetched through :mod:`citeget.netguard` and fulfilled from
+    there, so a mirror page cannot point the browser at a private address.
+    """
+    browser, context = netguard.launch_guarded_chromium(playwright, headless=headless)
+    # Block ad domains (registered last, so it is consulted first)
     context.route("**/*inopportunefable*", lambda route: route.abort())
     return browser, context
+
+
+def _goto(page, url: str, **kwargs):
+    """``page.goto`` that refuses ``file:``/``data:``/internal URLs up front."""
+    return page.goto(netguard.check_navigation(url), **kwargs)
 
 
 def _load_results_table(page, url: str, *, timeout: int, table_timeout: int):
@@ -471,7 +488,7 @@ def _load_results_table(page, url: str, *, timeout: int, table_timeout: int):
     table is reported as None, not as an error, because a mirror that answered
     is authoritative about having no results.
     """
-    page.goto(url, wait_until="domcontentloaded", timeout=timeout)
+    _goto(page, url, wait_until="domcontentloaded", timeout=timeout)
     try:
         page.wait_for_selector(
             RESULTS_TABLE_SELECTOR, timeout=table_timeout, state="attached"
@@ -659,7 +676,7 @@ def _get_download_url(
     """
     base = base_url.rstrip("/")
     full_url = f"{base}{ads_url}" if ads_url.startswith("/") else ads_url
-    page.goto(full_url, wait_until="domcontentloaded", timeout=timeout)
+    _goto(page, full_url, wait_until="domcontentloaded", timeout=timeout)
     try:
         page.wait_for_selector(
             DOWNLOAD_LINK_SELECTOR, timeout=link_timeout, state="attached"
@@ -783,12 +800,21 @@ def _finalize_download(
 
 
 def _fetch_via_page_request(pg, url: str, tmp_path: Path, *, timeout: int) -> bool:
-    """Fetch *url* through the page's request context. True if bytes landed."""
+    """Fetch *url* with the page's cookies, through the guard. True if bytes landed.
+
+    ``pg.request`` would bypass the context's routes (and so the guard), so the
+    request is made by :mod:`citeget.netguard` with the browser's cookies for
+    *url*. *timeout* is in milliseconds, as everywhere Playwright is involved.
+    """
     try:
-        response = pg.request.get(url, timeout=timeout)
+        cookies = pg.context.cookies([url])
+        headers = {"User-Agent": _USER_AGENT}
+        if cookies:
+            headers["Cookie"] = "; ".join(f"{c['name']}={c['value']}" for c in cookies)
+        response = netguard.get(url, headers=headers, timeout=timeout / 1000)
         if not response.ok:
             return False
-        body = response.body()
+        body = response.content
         if not body:
             return False
         tmp_path.parent.mkdir(parents=True, exist_ok=True)
@@ -828,7 +854,7 @@ def _try_libgen_download(
     try:
         with pg.expect_download(timeout=timeout) as download_info:
             try:
-                pg.goto(get_url, timeout=timeout)
+                _goto(pg, get_url, timeout=timeout)
             except Exception as exc:
                 # When libgen serves the file as an attachment, goto raises
                 # "Download is starting". Swallowing it here — inside the

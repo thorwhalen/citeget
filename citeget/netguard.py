@@ -318,8 +318,8 @@ def guarded_session(*, policy: Optional[NetPolicy] = None):
     return session
 
 
-def get(url: str, *, policy: Optional[NetPolicy] = None, **kwargs):
-    """``requests.get`` with the destination guard. Same arguments and return.
+def request(method: str, url: str, *, policy: Optional[NetPolicy] = None, **kwargs):
+    """``requests.request`` with the destination guard. Same arguments and return.
 
     Raises :class:`UnsafeURLError` if the URL, a redirect target, or an address
     a host resolves to is refused; ``proxies=`` is refused as well.
@@ -329,4 +329,155 @@ def get(url: str, *, policy: Optional[NetPolicy] = None, **kwargs):
         raise _refuse(url, "requests through a proxy are not allowed")
     check_url(url, policy=policy)
     with guarded_session(policy=policy) as session:
-        return session.get(url, **kwargs)
+        return session.request(method, url, **kwargs)
+
+
+def get(url: str, *, policy: Optional[NetPolicy] = None, **kwargs):
+    """``requests.get`` with the destination guard (see :func:`request`)."""
+    return request("GET", url, policy=policy, **kwargs)
+
+
+# ---------------------------------------------------------------------------
+# Playwright / Chromium integration
+# ---------------------------------------------------------------------------
+#
+# A route handler that only vets and then calls ``route.continue_()`` is not a
+# guard: Playwright calls the handler for the first URL of a redirect chain
+# only, and Chromium follows the rest (and does its own DNS, so it can be
+# rebound). So the browser is given no network of its own at all:
+#
+# - every request it makes is answered by :func:`browser_route_handler`, which
+#   fetches it through :func:`request` (connect-time vetting, every redirect
+#   followed and vetted here, never handed back to the browser) and fulfills
+#   the final response;
+# - Chromium itself is pointed at a proxy that is not there, with the implicit
+#   loopback bypass removed, so anything that escapes interception (a
+#   preconnect, a redirect, a request type routes do not see) goes nowhere;
+# - service workers, which bypass routes, are blocked; WebSockets are routed and
+#   never connected; WebRTC is kept off non-proxied UDP.
+
+#: Where Chromium's own traffic is sent: a port nothing listens on.
+DEAD_PROXY = "http://127.0.0.1:9"
+
+#: Chromium flags that leave the browser no network path of its own.
+CHROMIUM_GUARD_ARGS = (
+    f"--proxy-server={DEAD_PROXY}",
+    "--proxy-bypass-list=<-loopback>",  # also proxy loopback (bypassed by default)
+    "--force-webrtc-ip-handling-policy=disable_non_proxied_udp",
+    "--dns-prefetch-disable",
+)
+
+#: Resource types refused outright: nothing citeget reads needs them.
+BLOCKED_RESOURCE_TYPES = frozenset({"image", "media", "font"})
+
+#: Request headers not forwarded from the browser (requests sets its own).
+_HOP_BY_HOP_REQUEST_HEADERS = frozenset({
+    "host", "content-length", "connection", "keep-alive", "proxy-connection",
+    "transfer-encoding", "upgrade", "te", "accept-encoding",
+})
+#: Response headers dropped before fulfilling: the body is already decoded and
+#: re-framed, so these would describe bytes the browser never gets.
+_DROPPED_RESPONSE_HEADERS = frozenset({
+    "content-encoding", "content-length", "transfer-encoding", "connection",
+    "keep-alive", "set-cookie",
+})
+
+
+def _fulfill_headers(resp) -> dict:
+    headers = {
+        k: v for k, v in resp.headers.items() if k.lower() not in _DROPPED_RESPONSE_HEADERS
+    }
+    raw = getattr(resp.raw, "headers", None)
+    cookies = raw.getlist("Set-Cookie") if hasattr(raw, "getlist") else []
+    if cookies:
+        headers["set-cookie"] = "\n".join(cookies)  # Playwright's multi-value form
+    return headers
+
+
+def browser_route_handler(
+    *,
+    policy: Optional[NetPolicy] = None,
+    timeout: float = 30,
+    blocked_resource_types=BLOCKED_RESOURCE_TYPES,
+    fetch=None,
+):
+    """A ``context.route("**/*", ...)`` handler that fetches through the guard.
+
+    Args:
+        policy: The :class:`NetPolicy` (default: :func:`default_policy` now).
+        timeout: Per-request timeout, in seconds, for the guarded fetch.
+        blocked_resource_types: Playwright resource types aborted unfetched.
+        fetch: The fetcher, ``(method, url, **requests_kwargs) -> Response``;
+            defaults to :func:`request` with *policy*. A seam for tests.
+    """
+    import logging
+
+    log = logging.getLogger(__name__)
+    policy = policy or default_policy()
+    fetch = fetch or (lambda method, url, **kw: request(method, url, policy=policy, **kw))
+
+    def handler(route):
+        req = route.request
+        if req.resource_type in blocked_resource_types:
+            return route.abort("blockedbyclient")
+        try:
+            headers = {
+                k: v
+                for k, v in req.all_headers().items()
+                if not k.startswith(":") and k.lower() not in _HOP_BY_HOP_REQUEST_HEADERS
+            }
+            resp = fetch(
+                req.method,
+                req.url,
+                headers=headers,
+                data=req.post_data_buffer,
+                timeout=timeout,
+                allow_redirects=True,
+            )
+        except UnsafeURLError as e:
+            log.warning("Browser request refused: %s", e)
+            return route.abort("blockedbyclient")
+        except Exception as e:
+            log.debug("Browser request failed: %s: %s", req.url, e)
+            return route.abort("failed")
+        return route.fulfill(
+            status=resp.status_code, headers=_fulfill_headers(resp), body=resp.content
+        )
+
+    return handler
+
+
+def guard_browser_context(context, *, policy: Optional[NetPolicy] = None, **handler_kwargs):
+    """Route all of a Playwright ``BrowserContext``'s traffic through the guard.
+
+    The context should come from a browser launched with
+    :data:`CHROMIUM_GUARD_ARGS` and be created with ``service_workers="block"``
+    (see :func:`launch_guarded_chromium`); this installs the request route and
+    the WebSocket block. Returns *context*.
+    """
+    context.route("**/*", browser_route_handler(policy=policy, **handler_kwargs))
+    if hasattr(context, "route_web_socket"):  # Playwright >= 1.48
+        # A WebSocket route that never calls connect_to_server is never connected.
+        context.route_web_socket("**/*", lambda ws: None)
+    return context
+
+
+def launch_guarded_chromium(playwright, *, headless: bool = True, policy=None, **context_kwargs):
+    """Launch Chromium with no network of its own and return ``(browser, context)``.
+
+    Every request the context makes is fetched through the guard.
+    """
+    browser = playwright.chromium.launch(headless=headless, args=list(CHROMIUM_GUARD_ARGS))
+    context = browser.new_context(service_workers="block", **context_kwargs)
+    return browser, guard_browser_context(context, policy=policy)
+
+
+def check_navigation(url: str, *, policy: Optional[NetPolicy] = None) -> str:
+    """Vet a URL before ``page.goto``: refuses ``file:``, ``data:``, internal IPs.
+
+    >>> check_navigation("data:text/html,<p>hi</p>")
+    Traceback (most recent call last):
+      ...
+    citeget.netguard.UnsafeURLError: Refused data:text/html,<p>hi</p>: scheme 'data' is not allowed (allowed: http, https)
+    """
+    return check_url(url, policy=policy)
