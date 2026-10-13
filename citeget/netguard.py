@@ -132,17 +132,17 @@ def default_policy() -> NetPolicy:
     flag = os.environ.get(ALLOW_PRIVATE_ENV_VAR, "").strip().lower()
     return NetPolicy(
         allow_private=flag in _TRUTHY,
-        max_response_bytes=_env_limit(
+        max_response_bytes=env_limit(
             MAX_RESPONSE_BYTES_ENV_VAR, DEFAULT_MAX_RESPONSE_BYTES
         ),
-        max_text_bytes=_env_limit(MAX_TEXT_BYTES_ENV_VAR, DEFAULT_MAX_TEXT_BYTES),
-        max_response_seconds=_env_limit(
+        max_text_bytes=env_limit(MAX_TEXT_BYTES_ENV_VAR, DEFAULT_MAX_TEXT_BYTES),
+        max_response_seconds=env_limit(
             MAX_RESPONSE_SECONDS_ENV_VAR, DEFAULT_MAX_RESPONSE_SECONDS
         ),
     )
 
 
-def _env_limit(var: str, default: int) -> int:
+def env_limit(var: str, default: int) -> int:
     """A non-negative integer from environment variable *var*, else *default*."""
     raw = os.environ.get(var, "").strip()
     if not raw:
