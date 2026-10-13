@@ -13,12 +13,14 @@
 - [citeget.cli](_autosummary/citeget.cli.html.md): CLI entry points for citeget.
 - [citeget.core](_autosummary/citeget.core.html.md): Core search and download logic for libgen (libgen.vg-family mirrors).
 - [citeget.extract](_autosummary/citeget.extract.html.md): Composable reference extraction from documents.
+- [citeget.joblimit](_autosummary/citeget.joblimit.html.md): Cap how many acquisitions one owner runs at the same time.
 - [citeget.names](_autosummary/citeget.names.html.md): Author-name parsing for libgen metadata.
+- [citeget.netguard](_autosummary/citeget.netguard.html.md): Outbound-HTTP guard: refuse to fetch anything that is not on the public internet.
 - [citeget.rank](_autosummary/citeget.rank.html.md): Rank libgen search results against a requested title and author.
 - [citeget.resolve](_autosummary/citeget.resolve.html.md): Composable download and URL-resolution for academic references.
 - [citeget.validate](_autosummary/citeget.validate.html.md): Validate that a downloaded file is actually the book or paper it claims to be.
 - [For AI agents](ai-agents.html.md): &#96;citeget&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-09-22 13:26 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-13 11:26 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
 ## Optional
 

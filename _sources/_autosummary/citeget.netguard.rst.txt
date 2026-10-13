@@ -1,0 +1,35 @@
+citeget.netguard
+================
+
+.. automodule:: citeget.netguard
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      ALLOW_PRIVATE_ENV_VAR
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      check_url
+      default_policy
+      get
+      guarded_session
+      is_public_address
+      resolve_public
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      NetPolicy
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      UnsafeURLError
+   

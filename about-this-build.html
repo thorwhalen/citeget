@@ -86,7 +86,9 @@
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.cli.html">citeget.cli</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.core.html">citeget.core</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.extract.html">citeget.extract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.joblimit.html">citeget.joblimit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.names.html">citeget.names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.netguard.html">citeget.netguard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.rank.html">citeget.rank</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.resolve.html">citeget.resolve</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.validate.html">citeget.validate</a></li>
@@ -120,7 +122,7 @@
 
 <section id="about-this-build">
 <h1>About this build<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#about-this-build">¶</a></h1>
-<p>This documentation was built on <strong>2026-09-22 13:26 UTC</strong> from commit <a href="https://github.com/thorwhalen/citeget/commit/c1c5c860b07bf112304bdddd390394fa16882aaf"><code>c1c5c86</code></a> on branch <code>main</code>, for <strong>citeget 0.2.11</strong> (from <code>pyproject.toml</code>).</p>
+<p>This documentation was built on <strong>2026-10-13 11:26 UTC</strong> from commit <a href="https://github.com/thorwhalen/citeget/commit/4e92a3a76724033611c618412d6b0f2838742c85"><code>4e92a3a</code></a> on branch <code>main</code>, for <strong>citeget 0.2.12</strong> (from <code>pyproject.toml</code>).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.</p>
@@ -135,13 +137,13 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Commit</p></td>
-<td><p><a href="https://github.com/thorwhalen/citeget/commit/c1c5c860b07bf112304bdddd390394fa16882aaf"><code>c1c5c860b07bf112304bdddd390394fa16882aaf</code></a></p></td>
+<td><p><a href="https://github.com/thorwhalen/citeget/commit/4e92a3a76724033611c618412d6b0f2838742c85"><code>4e92a3a76724033611c618412d6b0f2838742c85</code></a></p></td>
 </tr>
 <tr class="row-odd"><td><p>Branch</p></td>
 <td><p><code>main</code></p></td>
 </tr>
 <tr class="row-even"><td><p>Tags at this commit</p></td>
-<td><p><code>0.2.11</code></p></td>
+<td><p><code>0.2.12</code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Working tree</p></td>
 <td><p>clean</p></td>
@@ -165,13 +167,13 @@
 <td><p><code>thorwhalen/citeget</code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Run</p></td>
-<td><p><a href="https://github.com/thorwhalen/citeget/actions/runs/35733235312">35733235312</a></p></td>
+<td><p><a href="https://github.com/thorwhalen/citeget/actions/runs/38389955955">38389955955</a></p></td>
 </tr>
 <tr class="row-even"><td><p>Ref</p></td>
 <td><p><code>refs/heads/main</code></p></td>
 </tr>
 <tr class="row-odd"><td><p>Event commit</p></td>
-<td><p><code>28a1bbc2670ceac16bcb1a773ffbf53831dbf8b6</code> (in the history of the built commit)</p></td>
+<td><p><code>cf8e288c18b91c5c47257239f92dc90eb86bc1e3</code> (in the history of the built commit)</p></td>
 </tr>
 </tbody>
 </table>
@@ -186,7 +188,7 @@
 </thead>
 <tbody>
 <tr class="row-even"><td><p>epythet</p></td>
-<td><p>0.2.12</p></td>
+<td><p>0.2.15</p></td>
 </tr>
 <tr class="row-odd"><td><p>Sphinx</p></td>
 <td><p>9.1.0</p></td>
@@ -195,7 +197,7 @@
 <td><p>0.22.4</p></td>
 </tr>
 <tr class="row-odd"><td><p>Python</p></td>
-<td><p>3.12.14</p></td>
+<td><p>3.12.15</p></td>
 </tr>
 </tbody>
 </table>
@@ -235,14 +237,14 @@
 </section>
 <section id="package-on-pypi">
 <h2>Package on PyPI<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#package-on-pypi" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#package-on-pypi'">¶</a></h2>
-<p>Latest release: <a href="https://pypi.org/project/citeget/0.2.11/">0.2.11</a>, the same as the documented version.</p>
+<p>Latest release: <a href="https://pypi.org/project/citeget/0.2.12/">0.2.12</a>, the same as the documented version.</p>
 </section>
-<section id="site"><h2>Site</h2><table class="docutils align-default"><tbody><tr><td><p>Modules documented</p></td><td><p>10</p></td></tr><tr><td><p>Objects documented</p></td><td><p>166</p></td></tr></tbody></table></section>
+<section id="site"><h2>Site</h2><table class="docutils align-default"><tbody><tr><td><p>Modules documented</p></td><td><p>12</p></td></tr><tr><td><p>Objects documented</p></td><td><p>183</p></td></tr></tbody></table></section>
 <section id="reproduce">
 <h2>Reproduce<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#reproduce" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#reproduce'">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">git<span class="w"> </span>clone<span class="w"> </span>https://github.com/thorwhalen/citeget<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>citeget
-</span><span id="line-2">git<span class="w"> </span>checkout<span class="w"> </span>c1c5c860b07bf112304bdddd390394fa16882aaf
-</span><span id="line-3">pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"epythet==0.2.12"</span>
+</span><span id="line-2">git<span class="w"> </span>checkout<span class="w"> </span>4e92a3a76724033611c618412d6b0f2838742c85
+</span><span id="line-3">pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"epythet==0.2.15"</span>
 </span><span id="line-4">epythet<span class="w"> </span>quickstart<span class="w"> </span>.<span class="w"> </span>--ignore<span class="w"> </span>tests/<span class="w"> </span>scrap/<span class="w"> </span>examples/
 </span></code></pre></div>
 </div>
@@ -271,7 +273,7 @@
 </div>
 </footer>
 </div>
-<script src="_static/documentation_options.js?v=29c81e07"></script>
+<script src="_static/documentation_options.js?v=1e30946d"></script>
 <script src="_static/doctools.js?v=fd6eb6e6"></script>
 <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
 <script src="_static/clipboard.min.js?v=a7894cd8"></script>

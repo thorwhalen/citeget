@@ -320,6 +320,20 @@ python -m citeget.article_pub.scripts.word_count draft.md --breakdown
 python -m citeget.article_pub.scripts.extract_references draft.md
 ```
 
+## Network safety (hosted use)
+
+citeget fetches URLs that come from its input: a reference’s URL, a page to save, a link found inside a page. Every one of those requests goes through `citeget.netguard`, which refuses anything that is not on the public internet: loopback, private (RFC 1918, `fc00::/7`), link-local (`169.254.0.0/16`, `fe80::/10`, which holds the cloud metadata service), unspecified and multicast addresses, including when they are spelled oddly (`2130706433`, `0x7f.1`) or wrapped in IPv6 (`::ffff:127.0.0.1`). Only `http` and `https` are allowed. The check is made on the address the socket actually connects to, on every redirect hop, so neither a redirect nor a rebinding DNS server can get around it. Environment proxies are ignored while the guard is on. HTML→PDF rendering never hands `wkhtmltopdf` a URL: the page is fetched through the guard and rendered offline, as text.
+
+On a desktop, to let citeget fetch from your own LAN or `localhost`:
+
+```bash
+export CITEGET_ALLOW_PRIVATE_NETWORK=1
+```
+
+A refused URL raises `citeget.netguard.UnsafeURLError`; in `fetch` it shows up as a failed result whose `error` starts with `Refused`.
+
+`acquire_all_references` also caps concurrent runs per owner (default 2; `CITEGET_MAX_CONCURRENT_JOBS`, `0` for no cap). By default, runs whose `work_dir`s share a parent directory share the cap, which is one cap per user in a hosted app that keeps each user’s jobs side by side. Pass `concurrency_key=` to choose the owner explicitly, or `None` to switch the cap off. Over the cap, the run raises `citeget.joblimit.JobLimitExceeded` before doing any work.
+
 ## Mirrors
 
 Libgen mirror domains rotate, so the shipped default list goes stale on its own

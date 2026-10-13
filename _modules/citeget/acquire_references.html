@@ -118,7 +118,9 @@
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.cli.html">citeget.cli</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.core.html">citeget.core</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.extract.html">citeget.extract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.joblimit.html">citeget.joblimit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.names.html">citeget.names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.netguard.html">citeget.netguard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.rank.html">citeget.rank</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.resolve.html">citeget.resolve</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.validate.html">citeget.validate</a></li>
@@ -561,7 +563,7 @@
 </span><span id="line-369">
 </span><span id="line-370"><span class="k">def</span><span class="w"> </span><span class="nf">_download_url</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 </span><span id="line-371"><span class="w">    </span><span class="sd">"""Try to download a URL as a PDF. Returns True on success."""</span>
-</span><span id="line-372">    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+</span><span id="line-372">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">netguard</span>
 </span><span id="line-373">
 </span><span id="line-374">    <span class="k">try</span><span class="p">:</span>
 </span><span id="line-375">        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -570,7 +572,7 @@
 </span><span id="line-378">                <span class="s2">"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"</span>
 </span><span id="line-379">            <span class="p">)</span>
 </span><span id="line-380">        <span class="p">}</span>
-</span><span id="line-381">        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-381">        <span class="n">resp</span> <span class="o">=</span> <span class="n">netguard</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="line-382">        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
 </span><span id="line-383">            <span class="k">return</span> <span class="kc">False</span>
 </span><span id="line-384">
@@ -955,7 +957,7 @@
 </span><span id="line-763">    <span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
 </span><span id="line-764"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 </span><span id="line-765"><span class="w">    </span><span class="sd">"""Search arxiv API for the paper and download if found."""</span>
-</span><span id="line-766">    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+</span><span id="line-766">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">netguard</span>
 </span><span id="line-767">    <span class="kn">from</span><span class="w"> </span><span class="nn">xml.etree</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElementTree</span> <span class="k">as</span> <span class="n">ET</span>
 </span><span id="line-768">
 </span><span id="line-769">    <span class="n">surname</span> <span class="o">=</span> <span class="n">_first_author_surname</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">authors</span><span class="p">)</span>
@@ -979,7 +981,7 @@
 </span><span id="line-787">
 </span><span id="line-788">    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(</span><span class="n">timespec</span><span class="o">=</span><span class="s2">"seconds"</span><span class="p">)</span>
 </span><span id="line-789">    <span class="k">try</span><span class="p">:</span>
-</span><span id="line-790">        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+</span><span id="line-790">        <span class="n">resp</span> <span class="o">=</span> <span class="n">netguard</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 </span><span id="line-791">        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
 </span><span id="line-792">            <span class="k">return</span> <span class="kc">None</span>
 </span><span id="line-793">
@@ -1043,7 +1045,7 @@
 </span><span id="line-851">    <span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
 </span><span id="line-852"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 </span><span id="line-853"><span class="w">    </span><span class="sd">"""Look up DOI via Crossref, then try Sci-Hub."""</span>
-</span><span id="line-854">    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+</span><span id="line-854">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">netguard</span>
 </span><span id="line-855">    <span class="kn">from</span><span class="w"> </span><span class="nn">bs4</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeautifulSoup</span>
 </span><span id="line-856">
 </span><span id="line-857">    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
@@ -1060,7 +1062,7 @@
 </span><span id="line-868">
 </span><span id="line-869">    <span class="n">doi</span> <span class="o">=</span> <span class="s2">""</span>
 </span><span id="line-870">    <span class="k">try</span><span class="p">:</span>
-</span><span id="line-871">        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+</span><span id="line-871">        <span class="n">resp</span> <span class="o">=</span> <span class="n">netguard</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
 </span><span id="line-872">            <span class="sa">f</span><span class="s2">"https://api.crossref.org/works?query=</span><span class="si">{</span><span class="n">crossref_query</span><span class="si">}</span><span class="s2">&amp;rows=3"</span><span class="p">,</span>
 </span><span id="line-873">            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
 </span><span id="line-874">            <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
@@ -1085,7 +1087,7 @@
 </span><span id="line-893">    <span class="c1"># Step 2: Try Sci-Hub with DOI</span>
 </span><span id="line-894">    <span class="k">try</span><span class="p">:</span>
 </span><span id="line-895">        <span class="n">scihub_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"https://sci-hub.ru/</span><span class="si">{</span><span class="n">doi</span><span class="si">}</span><span class="s2">"</span>
-</span><span id="line-896">        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+</span><span id="line-896">        <span class="n">resp</span> <span class="o">=</span> <span class="n">netguard</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
 </span><span id="line-897">            <span class="n">scihub_url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">allow_redirects</span><span class="o">=</span><span class="kc">True</span>
 </span><span id="line-898">        <span class="p">)</span>
 </span><span id="line-899">        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
@@ -1104,7 +1106,7 @@
 </span><span id="line-912">            <span class="k">if</span> <span class="n">pdf_link</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"/"</span><span class="p">):</span>
 </span><span id="line-913">                <span class="n">pdf_link</span> <span class="o">=</span> <span class="s2">"https://sci-hub.ru"</span> <span class="o">+</span> <span class="n">pdf_link</span>
 </span><span id="line-914">
-</span><span id="line-915">            <span class="n">pdf_resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pdf_link</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+</span><span id="line-915">            <span class="n">pdf_resp</span> <span class="o">=</span> <span class="n">netguard</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">pdf_link</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
 </span><span id="line-916">            <span class="k">if</span> <span class="n">pdf_resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">pdf_resp</span><span class="o">.</span><span class="n">content</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
 </span><span id="line-917">                <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="line-918">                <span class="n">filepath</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">pdf_resp</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
@@ -1409,215 +1411,271 @@
 </span><span id="line-1212">    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span id="line-1213">    <span class="n">convert_to_pdf</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span id="line-1214">    <span class="n">fetch_fallback</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span id="line-1215"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
-</span><span id="line-1216"><span class="w">    </span><span class="sd">"""Acquire files for a list of references.</span>
-</span><span id="line-1217">
-</span><span id="line-1218"><span class="sd">    Checks for already-downloaded files first and skips them, reporting</span>
-</span><span id="line-1219"><span class="sd">    which references are being skipped so the user can re-download by</span>
-</span><span id="line-1220"><span class="sd">    renaming or removing the existing file.</span>
-</span><span id="line-1221">
-</span><span id="line-1222"><span class="sd">    Each downloaded file is saved with an extension that matches its</span>
-</span><span id="line-1223"><span class="sd">    actual content (``.pdf``, ``.epub``, ``.mobi``, ``.djvu``, ...). A</span>
-</span><span id="line-1224"><span class="sd">    non-PDF is never renamed to ``.pdf``.</span>
-</span><span id="line-1225">
-</span><span id="line-1226"><span class="sd">    Args:</span>
-</span><span id="line-1227"><span class="sd">        references: List of Reference objects.</span>
-</span><span id="line-1228"><span class="sd">        download_dir: Where to save files (the ``references/`` subdirectory</span>
-</span><span id="line-1229"><span class="sd">            inside the work_dir, or a standalone directory).</span>
-</span><span id="line-1230"><span class="sd">        work_dir: Optional work directory — if given, ``log_file`` defaults</span>
-</span><span id="line-1231"><span class="sd">            to ``{work_dir}/{datetime}__acquisition_log.txt``.</span>
-</span><span id="line-1232"><span class="sd">        log_file: Explicit path for the acquisition log. If None and</span>
-</span><span id="line-1233"><span class="sd">            ``work_dir`` is given, auto-generated with timestamp.</span>
-</span><span id="line-1234"><span class="sd">        strategy: Acquisition strategy — a callable, registered name,</span>
-</span><span id="line-1235"><span class="sd">            or ``None`` for the legacy chain.  Pass ``"default"`` to use</span>
-</span><span id="line-1236"><span class="sd">            the composable default from :mod:`citeget.resolve`.</span>
-</span><span id="line-1237"><span class="sd">        libgen_topics: Libgen topics to try (legacy chain only).</span>
-</span><span id="line-1238"><span class="sd">        delay: Seconds between operations (rate limiting).</span>
-</span><span id="line-1239"><span class="sd">        verbose: Print progress.</span>
-</span><span id="line-1240"><span class="sd">        convert_to_pdf: When ``True``, convert non-PDF downloads to PDF</span>
-</span><span id="line-1241"><span class="sd">            via ``pdfdol`` (Calibre's ``ebook-convert``) when available.</span>
-</span><span id="line-1242"><span class="sd">            Prints a hint if the flag is on but the converter isn't</span>
-</span><span id="line-1243"><span class="sd">            available. Defaults to ``False`` — native formats preserved.</span>
-</span><span id="line-1244"><span class="sd">        fetch_fallback: If True (default), fall back to fetching ``ref.url``</span>
-</span><span id="line-1245"><span class="sd">            as Markdown when all academic strategies fail (catches non-paper</span>
-</span><span id="line-1246"><span class="sd">            references like blog posts, docs, product pages).</span>
-</span><span id="line-1247">
-</span><span id="line-1248"><span class="sd">    Returns:</span>
-</span><span id="line-1249"><span class="sd">        (successes, failures, log_entries) where successes and failures</span>
-</span><span id="line-1250"><span class="sd">        are lists of AcquisitionResult.</span>
-</span><span id="line-1251"><span class="sd">    """</span>
-</span><span id="line-1252">    <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
-</span><span id="line-1253">    <span class="n">download_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="line-1254">
-</span><span id="line-1255">    <span class="c1"># Default log file with timestamp</span>
-</span><span id="line-1256">    <span class="k">if</span> <span class="n">log_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">work_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-1257">        <span class="n">ts</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">_%H%M"</span><span class="p">)</span>
-</span><span id="line-1258">        <span class="n">log_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ts</span><span class="si">}</span><span class="s2">__acquisition_log.txt"</span>
+</span><span id="line-1215">    <span class="n">concurrency_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"auto"</span><span class="p">,</span>
+</span><span id="line-1216">    <span class="n">max_concurrent_jobs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-1217"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+</span><span id="line-1218"><span class="w">    </span><span class="sd">"""Acquire files for a list of references.</span>
+</span><span id="line-1219">
+</span><span id="line-1220"><span class="sd">    Checks for already-downloaded files first and skips them, reporting</span>
+</span><span id="line-1221"><span class="sd">    which references are being skipped so the user can re-download by</span>
+</span><span id="line-1222"><span class="sd">    renaming or removing the existing file.</span>
+</span><span id="line-1223">
+</span><span id="line-1224"><span class="sd">    Each downloaded file is saved with an extension that matches its</span>
+</span><span id="line-1225"><span class="sd">    actual content (``.pdf``, ``.epub``, ``.mobi``, ``.djvu``, ...). A</span>
+</span><span id="line-1226"><span class="sd">    non-PDF is never renamed to ``.pdf``.</span>
+</span><span id="line-1227">
+</span><span id="line-1228"><span class="sd">    Args:</span>
+</span><span id="line-1229"><span class="sd">        references: List of Reference objects.</span>
+</span><span id="line-1230"><span class="sd">        download_dir: Where to save files (the ``references/`` subdirectory</span>
+</span><span id="line-1231"><span class="sd">            inside the work_dir, or a standalone directory).</span>
+</span><span id="line-1232"><span class="sd">        work_dir: Optional work directory — if given, ``log_file`` defaults</span>
+</span><span id="line-1233"><span class="sd">            to ``{work_dir}/{datetime}__acquisition_log.txt``.</span>
+</span><span id="line-1234"><span class="sd">        log_file: Explicit path for the acquisition log. If None and</span>
+</span><span id="line-1235"><span class="sd">            ``work_dir`` is given, auto-generated with timestamp.</span>
+</span><span id="line-1236"><span class="sd">        strategy: Acquisition strategy — a callable, registered name,</span>
+</span><span id="line-1237"><span class="sd">            or ``None`` for the legacy chain.  Pass ``"default"`` to use</span>
+</span><span id="line-1238"><span class="sd">            the composable default from :mod:`citeget.resolve`.</span>
+</span><span id="line-1239"><span class="sd">        libgen_topics: Libgen topics to try (legacy chain only).</span>
+</span><span id="line-1240"><span class="sd">        delay: Seconds between operations (rate limiting).</span>
+</span><span id="line-1241"><span class="sd">        verbose: Print progress.</span>
+</span><span id="line-1242"><span class="sd">        convert_to_pdf: When ``True``, convert non-PDF downloads to PDF</span>
+</span><span id="line-1243"><span class="sd">            via ``pdfdol`` (Calibre's ``ebook-convert``) when available.</span>
+</span><span id="line-1244"><span class="sd">            Prints a hint if the flag is on but the converter isn't</span>
+</span><span id="line-1245"><span class="sd">            available. Defaults to ``False`` — native formats preserved.</span>
+</span><span id="line-1246"><span class="sd">        fetch_fallback: If True (default), fall back to fetching ``ref.url``</span>
+</span><span id="line-1247"><span class="sd">            as Markdown when all academic strategies fail (catches non-paper</span>
+</span><span id="line-1248"><span class="sd">            references like blog posts, docs, product pages).</span>
+</span><span id="line-1249"><span class="sd">        concurrency_key: Who this run counts against for the concurrent-run</span>
+</span><span id="line-1250"><span class="sd">            cap (see :mod:`citeget.joblimit`). ``"auto"`` (default) uses the</span>
+</span><span id="line-1251"><span class="sd">            parent of ``work_dir``, so runs whose work dirs sit side by side</span>
+</span><span id="line-1252"><span class="sd">            (a hosted app's per-user ``jobs/`` directory) share one cap; with</span>
+</span><span id="line-1253"><span class="sd">            no ``work_dir`` there is no cap. Pass a string (a user id) to</span>
+</span><span id="line-1254"><span class="sd">            choose the key, or ``None`` to switch the cap off.</span>
+</span><span id="line-1255"><span class="sd">        max_concurrent_jobs: The cap for that key. Defaults to the</span>
+</span><span id="line-1256"><span class="sd">            ``CITEGET_MAX_CONCURRENT_JOBS`` environment variable, else</span>
+</span><span id="line-1257"><span class="sd">            :data:`citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS`; ``0`` means</span>
+</span><span id="line-1258"><span class="sd">            no cap.</span>
 </span><span id="line-1259">
-</span><span id="line-1260">    <span class="n">log_entries</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="line-1261">    <span class="n">successes</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="line-1262">    <span class="n">failures</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-1260"><span class="sd">    Raises:</span>
+</span><span id="line-1261"><span class="sd">        citeget.joblimit.JobLimitExceeded: the key already has</span>
+</span><span id="line-1262"><span class="sd">            ``max_concurrent_jobs`` runs in progress. Raised before any work.</span>
 </span><span id="line-1263">
-</span><span id="line-1264">    <span class="k">if</span> <span class="n">convert_to_pdf</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
-</span><span id="line-1265">        <span class="k">try</span><span class="p">:</span>
-</span><span id="line-1266">            <span class="kn">from</span><span class="w"> </span><span class="nn">pdfdol.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_ebook_convert</span>  <span class="c1"># type: ignore</span>
-</span><span id="line-1267">
-</span><span id="line-1268">            <span class="k">if</span> <span class="n">find_ebook_convert</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-1269">                <span class="nb">print</span><span class="p">(</span>
-</span><span id="line-1270">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Note: convert_to_pdf=True but Calibre's "</span>
-</span><span id="line-1271">                    <span class="s2">"'ebook-convert' was not found. Install Calibre "</span>
-</span><span id="line-1272">                    <span class="s2">"(https://calibre-ebook.com/download) to enable "</span>
-</span><span id="line-1273">                    <span class="s2">"EPUB/MOBI/DjVu→PDF conversion. Native formats will be "</span>
-</span><span id="line-1274">                    <span class="s2">"kept as-is."</span>
-</span><span id="line-1275">                <span class="p">)</span>
-</span><span id="line-1276">        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-</span><span id="line-1277">            <span class="nb">print</span><span class="p">(</span>
-</span><span id="line-1278">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Note: convert_to_pdf=True but pdfdol is not "</span>
-</span><span id="line-1279">                <span class="s2">"available. Install it (`pip install pdfdol`) to enable "</span>
-</span><span id="line-1280">                <span class="s2">"conversion. Native formats will be kept as-is."</span>
-</span><span id="line-1281">            <span class="p">)</span>
-</span><span id="line-1282">
-</span><span id="line-1283">    <span class="c1"># (C) Check for already-downloaded files</span>
-</span><span id="line-1284">    <span class="n">to_acquire</span><span class="p">,</span> <span class="n">already_have</span> <span class="o">=</span> <span class="n">check_existing_downloads</span><span class="p">(</span><span class="n">references</span><span class="p">,</span> <span class="n">download_dir</span><span class="p">)</span>
-</span><span id="line-1285">
-</span><span id="line-1286">    <span class="k">if</span> <span class="n">already_have</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
-</span><span id="line-1287">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Skipping </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">already_have</span><span class="p">)</span><span class="si">}</span><span class="s2"> already-downloaded reference(s):"</span><span class="p">)</span>
-</span><span id="line-1288">        <span class="k">for</span> <span class="n">ref</span><span class="p">,</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="n">already_have</span><span class="p">:</span>
-</span><span id="line-1289">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  [</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1290">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"        -&gt; </span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1291">        <span class="nb">print</span><span class="p">(</span><span class="s2">"  (To re-download, rename or move the existing file.)</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1292">
-</span><span id="line-1293">    <span class="c1"># Record already-have as successes</span>
-</span><span id="line-1294">    <span class="k">for</span> <span class="n">ref</span><span class="p">,</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="n">already_have</span><span class="p">:</span>
-</span><span id="line-1295">        <span class="n">successes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-</span><span id="line-1296">            <span class="n">AcquisitionResult</span><span class="p">(</span>
-</span><span id="line-1297">                <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
-</span><span id="line-1298">                <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="line-1299">                <span class="n">filepath</span><span class="o">=</span><span class="n">fpath</span><span class="p">,</span>
-</span><span id="line-1300">                <span class="n">method</span><span class="o">=</span><span class="s2">"already_exists"</span><span class="p">,</span>
-</span><span id="line-1301">            <span class="p">)</span>
-</span><span id="line-1302">        <span class="p">)</span>
-</span><span id="line-1303">
-</span><span id="line-1304">    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ref</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">):</span>
-</span><span id="line-1305">        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-</span><span id="line-1306">            <span class="nb">print</span><span class="p">(</span>
-</span><span id="line-1307">                <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">)</span><span class="si">}</span><span class="s2">] Ref [</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">]: </span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">..."</span>
-</span><span id="line-1308">            <span class="p">)</span>
-</span><span id="line-1309">
-</span><span id="line-1310">        <span class="n">result</span> <span class="o">=</span> <span class="n">acquire_reference</span><span class="p">(</span>
-</span><span id="line-1311">            <span class="n">ref</span><span class="p">,</span>
-</span><span id="line-1312">            <span class="n">download_dir</span><span class="p">,</span>
-</span><span id="line-1313">            <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">,</span>
-</span><span id="line-1314">            <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span>
-</span><span id="line-1315">            <span class="n">libgen_topics</span><span class="o">=</span><span class="n">libgen_topics</span><span class="p">,</span>
-</span><span id="line-1316">            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
-</span><span id="line-1317">            <span class="n">convert_to_pdf</span><span class="o">=</span><span class="n">convert_to_pdf</span><span class="p">,</span>
-</span><span id="line-1318">            <span class="n">fetch_fallback</span><span class="o">=</span><span class="n">fetch_fallback</span><span class="p">,</span>
-</span><span id="line-1319">        <span class="p">)</span>
-</span><span id="line-1320">
-</span><span id="line-1321">        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
-</span><span id="line-1322">            <span class="n">successes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-</span><span id="line-1323">            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-</span><span id="line-1324">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> SUCCESS (</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2">) -&gt; </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">filepath</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1325">        <span class="k">else</span><span class="p">:</span>
-</span><span id="line-1326">            <span class="n">failures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-</span><span id="line-1327">            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-</span><span id="line-1328">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> FAILED: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1329">
-</span><span id="line-1330">        <span class="c1"># Rate limit between libgen operations</span>
-</span><span id="line-1331">        <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">delay</span><span class="p">:</span>
-</span><span id="line-1332">            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
-</span><span id="line-1333">
-</span><span id="line-1334">    <span class="c1"># Write log</span>
-</span><span id="line-1335">    <span class="k">if</span> <span class="n">log_file</span><span class="p">:</span>
-</span><span id="line-1336">        <span class="n">_write_log</span><span class="p">(</span><span class="n">log_entries</span><span class="p">,</span> <span class="n">log_file</span><span class="p">)</span>
-</span><span id="line-1337">
-</span><span id="line-1338">    <span class="k">return</span> <span class="n">successes</span><span class="p">,</span> <span class="n">failures</span><span class="p">,</span> <span class="n">log_entries</span></div>
+</span><span id="line-1264"><span class="sd">    Returns:</span>
+</span><span id="line-1265"><span class="sd">        (successes, failures, log_entries) where successes and failures</span>
+</span><span id="line-1266"><span class="sd">        are lists of AcquisitionResult.</span>
+</span><span id="line-1267"><span class="sd">    """</span>
+</span><span id="line-1268">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.joblimit</span><span class="w"> </span><span class="kn">import</span> <span class="n">job_slot</span>
+</span><span id="line-1269">
+</span><span id="line-1270">    <span class="k">if</span> <span class="n">concurrency_key</span> <span class="o">==</span> <span class="s2">"auto"</span><span class="p">:</span>
+</span><span id="line-1271">        <span class="n">concurrency_key</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="line-1272">            <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span> <span class="k">if</span> <span class="n">work_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span id="line-1273">        <span class="p">)</span>
+</span><span id="line-1274">    <span class="n">slot</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="line-1275">        <span class="n">job_slot</span><span class="p">(</span><span class="n">concurrency_key</span><span class="p">,</span> <span class="n">max_concurrent</span><span class="o">=</span><span class="n">max_concurrent_jobs</span><span class="p">)</span>
+</span><span id="line-1276">        <span class="k">if</span> <span class="n">concurrency_key</span>
+</span><span id="line-1277">        <span class="k">else</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">nullcontext</span><span class="p">()</span>
+</span><span id="line-1278">    <span class="p">)</span>
+</span><span id="line-1279">    <span class="k">with</span> <span class="n">slot</span><span class="p">:</span>
+</span><span id="line-1280">        <span class="k">return</span> <span class="n">_acquire_all_references</span><span class="p">(</span>
+</span><span id="line-1281">            <span class="n">references</span><span class="p">,</span>
+</span><span id="line-1282">            <span class="n">download_dir</span><span class="p">,</span>
+</span><span id="line-1283">            <span class="n">work_dir</span><span class="o">=</span><span class="n">work_dir</span><span class="p">,</span>
+</span><span id="line-1284">            <span class="n">log_file</span><span class="o">=</span><span class="n">log_file</span><span class="p">,</span>
+</span><span id="line-1285">            <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span>
+</span><span id="line-1286">            <span class="n">libgen_topics</span><span class="o">=</span><span class="n">libgen_topics</span><span class="p">,</span>
+</span><span id="line-1287">            <span class="n">delay</span><span class="o">=</span><span class="n">delay</span><span class="p">,</span>
+</span><span id="line-1288">            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+</span><span id="line-1289">            <span class="n">convert_to_pdf</span><span class="o">=</span><span class="n">convert_to_pdf</span><span class="p">,</span>
+</span><span id="line-1290">            <span class="n">fetch_fallback</span><span class="o">=</span><span class="n">fetch_fallback</span><span class="p">,</span>
+</span><span id="line-1291">        <span class="p">)</span></div>
 
-</span><span id="line-1339">
-</span><span id="line-1340">
-</span><span id="line-1341"><span class="k">def</span><span class="w"> </span><span class="nf">_write_log</span><span class="p">(</span><span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">):</span>
-</span><span id="line-1342"><span class="w">    </span><span class="sd">"""Write acquisition log as a TSV file for easy parsing."""</span>
-</span><span id="line-1343">    <span class="n">log_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span>
-</span><span id="line-1344">    <span class="n">log_file</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="line-1345">
-</span><span id="line-1346">    <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="line-1347">        <span class="s2">"timestamp"</span><span class="p">,</span>
-</span><span id="line-1348">        <span class="s2">"ref_number"</span><span class="p">,</span>
-</span><span id="line-1349">        <span class="s2">"ref_title"</span><span class="p">,</span>
-</span><span id="line-1350">        <span class="s2">"query"</span><span class="p">,</span>
-</span><span id="line-1351">        <span class="s2">"query_type"</span><span class="p">,</span>
-</span><span id="line-1352">        <span class="s2">"num_results"</span><span class="p">,</span>
-</span><span id="line-1353">        <span class="s2">"matched"</span><span class="p">,</span>
-</span><span id="line-1354">        <span class="s2">"best_score"</span><span class="p">,</span>
-</span><span id="line-1355">        <span class="s2">"best_title"</span><span class="p">,</span>
-</span><span id="line-1356">        <span class="s2">"error"</span><span class="p">,</span>
-</span><span id="line-1357">    <span class="p">]</span>
-</span><span id="line-1358">
-</span><span id="line-1359">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span><span id="line-1360">        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1361">        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">log_entries</span><span class="p">:</span>
-</span><span id="line-1362">            <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="line-1363">            <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
-</span><span id="line-1364">                <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
-</span><span id="line-1365">                <span class="c1"># Escape tabs and newlines</span>
-</span><span id="line-1366">                <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">)</span>
-</span><span id="line-1367">                <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-</span><span id="line-1368">            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1369">
-</span><span id="line-1370">
+</span><span id="line-1292">
+</span><span id="line-1293">
+</span><span id="line-1294"><span class="k">def</span><span class="w"> </span><span class="nf">_acquire_all_references</span><span class="p">(</span>
+</span><span id="line-1295">    <span class="n">references</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+</span><span id="line-1296">    <span class="n">download_dir</span><span class="p">,</span>
+</span><span id="line-1297">    <span class="o">*</span><span class="p">,</span>
+</span><span id="line-1298">    <span class="n">work_dir</span><span class="p">,</span>
+</span><span id="line-1299">    <span class="n">log_file</span><span class="p">,</span>
+</span><span id="line-1300">    <span class="n">strategy</span><span class="p">,</span>
+</span><span id="line-1301">    <span class="n">libgen_topics</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
+</span><span id="line-1302">    <span class="n">delay</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span id="line-1303">    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span id="line-1304">    <span class="n">convert_to_pdf</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span id="line-1305">    <span class="n">fetch_fallback</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span id="line-1306"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+</span><span id="line-1307"><span class="w">    </span><span class="sd">"""The body of :func:`acquire_all_references`, run inside its job slot."""</span>
+</span><span id="line-1308">    <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
+</span><span id="line-1309">    <span class="n">download_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-1310">
+</span><span id="line-1311">    <span class="c1"># Default log file with timestamp</span>
+</span><span id="line-1312">    <span class="k">if</span> <span class="n">log_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">work_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-1313">        <span class="n">ts</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%Y-%m-</span><span class="si">%d</span><span class="s2">_%H%M"</span><span class="p">)</span>
+</span><span id="line-1314">        <span class="n">log_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">work_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ts</span><span class="si">}</span><span class="s2">__acquisition_log.txt"</span>
+</span><span id="line-1315">
+</span><span id="line-1316">    <span class="n">log_entries</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-1317">    <span class="n">successes</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-1318">    <span class="n">failures</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-1319">
+</span><span id="line-1320">    <span class="k">if</span> <span class="n">convert_to_pdf</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+</span><span id="line-1321">        <span class="k">try</span><span class="p">:</span>
+</span><span id="line-1322">            <span class="kn">from</span><span class="w"> </span><span class="nn">pdfdol.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_ebook_convert</span>  <span class="c1"># type: ignore</span>
+</span><span id="line-1323">
+</span><span id="line-1324">            <span class="k">if</span> <span class="n">find_ebook_convert</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-1325">                <span class="nb">print</span><span class="p">(</span>
+</span><span id="line-1326">                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Note: convert_to_pdf=True but Calibre's "</span>
+</span><span id="line-1327">                    <span class="s2">"'ebook-convert' was not found. Install Calibre "</span>
+</span><span id="line-1328">                    <span class="s2">"(https://calibre-ebook.com/download) to enable "</span>
+</span><span id="line-1329">                    <span class="s2">"EPUB/MOBI/DjVu→PDF conversion. Native formats will be "</span>
+</span><span id="line-1330">                    <span class="s2">"kept as-is."</span>
+</span><span id="line-1331">                <span class="p">)</span>
+</span><span id="line-1332">        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span id="line-1333">            <span class="nb">print</span><span class="p">(</span>
+</span><span id="line-1334">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Note: convert_to_pdf=True but pdfdol is not "</span>
+</span><span id="line-1335">                <span class="s2">"available. Install it (`pip install pdfdol`) to enable "</span>
+</span><span id="line-1336">                <span class="s2">"conversion. Native formats will be kept as-is."</span>
+</span><span id="line-1337">            <span class="p">)</span>
+</span><span id="line-1338">
+</span><span id="line-1339">    <span class="c1"># (C) Check for already-downloaded files</span>
+</span><span id="line-1340">    <span class="n">to_acquire</span><span class="p">,</span> <span class="n">already_have</span> <span class="o">=</span> <span class="n">check_existing_downloads</span><span class="p">(</span><span class="n">references</span><span class="p">,</span> <span class="n">download_dir</span><span class="p">)</span>
+</span><span id="line-1341">
+</span><span id="line-1342">    <span class="k">if</span> <span class="n">already_have</span> <span class="ow">and</span> <span class="n">verbose</span><span class="p">:</span>
+</span><span id="line-1343">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Skipping </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">already_have</span><span class="p">)</span><span class="si">}</span><span class="s2"> already-downloaded reference(s):"</span><span class="p">)</span>
+</span><span id="line-1344">        <span class="k">for</span> <span class="n">ref</span><span class="p">,</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="n">already_have</span><span class="p">:</span>
+</span><span id="line-1345">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  [</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">] </span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1346">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"        -&gt; </span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1347">        <span class="nb">print</span><span class="p">(</span><span class="s2">"  (To re-download, rename or move the existing file.)</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1348">
+</span><span id="line-1349">    <span class="c1"># Record already-have as successes</span>
+</span><span id="line-1350">    <span class="k">for</span> <span class="n">ref</span><span class="p">,</span> <span class="n">fpath</span> <span class="ow">in</span> <span class="n">already_have</span><span class="p">:</span>
+</span><span id="line-1351">        <span class="n">successes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+</span><span id="line-1352">            <span class="n">AcquisitionResult</span><span class="p">(</span>
+</span><span id="line-1353">                <span class="n">reference</span><span class="o">=</span><span class="n">ref</span><span class="p">,</span>
+</span><span id="line-1354">                <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="line-1355">                <span class="n">filepath</span><span class="o">=</span><span class="n">fpath</span><span class="p">,</span>
+</span><span id="line-1356">                <span class="n">method</span><span class="o">=</span><span class="s2">"already_exists"</span><span class="p">,</span>
+</span><span id="line-1357">            <span class="p">)</span>
+</span><span id="line-1358">        <span class="p">)</span>
+</span><span id="line-1359">
+</span><span id="line-1360">    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">ref</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">):</span>
+</span><span id="line-1361">        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+</span><span id="line-1362">            <span class="nb">print</span><span class="p">(</span>
+</span><span id="line-1363">                <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">)</span><span class="si">}</span><span class="s2">] Ref [</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">number</span><span class="si">}</span><span class="s2">]: </span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">..."</span>
+</span><span id="line-1364">            <span class="p">)</span>
+</span><span id="line-1365">
+</span><span id="line-1366">        <span class="n">result</span> <span class="o">=</span> <span class="n">acquire_reference</span><span class="p">(</span>
+</span><span id="line-1367">            <span class="n">ref</span><span class="p">,</span>
+</span><span id="line-1368">            <span class="n">download_dir</span><span class="p">,</span>
+</span><span id="line-1369">            <span class="n">log_entries</span><span class="o">=</span><span class="n">log_entries</span><span class="p">,</span>
+</span><span id="line-1370">            <span class="n">strategy</span><span class="o">=</span><span class="n">strategy</span><span class="p">,</span>
+</span><span id="line-1371">            <span class="n">libgen_topics</span><span class="o">=</span><span class="n">libgen_topics</span><span class="p">,</span>
+</span><span id="line-1372">            <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+</span><span id="line-1373">            <span class="n">convert_to_pdf</span><span class="o">=</span><span class="n">convert_to_pdf</span><span class="p">,</span>
+</span><span id="line-1374">            <span class="n">fetch_fallback</span><span class="o">=</span><span class="n">fetch_fallback</span><span class="p">,</span>
+</span><span id="line-1375">        <span class="p">)</span>
+</span><span id="line-1376">
+</span><span id="line-1377">        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+</span><span id="line-1378">            <span class="n">successes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="line-1379">            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+</span><span id="line-1380">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> SUCCESS (</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2">) -&gt; </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">filepath</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1381">        <span class="k">else</span><span class="p">:</span>
+</span><span id="line-1382">            <span class="n">failures</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="line-1383">            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+</span><span id="line-1384">                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> FAILED: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1385">
+</span><span id="line-1386">        <span class="c1"># Rate limit between libgen operations</span>
+</span><span id="line-1387">        <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">to_acquire</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">delay</span><span class="p">:</span>
+</span><span id="line-1388">            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">delay</span><span class="p">)</span>
+</span><span id="line-1389">
+</span><span id="line-1390">    <span class="c1"># Write log</span>
+</span><span id="line-1391">    <span class="k">if</span> <span class="n">log_file</span><span class="p">:</span>
+</span><span id="line-1392">        <span class="n">_write_log</span><span class="p">(</span><span class="n">log_entries</span><span class="p">,</span> <span class="n">log_file</span><span class="p">)</span>
+</span><span id="line-1393">
+</span><span id="line-1394">    <span class="k">return</span> <span class="n">successes</span><span class="p">,</span> <span class="n">failures</span><span class="p">,</span> <span class="n">log_entries</span>
+</span><span id="line-1395">
+</span><span id="line-1396">
+</span><span id="line-1397"><span class="k">def</span><span class="w"> </span><span class="nf">_write_log</span><span class="p">(</span><span class="n">log_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">):</span>
+</span><span id="line-1398"><span class="w">    </span><span class="sd">"""Write acquisition log as a TSV file for easy parsing."""</span>
+</span><span id="line-1399">    <span class="n">log_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">log_file</span><span class="p">)</span>
+</span><span id="line-1400">    <span class="n">log_file</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-1401">
+</span><span id="line-1402">    <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="line-1403">        <span class="s2">"timestamp"</span><span class="p">,</span>
+</span><span id="line-1404">        <span class="s2">"ref_number"</span><span class="p">,</span>
+</span><span id="line-1405">        <span class="s2">"ref_title"</span><span class="p">,</span>
+</span><span id="line-1406">        <span class="s2">"query"</span><span class="p">,</span>
+</span><span id="line-1407">        <span class="s2">"query_type"</span><span class="p">,</span>
+</span><span id="line-1408">        <span class="s2">"num_results"</span><span class="p">,</span>
+</span><span id="line-1409">        <span class="s2">"matched"</span><span class="p">,</span>
+</span><span id="line-1410">        <span class="s2">"best_score"</span><span class="p">,</span>
+</span><span id="line-1411">        <span class="s2">"best_title"</span><span class="p">,</span>
+</span><span id="line-1412">        <span class="s2">"error"</span><span class="p">,</span>
+</span><span id="line-1413">    <span class="p">]</span>
+</span><span id="line-1414">
+</span><span id="line-1415">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="line-1416">        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1417">        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">log_entries</span><span class="p">:</span>
+</span><span id="line-1418">            <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-1419">            <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">headers</span><span class="p">:</span>
+</span><span id="line-1420">                <span class="n">val</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="s2">""</span><span class="p">))</span>
+</span><span id="line-1421">                <span class="c1"># Escape tabs and newlines</span>
+</span><span id="line-1422">                <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">)</span>
+</span><span id="line-1423">                <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+</span><span id="line-1424">            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"</span><span class="se">\t</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">+</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1425">
+</span><span id="line-1426">
 <div class="viewcode-block" id="write_references_md">
 <a class="viewcode-back" href="../../_autosummary/citeget.acquire_references.html#citeget.write_references_md">[docs]</a>
-</span><span id="line-1371"><span class="k">def</span><span class="w"> </span><span class="nf">write_references_md</span><span class="p">(</span>
-</span><span id="line-1372">    <span class="n">successes</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
-</span><span id="line-1373">    <span class="n">download_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
-</span><span id="line-1374">    <span class="n">output_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
-</span><span id="line-1375"><span class="p">):</span>
-</span><span id="line-1376"><span class="w">    </span><span class="sd">"""Write a references.md with hyperlinks to local downloaded files."""</span>
-</span><span id="line-1377">    <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">quote</span>
-</span><span id="line-1378">
-</span><span id="line-1379">    <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
-</span><span id="line-1380">    <span class="n">output_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
-</span><span id="line-1381">
-</span><span id="line-1382">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span><span id="line-1383">        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"# Acquired References</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1384">        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">successes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
-</span><span id="line-1385">            <span class="n">ref</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">reference</span>
-</span><span id="line-1386">            <span class="n">filepath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">filepath</span> <span class="k">else</span> <span class="kc">None</span>
-</span><span id="line-1387">            <span class="k">if</span> <span class="n">filepath</span> <span class="ow">and</span> <span class="n">filepath</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span id="line-1388">                <span class="c1"># Relative path from output_file's directory, URL-encoded</span>
-</span><span id="line-1389">                <span class="k">try</span><span class="p">:</span>
-</span><span id="line-1390">                    <span class="n">rel</span> <span class="o">=</span> <span class="n">filepath</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">output_file</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
-</span><span id="line-1391">                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-</span><span id="line-1392">                    <span class="n">rel</span> <span class="o">=</span> <span class="n">filepath</span>
-</span><span id="line-1393">                <span class="c1"># Use ./ prefix and URL-encode for markdown link compatibility</span>
-</span><span id="line-1394">                <span class="n">encoded</span> <span class="o">=</span> <span class="s2">"/"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">quote</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">rel</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
-</span><span id="line-1395">                <span class="n">link</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"./</span><span class="si">{</span><span class="n">encoded</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"./"</span><span class="p">)</span> <span class="k">else</span> <span class="n">encoded</span>
-</span><span id="line-1396">                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">raw</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1397">                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - **Local file**: [</span><span class="si">{</span><span class="n">filepath</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">](</span><span class="si">{</span><span class="n">link</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1398">                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - Method: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1399">            <span class="k">else</span><span class="p">:</span>
-</span><span id="line-1400">                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">raw</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1401">                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - Method: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2"> (file missing)</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span></div>
+</span><span id="line-1427"><span class="k">def</span><span class="w"> </span><span class="nf">write_references_md</span><span class="p">(</span>
+</span><span id="line-1428">    <span class="n">successes</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+</span><span id="line-1429">    <span class="n">download_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+</span><span id="line-1430">    <span class="n">output_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+</span><span id="line-1431"><span class="p">):</span>
+</span><span id="line-1432"><span class="w">    </span><span class="sd">"""Write a references.md with hyperlinks to local downloaded files."""</span>
+</span><span id="line-1433">    <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">quote</span>
+</span><span id="line-1434">
+</span><span id="line-1435">    <span class="n">download_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">download_dir</span><span class="p">)</span>
+</span><span id="line-1436">    <span class="n">output_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+</span><span id="line-1437">
+</span><span id="line-1438">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="line-1439">        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"# Acquired References</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1440">        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">successes</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+</span><span id="line-1441">            <span class="n">ref</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">reference</span>
+</span><span id="line-1442">            <span class="n">filepath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">filepath</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span id="line-1443">            <span class="k">if</span> <span class="n">filepath</span> <span class="ow">and</span> <span class="n">filepath</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+</span><span id="line-1444">                <span class="c1"># Relative path from output_file's directory, URL-encoded</span>
+</span><span id="line-1445">                <span class="k">try</span><span class="p">:</span>
+</span><span id="line-1446">                    <span class="n">rel</span> <span class="o">=</span> <span class="n">filepath</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">output_file</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+</span><span id="line-1447">                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+</span><span id="line-1448">                    <span class="n">rel</span> <span class="o">=</span> <span class="n">filepath</span>
+</span><span id="line-1449">                <span class="c1"># Use ./ prefix and URL-encode for markdown link compatibility</span>
+</span><span id="line-1450">                <span class="n">encoded</span> <span class="o">=</span> <span class="s2">"/"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">quote</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">rel</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+</span><span id="line-1451">                <span class="n">link</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"./</span><span class="si">{</span><span class="n">encoded</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">str</span><span class="p">(</span><span class="n">rel</span><span class="p">)</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"./"</span><span class="p">)</span> <span class="k">else</span> <span class="n">encoded</span>
+</span><span id="line-1452">                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">raw</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1453">                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - **Local file**: [</span><span class="si">{</span><span class="n">filepath</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">](</span><span class="si">{</span><span class="n">link</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1454">                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - Method: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1455">            <span class="k">else</span><span class="p">:</span>
+</span><span id="line-1456">                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">raw</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1457">                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - Method: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2"> (file missing)</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span></div>
 
-</span><span id="line-1402">
-</span><span id="line-1403">
+</span><span id="line-1458">
+</span><span id="line-1459">
 <div class="viewcode-block" id="write_missed_references_md">
 <a class="viewcode-back" href="../../_autosummary/citeget.acquire_references.html#citeget.write_missed_references_md">[docs]</a>
-</span><span id="line-1404"><span class="k">def</span><span class="w"> </span><span class="nf">write_missed_references_md</span><span class="p">(</span>
-</span><span id="line-1405">    <span class="n">failures</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
-</span><span id="line-1406">    <span class="n">output_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
-</span><span id="line-1407"><span class="p">):</span>
-</span><span id="line-1408"><span class="w">    </span><span class="sd">"""Write a markdown file listing references that could not be acquired."""</span>
-</span><span id="line-1409">    <span class="n">output_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
-</span><span id="line-1410">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span><span id="line-1411">        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"# Missed References</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1412">        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Generated: </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S'</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1413">        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Total missed: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">failures</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1414">        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">failures</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
-</span><span id="line-1415">            <span class="n">ref</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">reference</span>
-</span><span id="line-1416">            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">raw</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-1417">            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - Notes: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span></div>
+</span><span id="line-1460"><span class="k">def</span><span class="w"> </span><span class="nf">write_missed_references_md</span><span class="p">(</span>
+</span><span id="line-1461">    <span class="n">failures</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+</span><span id="line-1462">    <span class="n">output_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Path</span><span class="p">,</span>
+</span><span id="line-1463"><span class="p">):</span>
+</span><span id="line-1464"><span class="w">    </span><span class="sd">"""Write a markdown file listing references that could not be acquired."""</span>
+</span><span id="line-1465">    <span class="n">output_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_file</span><span class="p">)</span>
+</span><span id="line-1466">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="line-1467">        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">"# Missed References</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1468">        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Generated: </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">'%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S'</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1469">        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Total missed: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">failures</span><span class="p">)</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1470">        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">failures</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">reference</span><span class="o">.</span><span class="n">number</span><span class="p">):</span>
+</span><span id="line-1471">            <span class="n">ref</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">reference</span>
+</span><span id="line-1472">            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">ref</span><span class="o">.</span><span class="n">raw</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-1473">            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  - Notes: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">notes</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">)</span></div>
 
 </span></code></pre></div>
     </div></div>
@@ -1632,7 +1690,7 @@
 </footer>
     </div>
     
-    <script src="../../_static/documentation_options.js?v=29c81e07"></script>
+    <script src="../../_static/documentation_options.js?v=1e30946d"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

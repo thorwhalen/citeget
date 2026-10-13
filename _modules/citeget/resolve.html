@@ -118,7 +118,9 @@
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.cli.html">citeget.cli</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.core.html">citeget.core</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.extract.html">citeget.extract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.joblimit.html">citeget.joblimit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.names.html">citeget.names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.netguard.html">citeget.netguard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.rank.html">citeget.rank</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.resolve.html">citeget.resolve</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.validate.html">citeget.validate</a></li>
@@ -457,10 +459,10 @@
 </span><span id="line-241">
 </span><span id="line-242"><span class="k">def</span><span class="w"> </span><span class="nf">_pdf_downloader</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 </span><span id="line-243"><span class="w">    </span><span class="sd">"""Download *url*, validate as PDF (``%PDF`` magic or content-type)."""</span>
-</span><span id="line-244">    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+</span><span id="line-244">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">netguard</span>
 </span><span id="line-245">
 </span><span id="line-246">    <span class="k">try</span><span class="p">:</span>
-</span><span id="line-247">        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">_DEFAULT_HEADERS</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-247">        <span class="n">resp</span> <span class="o">=</span> <span class="n">netguard</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">_DEFAULT_HEADERS</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="line-248">        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
 </span><span id="line-249">            <span class="k">return</span> <span class="kc">False</span>
 </span><span id="line-250">
@@ -486,10 +488,10 @@
 </span><span id="line-270">
 </span><span id="line-271"><span class="k">def</span><span class="w"> </span><span class="nf">_any_downloader</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 </span><span id="line-272"><span class="w">    </span><span class="sd">"""Download *url* without format validation (HTML, PDF, anything)."""</span>
-</span><span id="line-273">    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+</span><span id="line-273">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">netguard</span>
 </span><span id="line-274">
 </span><span id="line-275">    <span class="k">try</span><span class="p">:</span>
-</span><span id="line-276">        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">_DEFAULT_HEADERS</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-276">        <span class="n">resp</span> <span class="o">=</span> <span class="n">netguard</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">_DEFAULT_HEADERS</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span><span id="line-277">        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
 </span><span id="line-278">            <span class="k">return</span> <span class="kc">False</span>
 </span><span id="line-279">
@@ -640,7 +642,7 @@
 </span><span id="line-421">
 </span><span id="line-422"><span class="k">def</span><span class="w"> </span><span class="nf">_lookup_doi_crossref</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 </span><span id="line-423"><span class="w">    </span><span class="sd">"""Look up a DOI via Crossref text search.  Returns DOI string or ``""``."""</span>
-</span><span id="line-424">    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+</span><span id="line-424">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">netguard</span>
 </span><span id="line-425">
 </span><span id="line-426">    <span class="n">clean_title</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"[</span><span class="se">\"</span><span class="s2">':;,.!?()</span><span class="si">{}</span><span class="s2">[\]—–\-]"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">,</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
 </span><span id="line-427">    <span class="n">clean_title</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\s+"</span><span class="p">,</span> <span class="s2">" "</span><span class="p">,</span> <span class="n">clean_title</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
@@ -655,7 +657,7 @@
 </span><span id="line-436">        <span class="k">return</span> <span class="s2">""</span>
 </span><span id="line-437">
 </span><span id="line-438">    <span class="k">try</span><span class="p">:</span>
-</span><span id="line-439">        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+</span><span id="line-439">        <span class="n">resp</span> <span class="o">=</span> <span class="n">netguard</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
 </span><span id="line-440">            <span class="sa">f</span><span class="s2">"https://api.crossref.org/works?query=</span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&amp;rows=3"</span><span class="p">,</span>
 </span><span id="line-441">            <span class="n">headers</span><span class="o">=</span><span class="n">_DEFAULT_HEADERS</span><span class="p">,</span>
 </span><span id="line-442">            <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
@@ -680,10 +682,10 @@
 </span><span id="line-461"><span class="w">    </span><span class="sd">"""Query Unpaywall for an open-access PDF URL.  Returns URL or ``""``."""</span>
 </span><span id="line-462">    <span class="k">if</span> <span class="ow">not</span> <span class="n">email</span><span class="p">:</span>
 </span><span id="line-463">        <span class="k">return</span> <span class="s2">""</span>
-</span><span id="line-464">    <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+</span><span id="line-464">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">netguard</span>
 </span><span id="line-465">
 </span><span id="line-466">    <span class="k">try</span><span class="p">:</span>
-</span><span id="line-467">        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+</span><span id="line-467">        <span class="n">resp</span> <span class="o">=</span> <span class="n">netguard</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
 </span><span id="line-468">            <span class="sa">f</span><span class="s2">"https://api.unpaywall.org/v2/</span><span class="si">{</span><span class="n">doi</span><span class="si">}</span><span class="s2">?email=</span><span class="si">{</span><span class="n">email</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
 </span><span id="line-469">            <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
 </span><span id="line-470">        <span class="p">)</span>
@@ -733,7 +735,7 @@
 </span><span id="line-509"><span class="w">    </span><span class="sd">"""Search the arxiv API by author + title, return PDF URLs."""</span>
 </span><span id="line-510">
 </span><span id="line-511">    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span id="line-512">        <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+</span><span id="line-512">        <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">netguard</span>
 </span><span id="line-513">        <span class="kn">from</span><span class="w"> </span><span class="nn">xml.etree</span><span class="w"> </span><span class="kn">import</span> <span class="n">ElementTree</span> <span class="k">as</span> <span class="n">ET</span>
 </span><span id="line-514">
 </span><span id="line-515">        <span class="n">surname</span> <span class="o">=</span> <span class="s2">""</span>
@@ -760,7 +762,7 @@
 </span><span id="line-536">        <span class="p">)</span>
 </span><span id="line-537">
 </span><span id="line-538">        <span class="k">try</span><span class="p">:</span>
-</span><span id="line-539">            <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+</span><span id="line-539">            <span class="n">resp</span> <span class="o">=</span> <span class="n">netguard</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
 </span><span id="line-540">            <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>
 </span><span id="line-541">                <span class="k">return</span> <span class="p">[]</span>
 </span><span id="line-542">            <span class="n">root</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
@@ -803,7 +805,7 @@
 </span><span id="line-576"><span class="w">    </span><span class="sd">"""Query the Semantic Scholar API for open-access PDF links."""</span>
 </span><span id="line-577">
 </span><span id="line-578">    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Reference</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span id="line-579">        <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
+</span><span id="line-579">        <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">netguard</span>
 </span><span id="line-580">
 </span><span id="line-581">        <span class="k">if</span> <span class="ow">not</span> <span class="n">ref</span><span class="o">.</span><span class="n">title</span><span class="p">:</span>
 </span><span id="line-582">            <span class="k">return</span> <span class="p">[]</span>
@@ -814,7 +816,7 @@
 </span><span id="line-587">                <span class="s2">"limit"</span><span class="p">:</span> <span class="s2">"3"</span><span class="p">,</span>
 </span><span id="line-588">                <span class="s2">"fields"</span><span class="p">:</span> <span class="s2">"openAccessPdf,title"</span><span class="p">,</span>
 </span><span id="line-589">            <span class="p">}</span>
-</span><span id="line-590">            <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+</span><span id="line-590">            <span class="n">resp</span> <span class="o">=</span> <span class="n">netguard</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
 </span><span id="line-591">                <span class="s2">"https://api.semanticscholar.org/graph/v1/paper/search"</span><span class="p">,</span>
 </span><span id="line-592">                <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
 </span><span id="line-593">                <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
@@ -1028,7 +1030,7 @@
 </footer>
     </div>
     
-    <script src="../../_static/documentation_options.js?v=29c81e07"></script>
+    <script src="../../_static/documentation_options.js?v=1e30946d"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

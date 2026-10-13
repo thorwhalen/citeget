@@ -1,0 +1,25 @@
+citeget.joblimit
+================
+
+.. automodule:: citeget.joblimit
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DEFAULT_MAX_CONCURRENT_JOBS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      job_slot
+      max_concurrent_jobs
+   
+   .. rubric:: Exceptions
+
+   .. autosummary::
+   
+      JobLimitExceeded
+   

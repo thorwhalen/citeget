@@ -47,7 +47,7 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A parsed academic reference.
 
-### citeget.acquire_references.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True)
+### citeget.acquire_references.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True, concurrency_key='auto', max_concurrent_jobs=None)
 
 Acquire files for a list of references.
 
@@ -80,6 +80,19 @@ non-PDF is never renamed to `.pdf`.
   * **fetch_fallback** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If True (default), fall back to fetching `ref.url`
     as Markdown when all academic strategies fail (catches non-paper
     references like blog posts, docs, product pages).
+  * **concurrency_key** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Who this run counts against for the concurrent-run
+    cap (see [`citeget.joblimit`](citeget.joblimit.html.md#module-citeget.joblimit)). `"auto"` (default) uses the
+    parent of `work_dir`, so runs whose work dirs sit side by side
+    (a hosted app’s per-user `jobs/` directory) share one cap; with
+    no `work_dir` there is no cap. Pass a string (a user id) to
+    choose the key, or `None` to switch the cap off.
+  * **max_concurrent_jobs** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – The cap for that key. Defaults to the
+    `CITEGET_MAX_CONCURRENT_JOBS` environment variable, else
+    [`citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS`](citeget.joblimit.html.md#citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS); `0` means
+    no cap.
+* **Raises:**
+  [**JobLimitExceeded**](citeget.joblimit.html.md#citeget.joblimit.JobLimitExceeded) – the key already has
+      `max_concurrent_jobs` runs in progress. Raised before any work.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
 * **Returns:**

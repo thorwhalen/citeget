@@ -87,7 +87,9 @@
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.cli.html">citeget.cli</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.core.html">citeget.core</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.extract.html">citeget.extract</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.joblimit.html">citeget.joblimit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.names.html">citeget.names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.netguard.html">citeget.netguard</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.rank.html">citeget.rank</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.resolve.html">citeget.resolve</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.validate.html">citeget.validate</a></li>
@@ -420,6 +422,16 @@ IEEE TSE, ACM Queue.</p>
 </span></code></pre></div>
 </div>
 </section>
+<section id="network-safety-hosted-use">
+<h2>Network safety (hosted use)<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#network-safety-hosted-use" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#network-safety-hosted-use'">¶</a></h2>
+<p>citeget fetches URLs that come from its input: a reference’s URL, a page to save, a link found inside a page. Every one of those requests goes through <code class="docutils literal notranslate"><span class="pre">citeget.netguard</span></code>, which refuses anything that is not on the public internet: loopback, private (RFC 1918, <code class="docutils literal notranslate"><span class="pre">fc00::/7</span></code>), link-local (<code class="docutils literal notranslate"><span class="pre">169.254.0.0/16</span></code>, <code class="docutils literal notranslate"><span class="pre">fe80::/10</span></code>, which holds the cloud metadata service), unspecified and multicast addresses, including when they are spelled oddly (<code class="docutils literal notranslate"><span class="pre">2130706433</span></code>, <code class="docutils literal notranslate"><span class="pre">0x7f.1</span></code>) or wrapped in IPv6 (<code class="docutils literal notranslate"><span class="pre">::ffff:127.0.0.1</span></code>). Only <code class="docutils literal notranslate"><span class="pre">http</span></code> and <code class="docutils literal notranslate"><span class="pre">https</span></code> are allowed. The check is made on the address the socket actually connects to, on every redirect hop, so neither a redirect nor a rebinding DNS server can get around it. Environment proxies are ignored while the guard is on. HTML→PDF rendering never hands <code class="docutils literal notranslate"><span class="pre">wkhtmltopdf</span></code> a URL: the page is fetched through the guard and rendered offline, as text.</p>
+<p>On a desktop, to let citeget fetch from your own LAN or <code class="docutils literal notranslate"><span class="pre">localhost</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nb">export</span><span class="w"> </span><span class="nv">CITEGET_ALLOW_PRIVATE_NETWORK</span><span class="o">=</span><span class="m">1</span>
+</span></code></pre></div>
+</div>
+<p>A refused URL raises <code class="docutils literal notranslate"><span class="pre">citeget.netguard.UnsafeURLError</span></code>; in <code class="docutils literal notranslate"><span class="pre">fetch</span></code> it shows up as a failed result whose <code class="docutils literal notranslate"><span class="pre">error</span></code> starts with <code class="docutils literal notranslate"><span class="pre">Refused</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">acquire_all_references</span></code> also caps concurrent runs per owner (default 2; <code class="docutils literal notranslate"><span class="pre">CITEGET_MAX_CONCURRENT_JOBS</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code> for no cap). By default, runs whose <code class="docutils literal notranslate"><span class="pre">work_dir</span></code>s share a parent directory share the cap, which is one cap per user in a hosted app that keeps each user’s jobs side by side. Pass <code class="docutils literal notranslate"><span class="pre">concurrency_key=</span></code> to choose the owner explicitly, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to switch the cap off. Over the cap, the run raises <code class="docutils literal notranslate"><span class="pre">citeget.joblimit.JobLimitExceeded</span></code> before doing any work.</p>
+</section>
 <section id="mirrors">
 <h2>Mirrors<a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#mirrors" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#mirrors'">¶</a></h2>
 <p>Libgen mirror domains rotate, so the shipped default list goes stale on its own
@@ -465,7 +477,7 @@ audit what was tried, what matched, and what failed.</p>
 
 </section>
 </section>
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-09-22 13:26 UTC from <a href="https://github.com/thorwhalen/citeget/commit/c1c5c860b07bf112304bdddd390394fa16882aaf">c1c5c86</a> (main) · citeget 0.2.11 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 11:26 UTC from <a href="https://github.com/thorwhalen/citeget/commit/4e92a3a76724033611c618412d6b0f2838742c85">4e92a3a</a> (main) · citeget 0.2.12 · <a href="about-this-build.html">about this build</a></p>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
@@ -481,6 +493,7 @@ audit what was tried, what matched, and what failed.</p>
 <li><a :data-current="activeSection === '#acquisition-strategy'" class="reference internal" href="#acquisition-strategy">Acquisition strategy</a></li>
 <li><a :data-current="activeSection === '#general-purpose-fetch'" class="reference internal" href="#general-purpose-fetch">General-purpose fetch</a></li>
 <li><a :data-current="activeSection === '#article-publication-toolkit'" class="reference internal" href="#article-publication-toolkit">Article publication toolkit</a></li>
+<li><a :data-current="activeSection === '#network-safety-hosted-use'" class="reference internal" href="#network-safety-hosted-use">Network safety (hosted use)</a></li>
 <li><a :data-current="activeSection === '#mirrors'" class="reference internal" href="#mirrors">Mirrors</a><ul>
 <li><a :data-current="activeSection === '#empty-results-are-not-always-real'" class="reference internal" href="#empty-results-are-not-always-real">Empty results are not always real</a></li>
 </ul>
@@ -499,7 +512,7 @@ audit what was tried, what matched, and what failed.</p>
 </div>
 </footer>
 </div>
-<script src="_static/documentation_options.js?v=29c81e07"></script>
+<script src="_static/documentation_options.js?v=1e30946d"></script>
 <script src="_static/doctools.js?v=fd6eb6e6"></script>
 <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
 <script src="_static/clipboard.min.js?v=a7894cd8"></script>

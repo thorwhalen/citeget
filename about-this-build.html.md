@@ -2,7 +2,7 @@
 
 # About this build
 
-This documentation was built on **2026-09-22 13:26 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/c1c5c860b07bf112304bdddd390394fa16882aaf"><code>c1c5c86</code></a> on branch <code>main</code>, for **citeget 0.2.11** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 11:26 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/4e92a3a76724033611c618412d6b0f2838742c85"><code>4e92a3a</code></a> on branch <code>main</code>, for **citeget 0.2.12** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -11,9 +11,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/c1c5c860b07bf112304bdddd390394fa16882aaf"><code>c1c5c860b07bf112304bdddd390394fa16882aaf</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/4e92a3a76724033611c618412d6b0f2838742c85"><code>4e92a3a76724033611c618412d6b0f2838742c85</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.2.11</code>                                                                                                                                       |
+| Tags at this commit | <code>0.2.12</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/citeget</code>                                                                                                        |
 
@@ -22,18 +22,18 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/citeget</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/35733235312">35733235312</a>   |
+| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/38389955955">38389955955</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>28a1bbc2670ceac16bcb1a773ffbf53831dbf8b6</code> (in the history of the built commit) |
+| Event commit | <code>cf8e288c18b91c5c47257239f92dc90eb86bc1e3</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.12  |
+| epythet  | 0.2.15  |
 | Sphinx   | 9.1.0   |
 | docutils | 0.22.4  |
-| Python   | 3.12.14 |
+| Python   | 3.12.15 |
 
 ## Configuration as resolved
 
@@ -49,14 +49,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/citeget/0.2.11/">0.2.11</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/citeget/0.2.12/">0.2.12</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/citeget && cd citeget
-git checkout c1c5c860b07bf112304bdddd390394fa16882aaf
-pip install "epythet==0.2.12"
+git checkout 4e92a3a76724033611c618412d6b0f2838742c85
+pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

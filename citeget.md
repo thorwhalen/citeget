@@ -1,4 +1,4 @@
-> built 2026-09-22 13:26 UTC from c1c5c86 (main) · citeget 0.2.11. Details: build_info.json
+> built 2026-10-13 11:26 UTC from 4e92a3a (main) · citeget 0.2.12. Details: build_info.json
 
 # index.html.md
 
@@ -324,6 +324,20 @@ python -m citeget.article_pub.scripts.word_count draft.md --breakdown
 python -m citeget.article_pub.scripts.extract_references draft.md
 ```
 
+## Network safety (hosted use)
+
+citeget fetches URLs that come from its input: a reference’s URL, a page to save, a link found inside a page. Every one of those requests goes through `citeget.netguard`, which refuses anything that is not on the public internet: loopback, private (RFC 1918, `fc00::/7`), link-local (`169.254.0.0/16`, `fe80::/10`, which holds the cloud metadata service), unspecified and multicast addresses, including when they are spelled oddly (`2130706433`, `0x7f.1`) or wrapped in IPv6 (`::ffff:127.0.0.1`). Only `http` and `https` are allowed. The check is made on the address the socket actually connects to, on every redirect hop, so neither a redirect nor a rebinding DNS server can get around it. Environment proxies are ignored while the guard is on. HTML→PDF rendering never hands `wkhtmltopdf` a URL: the page is fetched through the guard and rendered offline, as text.
+
+On a desktop, to let citeget fetch from your own LAN or `localhost`:
+
+```bash
+export CITEGET_ALLOW_PRIVATE_NETWORK=1
+```
+
+A refused URL raises `citeget.netguard.UnsafeURLError`; in `fetch` it shows up as a failed result whose `error` starts with `Refused`.
+
+`acquire_all_references` also caps concurrent runs per owner (default 2; `CITEGET_MAX_CONCURRENT_JOBS`, `0` for no cap). By default, runs whose `work_dir`s share a parent directory share the cap, which is one cap per user in a hosted app that keeps each user’s jobs side by side. Pass `concurrency_key=` to choose the owner explicitly, or `None` to switch the cap off. Over the cap, the run raises `citeget.joblimit.JobLimitExceeded` before doing any work.
+
 ## Mirrors
 
 Libgen mirror domains rotate, so the shipped default list goes stale on its own
@@ -427,7 +441,7 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A parsed academic reference.
 
-### citeget.acquire_references.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True)
+### citeget.acquire_references.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True, concurrency_key='auto', max_concurrent_jobs=None)
 
 Acquire files for a list of references.
 
@@ -460,6 +474,19 @@ non-PDF is never renamed to `.pdf`.
   * **fetch_fallback** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If True (default), fall back to fetching `ref.url`
     as Markdown when all academic strategies fail (catches non-paper
     references like blog posts, docs, product pages).
+  * **concurrency_key** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Who this run counts against for the concurrent-run
+    cap (see [`citeget.joblimit`](_autosummary/citeget.joblimit.html.md#module-citeget.joblimit)). `"auto"` (default) uses the
+    parent of `work_dir`, so runs whose work dirs sit side by side
+    (a hosted app’s per-user `jobs/` directory) share one cap; with
+    no `work_dir` there is no cap. Pass a string (a user id) to
+    choose the key, or `None` to switch the cap off.
+  * **max_concurrent_jobs** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – The cap for that key. Defaults to the
+    `CITEGET_MAX_CONCURRENT_JOBS` environment variable, else
+    [`citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS`](_autosummary/citeget.joblimit.html.md#citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS); `0` means
+    no cap.
+* **Raises:**
+  [**JobLimitExceeded**](_autosummary/citeget.joblimit.html.md#citeget.joblimit.JobLimitExceeded) – the key already has
+      `max_concurrent_jobs` runs in progress. Raised before any work.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
 * **Returns:**
@@ -1310,7 +1337,8 @@ Topics (for libgen search):
 | [`extract_urls_from_text`](_autosummary/citeget.html.md#citeget.extract_urls_from_text)(text)                       | Parse URLs from prose / markdown / reference-style citations.                                                |
 | [`infer_filename`](_autosummary/citeget.html.md#citeget.infer_filename)(entry, ext)                         | Infer a filename for *entry*, ending in `.{ext}`.                                                            |
 | [`html_to_markdown`](_autosummary/citeget.html.md#citeget.html_to_markdown)(html, \*[, source_url])           | Convert *html* to clean Markdown.                                                                            |
-| [`html_to_pdf`](_autosummary/citeget.html.md#citeget.html_to_pdf)(url, \*[, html])                       | Render *url* (or *html* fallback) to PDF bytes via pdfkit/wkhtmltopdf.                                       |
+| [`html_to_pdf`](_autosummary/citeget.html.md#citeget.html_to_pdf)(url, \*[, html, policy])               | Render *url* to PDF bytes via pdfkit/wkhtmltopdf.                                                            |
+| [`job_slot`](_autosummary/citeget.html.md#citeget.job_slot)(key, \*[, max_concurrent, lock_dir])      | Hold one of *key*'s concurrency slots for the duration of the block.                                         |
 
 ### Classes
 
@@ -1325,12 +1353,15 @@ Topics (for libgen search):
 | [`AcquisitionResult`](_autosummary/citeget.html.md#citeget.AcquisitionResult)(reference[, success, ...])      | Result of trying to acquire a reference.                             |
 | [`FetchResult`](_autosummary/citeget.html.md#citeget.FetchResult)(url, status[, output_file, ...])      | Outcome of a single URL fetch.                                       |
 | [`UrlEntry`](_autosummary/citeget.html.md#citeget.UrlEntry)(url[, title, ref])                       | A URL with optional context preserved for filename inference.        |
+| [`NetPolicy`](_autosummary/citeget.html.md#citeget.NetPolicy)([allow_private, allowed_schemes, ...])  | What outbound requests are allowed to reach.                         |
 
 ### Exceptions
 
 | [`MirrorUnreachableError`](_autosummary/citeget.html.md#citeget.MirrorUnreachableError)   | Raised when no libgen mirror could be reached.                            |
 |---------------------------------------------------------------------------|---------------------------------------------------------------------------|
 | [`InvalidDownloadError`](_autosummary/citeget.html.md#citeget.InvalidDownloadError)     | Raised when downloaded bytes are not a usable copy of the requested file. |
+| [`UnsafeURLError`](_autosummary/citeget.html.md#citeget.UnsafeURLError)           | A URL, or an address it resolved to, is outside what the policy allows.   |
+| [`JobLimitExceeded`](_autosummary/citeget.html.md#citeget.JobLimitExceeded)         | The owner already has as many acquisitions running as allowed.            |
 
 ### *class* citeget.AcquisitionResult(reference, success=False, filepath=None, method='', queries_tried=<factory>, notes='')
 
@@ -1360,6 +1391,12 @@ Bases: [`RuntimeError`](https://docs.python.org/3/builtins/exceptions.html#Runti
 
 Raised when downloaded bytes are not a usable copy of the requested file.
 
+### *exception* citeget.JobLimitExceeded
+
+Bases: [`RuntimeError`](https://docs.python.org/3/builtins/exceptions.html#RuntimeError)
+
+The owner already has as many acquisitions running as allowed.
+
 ### *exception* citeget.MirrorUnreachableError
 
 Bases: [`RuntimeError`](https://docs.python.org/3/builtins/exceptions.html#RuntimeError)
@@ -1369,6 +1406,19 @@ Raised when no libgen mirror could be reached.
 Distinct from an empty result set: this means every candidate mirror
 failed to connect (down, moved, or blocked by local DNS/network), so the
 caller gets an actionable message instead of a raw Playwright stack trace.
+
+### *class* citeget.NetPolicy(allow_private=False, allowed_schemes=('http', 'https'), max_redirects=10)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+What outbound requests are allowed to reach.
+
+* **Parameters:**
+  * **allow_private** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Allow loopback / private / link-local destinations.
+    Off by default; this is what a hosted deployment relies on.
+  * **allowed_schemes** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – URL schemes allowed on the first request and on every
+    redirect hop.
+  * **max_redirects** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Redirect hops followed before giving up.
 
 ### *class* citeget.Reference(number, raw, title='', authors='', year='', venue='', url='', doi='', source_text='')
 
@@ -1400,6 +1450,15 @@ Plausibility bounds for a real book file.
 `min_pdf_bytes` is deliberately far above `min_bytes`: a landing-page
 “download” stub is typically a valid but nearly empty PDF, whereas a short
 epub of a genuine book can legitimately be ~100 kB.
+
+### *exception* citeget.UnsafeURLError
+
+Bases: [`ValueError`](https://docs.python.org/3/builtins/exceptions.html#ValueError)
+
+A URL, or an address it resolved to, is outside what the policy allows.
+
+A `ValueError` rather than a `requests` exception on purpose: urllib3
+retries and re-wraps `OSError` subclasses, which would bury the reason.
 
 ### *class* citeget.UrlEntry(url, title=None, ref=None)
 
@@ -1468,7 +1527,7 @@ Return self when valid, else raise [`InvalidDownloadError`](_autosummary/citeget
 * **Return type:**
   [`ValidationResult`](_autosummary/citeget.validate.html.md#citeget.validate.ValidationResult)
 
-### citeget.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True)
+### citeget.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True, concurrency_key='auto', max_concurrent_jobs=None)
 
 Acquire files for a list of references.
 
@@ -1501,6 +1560,19 @@ non-PDF is never renamed to `.pdf`.
   * **fetch_fallback** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If True (default), fall back to fetching `ref.url`
     as Markdown when all academic strategies fail (catches non-paper
     references like blog posts, docs, product pages).
+  * **concurrency_key** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Who this run counts against for the concurrent-run
+    cap (see [`citeget.joblimit`](_autosummary/citeget.joblimit.html.md#module-citeget.joblimit)). `"auto"` (default) uses the
+    parent of `work_dir`, so runs whose work dirs sit side by side
+    (a hosted app’s per-user `jobs/` directory) share one cap; with
+    no `work_dir` there is no cap. Pass a string (a user id) to
+    choose the key, or `None` to switch the cap off.
+  * **max_concurrent_jobs** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – The cap for that key. Defaults to the
+    `CITEGET_MAX_CONCURRENT_JOBS` environment variable, else
+    [`citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS`](_autosummary/citeget.joblimit.html.md#citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS); `0` means
+    no cap.
+* **Raises:**
+  [**JobLimitExceeded**](_autosummary/citeget.joblimit.html.md#citeget.joblimit.JobLimitExceeded) – the key already has
+      `max_concurrent_jobs` runs in progress. Raised before any work.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
 * **Returns:**
@@ -1894,11 +1966,20 @@ Whitespace inside fenced code blocks is content, and is preserved:
 True
 ```
 
-### citeget.html_to_pdf(url, , html='')
+### citeget.html_to_pdf(url, , html='', policy=None)
 
-Render *url* (or *html* fallback) to PDF bytes via pdfkit/wkhtmltopdf.
+Render *url* to PDF bytes via pdfkit/wkhtmltopdf.
 
-Returns `None` if pdfkit / wkhtmltopdf is unavailable or rendering fails.
+wkhtmltopdf is a browser and would fetch whatever the page points it at,
+past [`citeget.netguard`](_autosummary/citeget.netguard.html.md#module-citeget.netguard). So by default it never gets a URL: the page
+is fetched through the guard (or *html* is used if given), stripped of
+everything that loads a resource, and rendered offline. The PDF keeps the
+text and structure, not images or styles. With the guard switched off
+(`policy.allow_private`, or `CITEGET_ALLOW_PRIVATE_NETWORK=1`),
+wkhtmltopdf renders the live URL, resources and all.
+
+Returns `None` if pdfkit / wkhtmltopdf is unavailable, the fetch is
+refused or fails, or rendering fails.
 
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bytes`](https://docs.python.org/3/builtins/stdtypes.html#bytes)]
@@ -1915,6 +1996,17 @@ Strategy (first non-empty wins):
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### citeget.job_slot(key, , max_concurrent=None, lock_dir=None)
+
+Hold one of *key*’s concurrency slots for the duration of the block.
+
+Yields the slot number, or `None` when no cap applies.
+
+* **Raises:**
+  [**JobLimitExceeded**](_autosummary/citeget.html.md#citeget.JobLimitExceeded) – every slot for *key* is held by a running job.
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]]
 
 ### citeget.list_downloaders()
 
@@ -2244,16 +2336,111 @@ Write a references.md with hyperlinks to local downloaded files.
 
 ### Modules
 
-| [`acquire_references`](_autosummary/citeget.acquire_references.html.md#module-citeget.acquire_references)   | Tools for acquiring academic references as PDFs.                               |
-|---------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| [`article_pub`](_autosummary/citeget.article_pub.html.md#module-citeget.article_pub)                 | Article publication toolkit — journal profiling, checking, and formatting.     |
-| [`cli`](_autosummary/citeget.cli.html.md#module-citeget.cli)                                 | CLI entry points for citeget.                                                  |
-| [`core`](_autosummary/citeget.core.html.md#module-citeget.core)                               | Core search and download logic for libgen (libgen.vg-family mirrors).          |
-| [`extract`](_autosummary/citeget.extract.html.md#module-citeget.extract)                         | Composable reference extraction from documents.                                |
-| [`names`](_autosummary/citeget.names.html.md#module-citeget.names)                             | Author-name parsing for libgen metadata.                                       |
-| [`rank`](_autosummary/citeget.rank.html.md#module-citeget.rank)                               | Rank libgen search results against a requested title and author.               |
-| [`resolve`](_autosummary/citeget.resolve.html.md#module-citeget.resolve)                         | Composable download and URL-resolution for academic references.                |
-| [`validate`](_autosummary/citeget.validate.html.md#module-citeget.validate)                       | Validate that a downloaded file is actually the book or paper it claims to be. |
+| [`acquire_references`](_autosummary/citeget.acquire_references.html.md#module-citeget.acquire_references)   | Tools for acquiring academic references as PDFs.                                  |
+|---------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| [`article_pub`](_autosummary/citeget.article_pub.html.md#module-citeget.article_pub)                 | Article publication toolkit — journal profiling, checking, and formatting.        |
+| [`cli`](_autosummary/citeget.cli.html.md#module-citeget.cli)                                 | CLI entry points for citeget.                                                     |
+| [`core`](_autosummary/citeget.core.html.md#module-citeget.core)                               | Core search and download logic for libgen (libgen.vg-family mirrors).             |
+| [`extract`](_autosummary/citeget.extract.html.md#module-citeget.extract)                         | Composable reference extraction from documents.                                   |
+| [`joblimit`](_autosummary/citeget.joblimit.html.md#module-citeget.joblimit)                       | Cap how many acquisitions one owner runs at the same time.                        |
+| [`names`](_autosummary/citeget.names.html.md#module-citeget.names)                             | Author-name parsing for libgen metadata.                                          |
+| [`netguard`](_autosummary/citeget.netguard.html.md#module-citeget.netguard)                       | Outbound-HTTP guard: refuse to fetch anything that is not on the public internet. |
+| [`rank`](_autosummary/citeget.rank.html.md#module-citeget.rank)                               | Rank libgen search results against a requested title and author.                  |
+| [`resolve`](_autosummary/citeget.resolve.html.md#module-citeget.resolve)                         | Composable download and URL-resolution for academic references.                   |
+| [`validate`](_autosummary/citeget.validate.html.md#module-citeget.validate)                       | Validate that a downloaded file is actually the book or paper it claims to be.    |
+
+
+# _autosummary/citeget.joblimit.html.md
+
+# citeget.joblimit
+
+Cap how many acquisitions one owner runs at the same time.
+
+An acquisition drives a headless Chromium and downloads whole books, so a few
+of them at once is the most one user should be able to start on a shared
+server. [`job_slot()`](_autosummary/citeget.joblimit.html.md#citeget.joblimit.job_slot) hands out a fixed number of slots per *owner key*
+(a user, or a user’s jobs directory). It is a context manager: entering it
+takes a free slot or raises [`JobLimitExceeded`](_autosummary/citeget.joblimit.html.md#citeget.joblimit.JobLimitExceeded) at once (it never
+queues), and leaving it frees the slot.
+
+Slots are advisory `flock` locks on small files, so they are shared by every
+process on the machine and freed by the kernel when the process holding one
+exits, even if it is killed. A crashed job can never leave a slot taken.
+
+Configuration, most specific first:
+
+- the `max_concurrent=` argument;
+- the `CITEGET_MAX_CONCURRENT_JOBS` environment variable;
+- [`DEFAULT_MAX_CONCURRENT_JOBS`](_autosummary/citeget.joblimit.html.md#citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS).
+
+`0` (or a negative number) means “no cap”. Lock files live under
+`CITEGET_JOB_LOCK_DIR` if set, else a `citeget-job-slots-<uid>` directory
+in the system temp dir. On a platform without `fcntl` (Windows) the cap is not
+enforced.
+
+```pycon
+>>> import tempfile
+>>> d = tempfile.mkdtemp()
+>>> with job_slot("alice", max_concurrent=1, lock_dir=d):
+...     try:
+...         with job_slot("alice", max_concurrent=1, lock_dir=d):
+...             pass
+...     except JobLimitExceeded as e:
+...         print("refused")
+refused
+>>> with job_slot("alice", max_concurrent=1, lock_dir=d):  # freed on exit
+...     print("ok")
+ok
+```
+
+### Module Attributes
+
+| [`DEFAULT_MAX_CONCURRENT_JOBS`](_autosummary/citeget.joblimit.html.md#citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS)   | Concurrent acquisitions allowed per owner when nothing else is configured.   |
+|--------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+
+### Functions
+
+| [`job_slot`](_autosummary/citeget.joblimit.html.md#citeget.joblimit.job_slot)(key, \*[, max_concurrent, lock_dir])   | Hold one of *key*'s concurrency slots for the duration of the block.        |
+|--------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [`max_concurrent_jobs`](_autosummary/citeget.joblimit.html.md#citeget.joblimit.max_concurrent_jobs)([value])                    | The cap in force: *value* if given, else the environment, else the default. |
+
+### Exceptions
+
+| [`JobLimitExceeded`](_autosummary/citeget.joblimit.html.md#citeget.joblimit.JobLimitExceeded)   | The owner already has as many acquisitions running as allowed.   |
+|---------------------------------------------------------------------|------------------------------------------------------------------|
+
+### citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS *= 2*
+
+Concurrent acquisitions allowed per owner when nothing else is configured.
+
+### *exception* citeget.joblimit.JobLimitExceeded
+
+Bases: [`RuntimeError`](https://docs.python.org/3/builtins/exceptions.html#RuntimeError)
+
+The owner already has as many acquisitions running as allowed.
+
+### citeget.joblimit.job_slot(key, , max_concurrent=None, lock_dir=None)
+
+Hold one of *key*’s concurrency slots for the duration of the block.
+
+Yields the slot number, or `None` when no cap applies.
+
+* **Raises:**
+  [**JobLimitExceeded**](_autosummary/citeget.joblimit.html.md#citeget.joblimit.JobLimitExceeded) – every slot for *key* is held by a running job.
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]]
+
+### citeget.joblimit.max_concurrent_jobs(value=None)
+
+The cap in force: *value* if given, else the environment, else the default.
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
+```pycon
+>>> max_concurrent_jobs(5)
+5
+```
 
 
 # _autosummary/citeget.names.html.md
@@ -2413,6 +2600,190 @@ Surnames of every author in *authors*, in order, casing preserved.
 >>> surnames("Chris Voss & Tahl Raz")
 ['Voss', 'Raz']
 ```
+
+
+# _autosummary/citeget.netguard.html.md
+
+# citeget.netguard
+
+Outbound-HTTP guard: refuse to fetch anything that is not on the public internet.
+
+citeget fetches URLs that come from its users: the `url` of a reference, a
+page to save as Markdown, a link found inside a fetched page. When citeget runs
+as a hosted web app, that is a server-side request forgery (SSRF) surface: a
+user could ask the server to fetch `http://127.0.0.1:<admin port>/` or the
+cloud metadata service and then download the response as a job result.
+
+Every HTTP request citeget makes goes through [`get()`](_autosummary/citeget.netguard.html.md#citeget.netguard.get) (or a
+[`guarded_session()`](_autosummary/citeget.netguard.html.md#citeget.netguard.guarded_session)), which enforces a [`NetPolicy`](_autosummary/citeget.netguard.html.md#citeget.netguard.NetPolicy):
+
+- only `http` and `https` URLs, on the first request and on every redirect;
+- the host is resolved **inside the connection step**, every resolved address
+  must be a public one, and the socket is opened to that vetted address. There
+  is no second DNS lookup, so a rebinding DNS server cannot swap the address
+  between the check and the connect, and every redirect hop that opens a
+  connection is vetted the same way;
+- loopback, private (RFC 1918, `fc00::/7`), link-local (`169.254.0.0/16`,
+  `fe80::/10`, which covers the usual metadata address), shared/CGNAT,
+  unspecified, reserved and multicast addresses are refused, including when
+  they are wrapped in IPv6 (`::ffff:127.0.0.1`, 6to4, NAT64, Teredo);
+- proxies and `.netrc` from the environment are ignored (`trust_env=False`)
+  and explicit proxies are refused, so `HTTP_PROXY` cannot route a request
+  around the check.
+
+Because the check is made on the address the socket actually connects to,
+alternative spellings of a host (`2130706433`, `0x7f.1`, `017700000001`,
+a DNS name that resolves to `10.0.0.5`) are all caught: they resolve to the
+same refused address.
+
+The guard is on by default. A desktop user who wants citeget to fetch from
+their own LAN or `localhost` can opt out with the environment variable
+`CITEGET_ALLOW_PRIVATE_NETWORK=1` or by passing
+`policy=NetPolicy(allow_private=True)`.
+
+```pycon
+>>> is_public_address("8.8.8.8")
+True
+>>> [is_public_address(a) for a in ("127.0.0.1", "169.254.169.254", "10.1.2.3")]
+[False, False, False]
+>>> [is_public_address(a) for a in ("::1", "::ffff:127.0.0.1", "fd00:ec2::254")]
+[False, False, False]
+>>> check_url("file:///etc/passwd")
+Traceback (most recent call last):
+  ...
+citeget.netguard.UnsafeURLError: Refused file:///etc/passwd: scheme 'file' is not allowed (allowed: http, https)
+```
+
+### Module Attributes
+
+| [`ALLOW_PRIVATE_ENV_VAR`](_autosummary/citeget.netguard.html.md#citeget.netguard.ALLOW_PRIVATE_ENV_VAR)   | Environment variable that switches the guard off (`1`/`true`/`yes`).   |
+|--------------------------------------------------------------------------|------------------------------------------------------------------------|
+
+### Functions
+
+| [`check_url`](_autosummary/citeget.netguard.html.md#citeget.netguard.check_url)(url, \*[, policy])             | Check the parts of *url* that can be judged without DNS; return it.      |
+|-------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| [`default_policy`](_autosummary/citeget.netguard.html.md#citeget.netguard.default_policy)()                         | The policy in force when none is passed, read from the environment now.  |
+| [`get`](_autosummary/citeget.netguard.html.md#citeget.netguard.get)(url, \*[, policy])                   | `requests.get` with the destination guard.                               |
+| [`guarded_session`](_autosummary/citeget.netguard.html.md#citeget.netguard.guarded_session)(\*[, policy])            | A `requests.Session` that enforces *policy* on every connection and hop. |
+| [`is_public_address`](_autosummary/citeget.netguard.html.md#citeget.netguard.is_public_address)(address)               | True if *address* (an IP literal, possibly with a `%zone`) is public.    |
+| [`resolve_public`](_autosummary/citeget.netguard.html.md#citeget.netguard.resolve_public)(host, port, \*[, policy]) | Resolve *host* and return its addresses, refusing if any is not public.  |
+
+### Classes
+
+| [`NetPolicy`](_autosummary/citeget.netguard.html.md#citeget.netguard.NetPolicy)([allow_private, allowed_schemes, ...])   | What outbound requests are allowed to reach.   |
+|-----------------------------------------------------------------------------------------------------|------------------------------------------------|
+
+### Exceptions
+
+| [`UnsafeURLError`](_autosummary/citeget.netguard.html.md#citeget.netguard.UnsafeURLError)   | A URL, or an address it resolved to, is outside what the policy allows.   |
+|-------------------------------------------------------------------|---------------------------------------------------------------------------|
+
+### citeget.netguard.ALLOW_PRIVATE_ENV_VAR *= 'CITEGET_ALLOW_PRIVATE_NETWORK'*
+
+Environment variable that switches the guard off (`1`/`true`/`yes`).
+
+### *class* citeget.netguard.NetPolicy(allow_private=False, allowed_schemes=('http', 'https'), max_redirects=10)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+What outbound requests are allowed to reach.
+
+* **Parameters:**
+  * **allow_private** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Allow loopback / private / link-local destinations.
+    Off by default; this is what a hosted deployment relies on.
+  * **allowed_schemes** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – URL schemes allowed on the first request and on every
+    redirect hop.
+  * **max_redirects** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Redirect hops followed before giving up.
+
+### *exception* citeget.netguard.UnsafeURLError
+
+Bases: [`ValueError`](https://docs.python.org/3/builtins/exceptions.html#ValueError)
+
+A URL, or an address it resolved to, is outside what the policy allows.
+
+A `ValueError` rather than a `requests` exception on purpose: urllib3
+retries and re-wraps `OSError` subclasses, which would bury the reason.
+
+### citeget.netguard.check_url(url, , policy=None)
+
+Check the parts of *url* that can be judged without DNS; return it.
+
+The scheme must be allowed and there must be a host. A host written as an
+IP literal is judged here too. Hostnames are judged when the connection is
+made (see [`resolve_public()`](_autosummary/citeget.netguard.html.md#citeget.netguard.resolve_public)), since that is the only check a DNS
+rebind cannot race.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+```pycon
+>>> check_url("https://example.org/paper.pdf")
+'https://example.org/paper.pdf'
+>>> check_url("http://[::1]:8080/")
+Traceback (most recent call last):
+  ...
+citeget.netguard.UnsafeURLError: Refused http://[::1]:8080/: ::1 is not a public address
+```
+
+### citeget.netguard.default_policy()
+
+The policy in force when none is passed, read from the environment now.
+
+* **Return type:**
+  [`NetPolicy`](_autosummary/citeget.netguard.html.md#citeget.netguard.NetPolicy)
+
+```pycon
+>>> default_policy().allow_private in (True, False)
+True
+```
+
+### citeget.netguard.get(url, , policy=None, \*\*kwargs)
+
+`requests.get` with the destination guard. Same arguments and return.
+
+Raises [`UnsafeURLError`](_autosummary/citeget.netguard.html.md#citeget.netguard.UnsafeURLError) if the URL, a redirect target, or an address
+a host resolves to is refused; `proxies=` is refused as well.
+
+### citeget.netguard.guarded_session(, policy=None)
+
+A `requests.Session` that enforces *policy* on every connection and hop.
+
+Use it as a context manager, like `requests.Session`. With
+`policy.allow_private` it still restricts schemes, but connects wherever
+DNS points and honours environment proxies like plain `requests`.
+
+### citeget.netguard.is_public_address(address)
+
+True if *address* (an IP literal, possibly with a `%zone`) is public.
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
+```pycon
+>>> is_public_address("fe80::1%eth0")
+False
+>>> is_public_address("2002:7f00:1::")  # 6to4 wrapping 127.0.0.1
+False
+>>> is_public_address("64:ff9b::a9fe:a9fe")  # NAT64 wrapping 169.254.169.254
+False
+>>> is_public_address("::ffff:0:7f00:1")  # SIIT wrapping 127.0.0.1
+False
+>>> is_public_address("fec0::1")  # deprecated site-local
+False
+```
+
+### citeget.netguard.resolve_public(host, port, , policy=None)
+
+Resolve *host* and return its addresses, refusing if any is not public.
+
+Every address must pass: a name with one public and one private record is
+refused outright rather than connected to “the good one”.
+
+Returns `getaddrinfo` tuples `(family, type, proto, canonname, sockaddr)`.
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
 
 # _autosummary/citeget.rank.html.md
@@ -3104,7 +3475,7 @@ Validate a file on disk. Extension defaults to the file’s own suffix.
 
 # About this build
 
-This documentation was built on **2026-09-22 13:26 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/c1c5c860b07bf112304bdddd390394fa16882aaf"><code>c1c5c86</code></a> on branch <code>main</code>, for **citeget 0.2.11** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 11:26 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/4e92a3a76724033611c618412d6b0f2838742c85"><code>4e92a3a</code></a> on branch <code>main</code>, for **citeget 0.2.12** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -3113,9 +3484,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/c1c5c860b07bf112304bdddd390394fa16882aaf"><code>c1c5c860b07bf112304bdddd390394fa16882aaf</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/4e92a3a76724033611c618412d6b0f2838742c85"><code>4e92a3a76724033611c618412d6b0f2838742c85</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.2.11</code>                                                                                                                                       |
+| Tags at this commit | <code>0.2.12</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/citeget</code>                                                                                                        |
 
@@ -3124,18 +3495,18 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/citeget</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/35733235312">35733235312</a>   |
+| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/38389955955">38389955955</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>28a1bbc2670ceac16bcb1a773ffbf53831dbf8b6</code> (in the history of the built commit) |
+| Event commit | <code>cf8e288c18b91c5c47257239f92dc90eb86bc1e3</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.12  |
+| epythet  | 0.2.15  |
 | Sphinx   | 9.1.0   |
 | docutils | 0.22.4  |
-| Python   | 3.12.14 |
+| Python   | 3.12.15 |
 
 ## Configuration as resolved
 
@@ -3151,14 +3522,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/citeget/0.2.11/">0.2.11</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/citeget/0.2.12/">0.2.12</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/citeget && cd citeget
-git checkout c1c5c860b07bf112304bdddd390394fa16882aaf
-pip install "epythet==0.2.12"
+git checkout 4e92a3a76724033611c618412d6b0f2838742c85
+pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

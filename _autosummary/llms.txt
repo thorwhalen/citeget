@@ -11,7 +11,9 @@
 - [citeget.cli](citeget.cli.html.md): CLI entry points for citeget.
 - [citeget.core](citeget.core.html.md): Core search and download logic for libgen (libgen.vg-family mirrors).
 - [citeget.extract](citeget.extract.html.md): Composable reference extraction from documents.
+- [citeget.joblimit](citeget.joblimit.html.md): Cap how many acquisitions one owner runs at the same time.
 - [citeget.names](citeget.names.html.md): Author-name parsing for libgen metadata.
+- [citeget.netguard](citeget.netguard.html.md): Outbound-HTTP guard: refuse to fetch anything that is not on the public internet.
 - [citeget.rank](citeget.rank.html.md): Rank libgen search results against a requested title and author.
 - [citeget.resolve](citeget.resolve.html.md): Composable download and URL-resolution for academic references.
 - [citeget.validate](citeget.validate.html.md): Validate that a downloaded file is actually the book or paper it claims to be.

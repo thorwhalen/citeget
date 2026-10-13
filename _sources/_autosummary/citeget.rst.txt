@@ -55,6 +55,7 @@
       infer_filename
       html_to_markdown
       html_to_pdf
+      job_slot
    
    .. rubric:: Classes
 
@@ -70,6 +71,7 @@
       AcquisitionResult
       FetchResult
       UrlEntry
+      NetPolicy
    
    .. rubric:: Exceptions
 
@@ -77,6 +79,8 @@
    
       MirrorUnreachableError
       InvalidDownloadError
+      UnsafeURLError
+      JobLimitExceeded
    
 .. rubric:: Modules
 
@@ -89,7 +93,9 @@
    cli
    core
    extract
+   joblimit
    names
+   netguard
    rank
    resolve
    validate

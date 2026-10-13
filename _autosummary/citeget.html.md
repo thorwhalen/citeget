@@ -90,7 +90,8 @@ Topics (for libgen search):
 | [`extract_urls_from_text`](#citeget.extract_urls_from_text)(text)                       | Parse URLs from prose / markdown / reference-style citations.                                                |
 | [`infer_filename`](#citeget.infer_filename)(entry, ext)                         | Infer a filename for *entry*, ending in `.{ext}`.                                                            |
 | [`html_to_markdown`](#citeget.html_to_markdown)(html, \*[, source_url])           | Convert *html* to clean Markdown.                                                                            |
-| [`html_to_pdf`](#citeget.html_to_pdf)(url, \*[, html])                       | Render *url* (or *html* fallback) to PDF bytes via pdfkit/wkhtmltopdf.                                       |
+| [`html_to_pdf`](#citeget.html_to_pdf)(url, \*[, html, policy])               | Render *url* to PDF bytes via pdfkit/wkhtmltopdf.                                                            |
+| [`job_slot`](#citeget.job_slot)(key, \*[, max_concurrent, lock_dir])      | Hold one of *key*'s concurrency slots for the duration of the block.                                         |
 
 ### Classes
 
@@ -105,12 +106,15 @@ Topics (for libgen search):
 | [`AcquisitionResult`](#citeget.AcquisitionResult)(reference[, success, ...])      | Result of trying to acquire a reference.                             |
 | [`FetchResult`](#citeget.FetchResult)(url, status[, output_file, ...])      | Outcome of a single URL fetch.                                       |
 | [`UrlEntry`](#citeget.UrlEntry)(url[, title, ref])                       | A URL with optional context preserved for filename inference.        |
+| [`NetPolicy`](#citeget.NetPolicy)([allow_private, allowed_schemes, ...])  | What outbound requests are allowed to reach.                         |
 
 ### Exceptions
 
 | [`MirrorUnreachableError`](#citeget.MirrorUnreachableError)   | Raised when no libgen mirror could be reached.                            |
 |---------------------------------------------------------------------------|---------------------------------------------------------------------------|
 | [`InvalidDownloadError`](#citeget.InvalidDownloadError)     | Raised when downloaded bytes are not a usable copy of the requested file. |
+| [`UnsafeURLError`](#citeget.UnsafeURLError)           | A URL, or an address it resolved to, is outside what the policy allows.   |
+| [`JobLimitExceeded`](#citeget.JobLimitExceeded)         | The owner already has as many acquisitions running as allowed.            |
 
 ### *class* citeget.AcquisitionResult(reference, success=False, filepath=None, method='', queries_tried=<factory>, notes='')
 
@@ -140,6 +144,12 @@ Bases: [`RuntimeError`](https://docs.python.org/3/builtins/exceptions.html#Runti
 
 Raised when downloaded bytes are not a usable copy of the requested file.
 
+### *exception* citeget.JobLimitExceeded
+
+Bases: [`RuntimeError`](https://docs.python.org/3/builtins/exceptions.html#RuntimeError)
+
+The owner already has as many acquisitions running as allowed.
+
 ### *exception* citeget.MirrorUnreachableError
 
 Bases: [`RuntimeError`](https://docs.python.org/3/builtins/exceptions.html#RuntimeError)
@@ -149,6 +159,19 @@ Raised when no libgen mirror could be reached.
 Distinct from an empty result set: this means every candidate mirror
 failed to connect (down, moved, or blocked by local DNS/network), so the
 caller gets an actionable message instead of a raw Playwright stack trace.
+
+### *class* citeget.NetPolicy(allow_private=False, allowed_schemes=('http', 'https'), max_redirects=10)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+What outbound requests are allowed to reach.
+
+* **Parameters:**
+  * **allow_private** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Allow loopback / private / link-local destinations.
+    Off by default; this is what a hosted deployment relies on.
+  * **allowed_schemes** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – URL schemes allowed on the first request and on every
+    redirect hop.
+  * **max_redirects** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Redirect hops followed before giving up.
 
 ### *class* citeget.Reference(number, raw, title='', authors='', year='', venue='', url='', doi='', source_text='')
 
@@ -180,6 +203,15 @@ Plausibility bounds for a real book file.
 `min_pdf_bytes` is deliberately far above `min_bytes`: a landing-page
 “download” stub is typically a valid but nearly empty PDF, whereas a short
 epub of a genuine book can legitimately be ~100 kB.
+
+### *exception* citeget.UnsafeURLError
+
+Bases: [`ValueError`](https://docs.python.org/3/builtins/exceptions.html#ValueError)
+
+A URL, or an address it resolved to, is outside what the policy allows.
+
+A `ValueError` rather than a `requests` exception on purpose: urllib3
+retries and re-wraps `OSError` subclasses, which would bury the reason.
 
 ### *class* citeget.UrlEntry(url, title=None, ref=None)
 
@@ -248,7 +280,7 @@ Return self when valid, else raise [`InvalidDownloadError`](#citeget.InvalidDown
 * **Return type:**
   [`ValidationResult`](citeget.validate.html.md#citeget.validate.ValidationResult)
 
-### citeget.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True)
+### citeget.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True, concurrency_key='auto', max_concurrent_jobs=None)
 
 Acquire files for a list of references.
 
@@ -281,6 +313,19 @@ non-PDF is never renamed to `.pdf`.
   * **fetch_fallback** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If True (default), fall back to fetching `ref.url`
     as Markdown when all academic strategies fail (catches non-paper
     references like blog posts, docs, product pages).
+  * **concurrency_key** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Who this run counts against for the concurrent-run
+    cap (see [`citeget.joblimit`](citeget.joblimit.html.md#module-citeget.joblimit)). `"auto"` (default) uses the
+    parent of `work_dir`, so runs whose work dirs sit side by side
+    (a hosted app’s per-user `jobs/` directory) share one cap; with
+    no `work_dir` there is no cap. Pass a string (a user id) to
+    choose the key, or `None` to switch the cap off.
+  * **max_concurrent_jobs** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – The cap for that key. Defaults to the
+    `CITEGET_MAX_CONCURRENT_JOBS` environment variable, else
+    [`citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS`](citeget.joblimit.html.md#citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS); `0` means
+    no cap.
+* **Raises:**
+  [**JobLimitExceeded**](citeget.joblimit.html.md#citeget.joblimit.JobLimitExceeded) – the key already has
+      `max_concurrent_jobs` runs in progress. Raised before any work.
 * **Return type:**
   [`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)
 * **Returns:**
@@ -674,11 +719,20 @@ Whitespace inside fenced code blocks is content, and is preserved:
 True
 ```
 
-### citeget.html_to_pdf(url, , html='')
+### citeget.html_to_pdf(url, , html='', policy=None)
 
-Render *url* (or *html* fallback) to PDF bytes via pdfkit/wkhtmltopdf.
+Render *url* to PDF bytes via pdfkit/wkhtmltopdf.
 
-Returns `None` if pdfkit / wkhtmltopdf is unavailable or rendering fails.
+wkhtmltopdf is a browser and would fetch whatever the page points it at,
+past [`citeget.netguard`](citeget.netguard.html.md#module-citeget.netguard). So by default it never gets a URL: the page
+is fetched through the guard (or *html* is used if given), stripped of
+everything that loads a resource, and rendered offline. The PDF keeps the
+text and structure, not images or styles. With the guard switched off
+(`policy.allow_private`, or `CITEGET_ALLOW_PRIVATE_NETWORK=1`),
+wkhtmltopdf renders the live URL, resources and all.
+
+Returns `None` if pdfkit / wkhtmltopdf is unavailable, the fetch is
+refused or fails, or rendering fails.
 
 * **Return type:**
   [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`bytes`](https://docs.python.org/3/builtins/stdtypes.html#bytes)]
@@ -695,6 +749,17 @@ Strategy (first non-empty wins):
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### citeget.job_slot(key, , max_concurrent=None, lock_dir=None)
+
+Hold one of *key*’s concurrency slots for the duration of the block.
+
+Yields the slot number, or `None` when no cap applies.
+
+* **Raises:**
+  [**JobLimitExceeded**](#citeget.JobLimitExceeded) – every slot for *key* is held by a running job.
+* **Return type:**
+  [`Iterator`](https://docs.python.org/3/library/typing.html#typing.Iterator)[[`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]]
 
 ### citeget.list_downloaders()
 
@@ -1024,13 +1089,15 @@ Write a references.md with hyperlinks to local downloaded files.
 
 ### Modules
 
-| [`acquire_references`](citeget.acquire_references.html.md#module-citeget.acquire_references)   | Tools for acquiring academic references as PDFs.                               |
-|---------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------|
-| [`article_pub`](citeget.article_pub.html.md#module-citeget.article_pub)                 | Article publication toolkit — journal profiling, checking, and formatting.     |
-| [`cli`](citeget.cli.html.md#module-citeget.cli)                                 | CLI entry points for citeget.                                                  |
-| [`core`](citeget.core.html.md#module-citeget.core)                               | Core search and download logic for libgen (libgen.vg-family mirrors).          |
-| [`extract`](citeget.extract.html.md#module-citeget.extract)                         | Composable reference extraction from documents.                                |
-| [`names`](citeget.names.html.md#module-citeget.names)                             | Author-name parsing for libgen metadata.                                       |
-| [`rank`](citeget.rank.html.md#module-citeget.rank)                               | Rank libgen search results against a requested title and author.               |
-| [`resolve`](citeget.resolve.html.md#module-citeget.resolve)                         | Composable download and URL-resolution for academic references.                |
-| [`validate`](citeget.validate.html.md#module-citeget.validate)                       | Validate that a downloaded file is actually the book or paper it claims to be. |
+| [`acquire_references`](citeget.acquire_references.html.md#module-citeget.acquire_references)   | Tools for acquiring academic references as PDFs.                                  |
+|---------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| [`article_pub`](citeget.article_pub.html.md#module-citeget.article_pub)                 | Article publication toolkit — journal profiling, checking, and formatting.        |
+| [`cli`](citeget.cli.html.md#module-citeget.cli)                                 | CLI entry points for citeget.                                                     |
+| [`core`](citeget.core.html.md#module-citeget.core)                               | Core search and download logic for libgen (libgen.vg-family mirrors).             |
+| [`extract`](citeget.extract.html.md#module-citeget.extract)                         | Composable reference extraction from documents.                                   |
+| [`joblimit`](citeget.joblimit.html.md#module-citeget.joblimit)                       | Cap how many acquisitions one owner runs at the same time.                        |
+| [`names`](citeget.names.html.md#module-citeget.names)                             | Author-name parsing for libgen metadata.                                          |
+| [`netguard`](citeget.netguard.html.md#module-citeget.netguard)                       | Outbound-HTTP guard: refuse to fetch anything that is not on the public internet. |
+| [`rank`](citeget.rank.html.md#module-citeget.rank)                               | Rank libgen search results against a requested title and author.                  |
+| [`resolve`](citeget.resolve.html.md#module-citeget.resolve)                         | Composable download and URL-resolution for academic references.                   |
+| [`validate`](citeget.validate.html.md#module-citeget.validate)                       | Validate that a downloaded file is actually the book or paper it claims to be.    |
