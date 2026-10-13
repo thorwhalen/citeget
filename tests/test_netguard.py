@@ -447,3 +447,60 @@ def test_the_browser_route_aborts_an_oversized_response(net, monkeypatch):
     route = FakeRoute(FakeRequest("http://good.example/get.php"))
     netguard.browser_route_handler()(route)
     assert route.outcome == ("abort", "blockedbyclient")
+
+
+def test_a_body_too_big_to_parse_as_text_is_refused_at_text(net):
+    net.transport.responses[PUBLIC_IP] = _response(200, b"<p>" + b"a" * 3000 + b"</p>")
+    resp = netguard.get(
+        "http://good.example/", policy=NetPolicy(max_text_bytes=1000)
+    )
+    assert len(resp.content) > 1000  # the bytes are fine: a download may keep them
+    with pytest.raises(netguard.ResponseTooLargeError, match="text"):
+        resp.text
+    with pytest.raises(netguard.ResponseTooLargeError, match="text"):
+        resp.json()
+
+
+def test_a_trickled_body_is_cut_off_at_the_deadline(net, monkeypatch):
+    import itertools
+    import time
+
+    clock = itertools.count(0, 400)  # every read "takes" 400 seconds
+    monkeypatch.setattr(time, "monotonic", lambda: next(clock))
+    net.transport.responses[PUBLIC_IP] = _response(200, b"d" * 200_000)
+    with pytest.raises(netguard.ResponseTooLargeError, match="took over"):
+        netguard.get("http://good.example/", policy=NetPolicy(max_response_seconds=600))
+
+
+def test_stacked_content_encodings_are_refused(net):
+    net.transport.responses[PUBLIC_IP] = _response(
+        200, b"x", headers=[("Content-Encoding", "gzip, gzip")]
+    )
+    with pytest.raises(netguard.ResponseTooLargeError, match="stacked"):
+        netguard.get("http://good.example/")
+
+
+@pytest.mark.parametrize(
+    "var",
+    [
+        netguard.MAX_RESPONSE_BYTES_ENV_VAR,
+        netguard.MAX_TEXT_BYTES_ENV_VAR,
+        netguard.MAX_RESPONSE_SECONDS_ENV_VAR,
+    ],
+)
+def test_negative_limits_are_an_informative_error(monkeypatch, var):
+    monkeypatch.setenv(var, "-1")
+    with pytest.raises(ValueError, match=var):
+        netguard.default_policy()
+
+
+def test_fetch_one_refuses_a_page_too_big_to_convert(net, tmp_path, monkeypatch):
+    from citeget.fetch import fetch_one
+
+    monkeypatch.setenv(netguard.MAX_TEXT_BYTES_ENV_VAR, "100")
+    net.transport.responses[PUBLIC_IP] = _response(
+        200, b"<p>" + b"a" * 500 + b"</p>", headers=[("Content-Type", "text/html")]
+    )
+    result = fetch_one("http://good.example/huge-page", output_dir=tmp_path)
+    assert result.status == "failed" and "text" in result.error
+    assert list(tmp_path.iterdir()) == []

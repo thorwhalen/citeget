@@ -327,7 +327,7 @@ On a desktop, to let citeget fetch from your own LAN or `localhost`:
 export CITEGET_ALLOW_PRIVATE_NETWORK=1
 ```
 
-Response bodies are capped at 200 MB (decoded; `CITEGET_MAX_RESPONSE_BYTES`, `0` for no cap), so one URL cannot fill memory or disk; an oversized one is refused like an internal one.
+Response bodies are capped at 100 MB (decoded; `CITEGET_MAX_RESPONSE_BYTES`), a body read as text (HTML, XML, JSON) at 10 MB (`CITEGET_MAX_TEXT_BYTES`), and the time a body may take to arrive at 600 s (`CITEGET_MAX_RESPONSE_SECONDS`); `0` lifts a ceiling. An oversized or too-slow response is refused like an internal one.
 
 A refused URL raises `citeget.netguard.UnsafeURLError` (`ResponseTooLargeError` for an oversized body); in `fetch` it shows up as a failed result whose `error` starts with `Refused`.
 

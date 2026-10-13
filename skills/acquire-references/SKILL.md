@@ -206,7 +206,7 @@ the API is designed for the bulk-URL case.
 ## Refusals that are not failures
 
 - **Internal URLs are refused.** A reference URL that points at loopback, a private network, a link-local or cloud-metadata address (or redirects to one) is never fetched; see `citeget.netguard`. On a desktop, `CITEGET_ALLOW_PRIVATE_NETWORK=1` lifts this.
-- **Oversized responses are refused.** A body over `CITEGET_MAX_RESPONSE_BYTES` (default 200 MB) is not saved. For a genuinely huge scanned book, raise the limit; do not retry as is.
+- **Oversized responses are refused.** A body over `CITEGET_MAX_RESPONSE_BYTES` (default 100 MB; text: `CITEGET_MAX_TEXT_BYTES`, 10 MB; slower than `CITEGET_MAX_RESPONSE_SECONDS`, 600 s) is not saved. For a genuinely huge scanned book, raise the limit; do not retry as is.
 - **Concurrent runs are capped.** `acquire_all_references` raises `citeget.joblimit.JobLimitExceeded` before doing any work when the owner already has `CITEGET_MAX_CONCURRENT_JOBS` (default 2) runs going. By default the owner is the parent of `work_dir`. Wait for a run to finish rather than retrying in a loop; pass `concurrency_key=None` to opt out in a single-user script.
 
 ## Tips

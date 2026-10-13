@@ -34,6 +34,7 @@ authors = [
 dependencies = [
     "playwright",
     "requests",
+    "urllib3>=2.6",  # bounded decompression (CVE-2025-66471): the size cap counts decoded bytes
     "beautifulsoup4",
     "markdownify>=1.0",
     "cw>=0.1.1,<0.2",
