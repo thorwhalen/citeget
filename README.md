@@ -327,7 +327,9 @@ On a desktop, to let citeget fetch from your own LAN or `localhost`:
 export CITEGET_ALLOW_PRIVATE_NETWORK=1
 ```
 
-A refused URL raises `citeget.netguard.UnsafeURLError`; in `fetch` it shows up as a failed result whose `error` starts with `Refused`.
+Response bodies are capped at 200 MB (decoded; `CITEGET_MAX_RESPONSE_BYTES`, `0` for no cap), so one URL cannot fill memory or disk; an oversized one is refused like an internal one.
+
+A refused URL raises `citeget.netguard.UnsafeURLError` (`ResponseTooLargeError` for an oversized body); in `fetch` it shows up as a failed result whose `error` starts with `Refused`.
 
 `acquire_all_references` also caps concurrent runs per owner (default 2; `CITEGET_MAX_CONCURRENT_JOBS`, `0` for no cap). By default, runs whose `work_dir`s share a parent directory share the cap, which is one cap per user in a hosted app that keeps each user's jobs side by side. Pass `concurrency_key=` to choose the owner explicitly, or `None` to switch the cap off. Over the cap, the run raises `citeget.joblimit.JobLimitExceeded` before doing any work.
 

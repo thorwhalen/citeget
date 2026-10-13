@@ -82,7 +82,8 @@ URLs are extracted in three forms (deduped, first match wins):
    every redirect hop; the result is `failed` with `error` starting
    `Refused`. That is deliberate, not a network fault: do not retry it. To
    fetch from the user's own LAN or localhost on a desktop, set
-   `CITEGET_ALLOW_PRIVATE_NETWORK=1`.
+   `CITEGET_ALLOW_PRIVATE_NETWORK=1`. Bodies over `CITEGET_MAX_RESPONSE_BYTES`
+   (default 200 MB) are refused the same way.
 2. If the response is a PDF and `prefer in {"pdf", "original", "auto"}` →
    save as `.pdf`.
 3. If HTML and `prefer="pdf"` → look for embedded direct-PDF link
