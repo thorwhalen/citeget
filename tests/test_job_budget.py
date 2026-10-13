@@ -48,16 +48,35 @@ def test_once_spent_the_remaining_references_are_not_fetched(tmp_path, fake_fetc
     assert fake_fetch.calls == [1, 2, 3]
 
 
-def test_a_reference_that_overshoots_is_refused_and_its_file_removed(
+def test_a_reference_that_overshoots_is_refused_its_file_removed_and_the_job_stops(
     tmp_path, fake_fetch
 ):
     fake_fetch.sizes = {1: 600, 2: 600, 3: 100}
-    ok, failed, _ = _run(tmp_path, _refs(3), max_job_bytes=1000)
-    assert [r.reference.number for r in ok] == [1, 3]
-    assert ar.JOB_BUDGET_NOTE in failed[0].notes
+    ok, failed, log = _run(tmp_path, _refs(3), max_job_bytes=1000)
+    assert [r.reference.number for r in ok] == [1]
+    assert [r.reference.number for r in failed] == [2, 3]
+    assert all(ar.JOB_BUDGET_NOTE in r.notes for r in failed)
+    assert fake_fetch.calls == [1, 2]  # 3 is never fetched only to be discarded
     assert not (tmp_path / "refs" / "ref2.pdf").exists()
-    total = sum(p.stat().st_size for p in (tmp_path / "refs").iterdir())
-    assert total <= 1000
+    assert any(ar.JOB_BUDGET_NOTE in str(e.get("error")) for e in log)
+
+
+def test_an_overshoot_never_removes_a_file_another_run_wrote(
+    tmp_path, fake_fetch, monkeypatch
+):
+    """A concurrent run sharing the directory may write while we fetch (review)."""
+    fake_fetch.sizes = {1: 600}
+    inner = ar.acquire_reference
+
+    def with_neighbour(ref, download_dir, **kwargs):
+        (download_dir / "other-run.pdf").write_bytes(b"y" * 900)
+        return inner(ref, download_dir, **kwargs)
+
+    monkeypatch.setattr(ar, "acquire_reference", with_neighbour)
+    ok, failed, _ = _run(tmp_path, _refs(1), max_job_bytes=1000)
+    assert not ok and ar.JOB_BUDGET_NOTE in failed[0].notes
+    assert (tmp_path / "refs" / "other-run.pdf").exists()
+    assert not (tmp_path / "refs" / "ref1.pdf").exists()
 
 
 def test_files_already_there_do_not_count(tmp_path, fake_fetch):

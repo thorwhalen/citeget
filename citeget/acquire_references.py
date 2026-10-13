@@ -143,8 +143,9 @@ MAX_JOB_BYTES_ENV_VAR = "CITEGET_MAX_JOB_BYTES"
 #: Most bytes one :func:`acquire_all_references` run may write into its download
 #: directory. The per-response ceiling (``CITEGET_MAX_RESPONSE_BYTES``) bounds one
 #: file; this bounds a job of many references, on a disk shared by every user of
-#: a hosted deployment (#22). Twenty full-size responses.
-DEFAULT_MAX_JOB_BYTES = 2 * 1024 * 1024 * 1024
+#: a hosted deployment (#22). Five full-size responses: a job of many books needs
+#: the variable raised, which is the point on a small shared server.
+DEFAULT_MAX_JOB_BYTES = 512 * 1024 * 1024
 #: The note on a reference refused because the job's byte budget was spent.
 JOB_BUDGET_NOTE = "job byte budget reached"
 
@@ -1272,10 +1273,14 @@ def acquire_all_references(
             Defaults to the ``CITEGET_MAX_JOB_BYTES`` environment variable, else
             :data:`DEFAULT_MAX_JOB_BYTES`; ``0`` means no budget. Once it is
             spent, the remaining references fail with :data:`JOB_BUDGET_NOTE`
-            instead of being fetched. A reference whose files would overshoot it
-            is refused the same way and its new files are removed, so the
-            directory never ends a run over budget. Files already there before
-            the run do not count.
+            instead of being fetched. A reference whose download would overshoot
+            it is refused the same way, its file is removed, and the budget
+            counts as spent. Every file that appears in ``download_dir`` while a
+            reference is acquired counts, which over-counts (never under-counts)
+            when another run shares the directory; files already there before
+            the run do not count. A browser download's temporary spool file
+            lives outside ``download_dir`` and is bounded by the per-response
+            ceiling instead.
 
     Raises:
         citeget.joblimit.JobLimitExceeded: the key already has
@@ -1443,14 +1448,23 @@ def _acquire_all_references(
             grown = sum(max(after[p] - before[p], 0) for p in after.keys() & before.keys())
             cost = grown + sum(after[p] for p in new)
             if spent + cost > budget:
-                # Over budget: take back the files it created. Growth of files
-                # that were already there cannot be undone, so it still counts.
-                for path in new:
+                # Over budget: remove the file this reference reports, and only
+                # that one -- another run sharing the directory may have written
+                # the other new files. Then stop: fetching the next reference
+                # only to discard it would spend the bandwidth the budget saves.
+                if result.filepath and os.path.abspath(result.filepath) in {
+                    os.path.abspath(p) for p in new
+                }:
                     with contextlib.suppress(OSError):
-                        os.remove(path)
-                cost = grown
+                        os.remove(result.filepath)
                 result = _budget_refusal(ref, spent + cost, budget)
-            spent += cost
+                log_entries.append(
+                    {"ref_number": ref.number, "ref_title": ref.title,
+                     "matched": False, "error": result.notes}
+                )
+                spent = budget
+            else:
+                spent += cost
 
         if result.success:
             successes.append(result)
