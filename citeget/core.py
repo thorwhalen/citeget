@@ -799,6 +799,22 @@ def _finalize_download(
             tmp_path.unlink()
 
 
+def _adopt_guarded_download(pg, url: str, tmp_path: Path) -> bool:
+    """Move the file the browser guard streamed for *url* to *tmp_path*.
+
+    The guard hands Chromium an empty attachment and keeps the real bytes on
+    disk (see :class:`citeget.netguard.BrowserDownloads`), so what
+    ``download.save_as`` wrote is a placeholder. True if a file was adopted.
+    """
+    context = getattr(pg, "context", None)
+    path = netguard.take_browser_download(context, url) if context is not None else None
+    if not path:
+        return False
+    tmp_path.parent.mkdir(parents=True, exist_ok=True)
+    os.replace(path, tmp_path)
+    return True
+
+
 def _fetch_via_page_request(pg, url: str, tmp_path: Path, *, timeout: int) -> bool:
     """Fetch *url* with the page's cookies, through the guard. True if bytes landed.
 
@@ -808,7 +824,11 @@ def _fetch_via_page_request(pg, url: str, tmp_path: Path, *, timeout: int) -> bo
     """
     try:
         cookies = pg.context.cookies([url])
-        headers = {"User-Agent": _USER_AGENT}
+        try:  # the same browser identity as the hop before
+            user_agent = pg.evaluate("navigator.userAgent")
+        except Exception:
+            user_agent = _USER_AGENT
+        headers = {"User-Agent": user_agent}
         if cookies:
             headers["Cookie"] = "; ".join(f"{c['name']}={c['value']}" for c in cookies)
         response = netguard.get(url, headers=headers, timeout=timeout / 1000)
@@ -863,7 +883,19 @@ def _try_libgen_download(
                 goto_error = exc
         download = download_info.value
         download.save_as(str(tmp_path))
+        _adopt_guarded_download(pg, get_url, tmp_path)
     except Exception as exc:
+        # The guard may have streamed the file even though no download event
+        # arrived in time; then the key is spent and the file is the answer.
+        if _adopt_guarded_download(pg, get_url, tmp_path):
+            return _finalize_download(
+                tmp_path,
+                filepath,
+                extension=extension,
+                expected_bytes=expected_bytes,
+                policy=policy,
+                validate=validate,
+            )
         # No download materialised. Refetching get.php only helps if the request
         # never reached libgen: the ``key`` is single-use, so once the transfer
         # has started a retry gets an HTML error page, not the file.

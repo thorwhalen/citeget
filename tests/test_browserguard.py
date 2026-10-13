@@ -94,9 +94,20 @@ def test_a_public_redirect_is_followed_and_only_the_final_response_fulfilled(net
         b"%PDF-1.4",
         headers=[("Content-Disposition", 'attachment; filename="b.pdf"')],
     )
-    kind, status, headers, body = _route("http://good.example/get.php").outcome
-    assert (kind, status, body) == ("fulfill", 200, b"%PDF-1.4")
+    handler = netguard.browser_route_handler()
+    route = FakeRoute(FakeRequest("http://good.example/get.php"))
+    handler(route)
+    kind, status, headers, body = route.outcome
+    # A download is streamed to disk by the guard; Chromium gets an empty
+    # attachment (fulfilling a whole book through Playwright is what timed out).
+    assert (kind, status, body) == ("fulfill", 200, b"")
     assert "attachment" in headers["Content-Disposition"]
+    path = handler.downloads.take("http://good.example/get.php")
+    with open(path, "rb") as f:
+        assert f.read() == b"%PDF-1.4"
+    import os
+
+    os.unlink(path)
 
 
 def test_images_media_and_fonts_are_not_fetched(net):
@@ -106,6 +117,47 @@ def test_images_media_and_fonts_are_not_fetched(net):
             "blockedbyclient",
         )
     assert net.transport.connected == []
+
+
+def test_a_non_html_navigation_is_a_download_even_without_a_disposition(net):
+    net.transport.responses[PUBLIC_IP] = _response(
+        200, b"%PDF-1.4 x", headers=[("Content-Type", "application/pdf")]
+    )
+    handler = netguard.browser_route_handler()
+    route = FakeRoute(FakeRequest("http://good.example/b.pdf"))
+    handler(route)
+    assert route.outcome[3] == b"" and route.outcome[2]["Content-Disposition"] == "attachment"
+    assert handler.downloads.take() is not None
+
+
+def test_a_subresource_is_never_spooled_as_a_download(net):
+    net.transport.responses[PUBLIC_IP] = _response(
+        200, b"var x;", headers=[("Content-Type", "application/javascript")]
+    )
+    handler = netguard.browser_route_handler()
+    route = FakeRoute(FakeRequest("http://good.example/a.js", resource_type="script"))
+    handler(route)
+    assert route.outcome[3] == b"var x;" and handler.downloads.take() is None
+
+
+def test_folded_header_values_are_dropped_not_passed_to_chromium(net):
+    raw = (
+        b"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nX-B: v\r\n X-Injected: 1\r\n"
+        b"Content-Length: 2\r\nConnection: close\r\n\r\nok"
+    )
+    net.transport.responses[PUBLIC_IP] = raw
+    _, status, headers, body = _route("http://good.example/").outcome
+    assert status == 200 and body == b"ok"
+    assert all("\n" not in v and "\r" not in v for v in headers.values())
+
+
+def test_set_cookies_from_same_host_redirect_hops_are_kept(net):
+    net.transport.responses[PUBLIC_IP] = [
+        _response(302, headers=[("Location", "/final"), ("Set-Cookie", "hop=1; Path=/")]),
+        _response(200, b"ok", headers=[("Set-Cookie", "end=2; Path=/")]),
+    ]
+    _, _, headers, _ = _route("http://good.example/start").outcome
+    assert headers["set-cookie"].split("\n") == ["hop=1; Path=/", "end=2; Path=/"]
 
 
 def test_cookies_and_body_are_forwarded_and_multiple_set_cookies_survive(net):
@@ -151,7 +203,13 @@ def test_a_transport_failure_aborts_rather_than_raising(net):
 
 class _FakeContext:
     def __init__(self):
-        self.routes, self.ws_routes = [], []
+        self.routes, self.ws_routes, self.init_scripts = [], [], []
+
+    def add_init_script(self, script):
+        self.init_scripts.append(script)
+
+    def on(self, event, handler):
+        pass
 
     def route(self, pattern, handler):
         self.routes.append(pattern)
@@ -189,6 +247,8 @@ def test_the_browser_is_launched_with_no_network_of_its_own():
     assert "--proxy-bypass-list=<-loopback>" in args
     assert browser.context_kwargs["service_workers"] == "block"
     assert "**/*" in context.routes and context.ws_routes == ["**/*"]
+    assert "SharedWorker" in context.init_scripts[0]
+    assert "RTCPeerConnection" in context.init_scripts[0]
 
 
 @pytest.mark.parametrize(
@@ -270,3 +330,39 @@ def test_a_real_browser_has_no_route_around_the_guard(chromium):
     page = context.new_page()
     with pytest.raises(Exception, match="ERR_PROXY_CONNECTION_FAILED|ERR_TUNNEL"):
         page.goto("http://203.0.113.10/", timeout=10000)  # TEST-NET-3, never routed
+
+
+def test_a_real_libgen_style_download_is_streamed_and_adopted(net, chromium, tmp_path):
+    """ads.php -> get.php -> 302 -> attachment, end to end through a real Chromium."""
+    _, context = chromium
+    net.dns.table["cdn.example"] = [OTHER_PUBLIC_IP]
+    book = b"%PDF-1.4 " + b"b" * 50_000
+    net.transport.responses[PUBLIC_IP] = _response(
+        200,
+        b'<html><body><a href="get.php?md5=x&key=k">GET</a></body></html>',
+        headers=[("Content-Type", "text/html")],
+    )
+    page = context.new_page()
+    get_url = core._get_download_url(
+        page, "/ads.php?md5=x", base_url="http://good.example", timeout=15000
+    )
+    assert get_url == "http://good.example/get.php?md5=x&key=k"
+    net.transport.responses[PUBLIC_IP] = _response(
+        302, headers=[("Location", "http://cdn.example/b.pdf")]
+    )
+    net.transport.responses[OTHER_PUBLIC_IP] = _response(
+        200, book, headers=[("Content-Type", "application/pdf"),
+                            ("Content-Disposition", 'attachment; filename="b.pdf"')]
+    )
+    monkey_target = tmp_path / "book.pdf"
+    original = core._get_download_url
+    try:
+        core._get_download_url = lambda *a, **k: get_url
+        saved = core._try_libgen_download(
+            page, "/ads.php?md5=x", monkey_target, base_url="http://good.example",
+            timeout=15000, delay=0, extension="pdf", validate=False,
+        )
+    finally:
+        core._get_download_url = original
+    assert monkey_target.read_bytes() == book and saved == str(monkey_target)
+    assert net.transport.connected.count(OTHER_PUBLIC_IP) == 1  # the key is used once

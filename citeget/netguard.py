@@ -367,8 +367,32 @@ CHROMIUM_GUARD_ARGS = (
     "--dns-prefetch-disable",
 )
 
-#: Resource types refused outright: nothing citeget reads needs them.
-BLOCKED_RESOURCE_TYPES = frozenset({"image", "media", "font"})
+#: Resource types refused outright: nothing citeget reads needs them, and every
+#: request the route serves holds up the page (the handler runs on Playwright's
+#: one thread), so ad frames, long polls and beacons are not worth a fetch.
+BLOCKED_RESOURCE_TYPES = frozenset({
+    "image", "media", "font", "sub_frame", "ping", "eventsource", "csp_report",
+    "manifest", "texttrack", "other",
+})
+
+#: Timeouts (connect, read), in seconds, for a page itself and for what it loads.
+DOCUMENT_TIMEOUT = (10, 60)
+SUBRESOURCE_TIMEOUT = (5, 10)
+
+#: Content types a navigation renders; any other navigation is a download.
+_RENDERED_TYPES = frozenset({
+    "text/html", "application/xhtml+xml", "text/plain", "text/xml", "application/xml", "",
+})
+
+#: Removed from every page before its scripts run: a SharedWorker's requests and
+#: WebRTC's TURN-over-TCP do not pass through routes (the dead proxy stops them,
+#: but it should not be the only wall).
+_PAGE_INIT_SCRIPT = """
+for (const name of ["SharedWorker", "RTCPeerConnection", "webkitRTCPeerConnection",
+                    "RTCDataChannel", "RTCSessionDescription", "RTCIceCandidate"]) {
+  try { delete window[name]; } catch (e) {}
+}
+"""
 
 #: Request headers not forwarded from the browser (requests sets its own).
 _HOP_BY_HOP_REQUEST_HEADERS = frozenset({
@@ -383,30 +407,107 @@ _DROPPED_RESPONSE_HEADERS = frozenset({
 })
 
 
-def _fulfill_headers(resp) -> dict:
+def _safe_header_value(value: str) -> bool:
+    # A value with CR/LF (obs-fold from the origin) makes Chromium drop the
+    # fulfilled response silently, stalling the navigation until it times out.
+    return "\r" not in value and "\n" not in value
+
+
+def _fulfill_headers(resp, *, request_url: str) -> dict:
+    """The headers to fulfill *resp* with: re-framing headers dropped, every
+    ``Set-Cookie`` kept (also from redirect hops on the request's own host)."""
     headers = {
-        k: v for k, v in resp.headers.items() if k.lower() not in _DROPPED_RESPONSE_HEADERS
+        k: v
+        for k, v in resp.headers.items()
+        if k.lower() not in _DROPPED_RESPONSE_HEADERS and _safe_header_value(v)
     }
-    raw = getattr(resp.raw, "headers", None)
-    cookies = raw.getlist("Set-Cookie") if hasattr(raw, "getlist") else []
+    host = urlsplit(request_url).hostname
+    hops = [h for h in getattr(resp, "history", []) if urlsplit(h.url).hostname == host]
+    cookies = []
+    for r in [*hops, resp]:
+        raw = getattr(r.raw, "headers", None)
+        if hasattr(raw, "getlist"):
+            cookies += [c for c in raw.getlist("Set-Cookie") if _safe_header_value(c)]
     if cookies:
         headers["set-cookie"] = "\n".join(cookies)  # Playwright's multi-value form
     return headers
 
 
+def _is_download(resp) -> bool:
+    disposition = resp.headers.get("Content-Disposition", "").lower()
+    content_type = resp.headers.get("Content-Type", "").split(";")[0].strip().lower()
+    return "attachment" in disposition or content_type not in _RENDERED_TYPES
+
+
+def _spool(resp) -> str:
+    """Stream *resp*'s body to a temp file; return its path."""
+    import tempfile
+
+    fd, path = tempfile.mkstemp(prefix="citeget-browser-", suffix=".download")
+    try:
+        with os.fdopen(fd, "wb") as f:
+            for chunk in resp.iter_content(64 * 1024):
+                f.write(chunk)
+    except BaseException:
+        os.unlink(path)
+        raise
+    finally:
+        resp.close()
+    return path
+
+
+class BrowserDownloads:
+    """Files the route handler streamed to disk for download navigations.
+
+    Fulfilling a whole book through Playwright copies it several times over
+    (base64, a JSON pipe, the driver, CDP) and holds the ``download`` event
+    until the last byte has crossed, so a large book times out. Instead the
+    handler streams a download to a temp file itself and hands Chromium an
+    empty attachment; the caller then takes the real file from here.
+    """
+
+    def __init__(self):
+        self._paths: dict = {}
+
+    def add(self, url: str, path: str) -> None:
+        self._paths[url] = path
+
+    def take(self, url: Optional[str] = None) -> Optional[str]:
+        """Pop the file downloaded from *url*, else the most recent one."""
+        if url in self._paths:
+            return self._paths.pop(url)
+        if self._paths:
+            return self._paths.pop(next(reversed(self._paths)))
+        return None
+
+    def discard_all(self) -> None:
+        while self._paths:
+            path = self._paths.popitem()[1]
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+
+
 def browser_route_handler(
     *,
     policy: Optional[NetPolicy] = None,
-    timeout: float = 30,
+    document_timeout=DOCUMENT_TIMEOUT,
+    subresource_timeout=SUBRESOURCE_TIMEOUT,
     blocked_resource_types=BLOCKED_RESOURCE_TYPES,
+    downloads: Optional[BrowserDownloads] = None,
     fetch=None,
 ):
     """A ``context.route("**/*", ...)`` handler that fetches through the guard.
 
     Args:
         policy: The :class:`NetPolicy` (default: :func:`default_policy` now).
-        timeout: Per-request timeout, in seconds, for the guarded fetch.
+        document_timeout: ``requests`` timeout for navigations.
+        subresource_timeout: ``requests`` timeout for everything a page loads.
         blocked_resource_types: Playwright resource types aborted unfetched.
+        downloads: Where download navigations are streamed to (see
+            :class:`BrowserDownloads`); a new one if not given. Exposed on the
+            handler as ``handler.downloads``.
         fetch: The fetcher, ``(method, url, **requests_kwargs) -> Response``;
             defaults to :func:`request` with *policy*. A seam for tests.
     """
@@ -415,11 +516,13 @@ def browser_route_handler(
     log = logging.getLogger(__name__)
     policy = policy or default_policy()
     fetch = fetch or (lambda method, url, **kw: request(method, url, policy=policy, **kw))
+    downloads = downloads if downloads is not None else BrowserDownloads()
 
     def handler(route):
         req = route.request
         if req.resource_type in blocked_resource_types:
             return route.abort("blockedbyclient")
+        is_document = req.resource_type == "document"
         try:
             headers = {
                 k: v
@@ -431,20 +534,41 @@ def browser_route_handler(
                 req.url,
                 headers=headers,
                 data=req.post_data_buffer,
-                timeout=timeout,
+                timeout=document_timeout if is_document else subresource_timeout,
                 allow_redirects=True,
+                stream=True,
             )
+            fulfill_headers = _fulfill_headers(resp, request_url=req.url)
+            if is_document and resp.ok and _is_download(resp):
+                downloads.add(req.url, _spool(resp))
+                if "attachment" not in fulfill_headers.get("Content-Disposition", ""):
+                    fulfill_headers["Content-Disposition"] = "attachment"
+                return route.fulfill(status=resp.status_code, headers=fulfill_headers, body=b"")
+            body = resp.content
         except UnsafeURLError as e:
             log.warning("Browser request refused: %s", e)
             return route.abort("blockedbyclient")
         except Exception as e:
             log.debug("Browser request failed: %s: %s", req.url, e)
             return route.abort("failed")
-        return route.fulfill(
-            status=resp.status_code, headers=_fulfill_headers(resp), body=resp.content
-        )
+        return route.fulfill(status=resp.status_code, headers=fulfill_headers, body=body)
 
+    handler.downloads = downloads
     return handler
+
+
+#: The download stash of each guarded context, by ``id(context)``.
+_CONTEXT_DOWNLOADS: dict = {}
+
+
+def take_browser_download(context, url: Optional[str] = None) -> Optional[str]:
+    """The temp file a guarded *context* streamed for a download of *url*.
+
+    The caller owns the file afterwards. ``None`` if there is none (or the
+    context is not guarded).
+    """
+    stash = _CONTEXT_DOWNLOADS.get(id(context))
+    return stash.take(url) if stash is not None else None
 
 
 def guard_browser_context(context, *, policy: Optional[NetPolicy] = None, **handler_kwargs):
@@ -452,13 +576,25 @@ def guard_browser_context(context, *, policy: Optional[NetPolicy] = None, **hand
 
     The context should come from a browser launched with
     :data:`CHROMIUM_GUARD_ARGS` and be created with ``service_workers="block"``
-    (see :func:`launch_guarded_chromium`); this installs the request route and
-    the WebSocket block. Returns *context*.
+    (see :func:`launch_guarded_chromium`); this installs the request route, the
+    WebSocket block and the page init script. Returns *context*.
     """
-    context.route("**/*", browser_route_handler(policy=policy, **handler_kwargs))
+    handler = browser_route_handler(policy=policy, **handler_kwargs)
+    _CONTEXT_DOWNLOADS[id(context)] = handler.downloads
+
+    def _on_close(*_):
+        stash = _CONTEXT_DOWNLOADS.pop(id(context), None)
+        if stash is not None:
+            stash.discard_all()
+
+    context.route("**/*", handler)
     if hasattr(context, "route_web_socket"):  # Playwright >= 1.48
         # A WebSocket route that never calls connect_to_server is never connected.
         context.route_web_socket("**/*", lambda ws: None)
+    if hasattr(context, "add_init_script"):
+        context.add_init_script(_PAGE_INIT_SCRIPT)
+    if hasattr(context, "on"):
+        context.on("close", _on_close)
     return context
 
 

@@ -39,7 +39,7 @@ class FakeTransport:
     """Stands in for ``urllib3.util.connection.create_connection``."""
 
     def __init__(self, responses):
-        self.responses = responses  # ip -> raw HTTP response bytes
+        self.responses = responses  # ip -> raw HTTP response bytes (or a list)
         self.connected = []
         self._peers = []  # keep each peer alive while its response is read
 
@@ -47,7 +47,10 @@ class FakeTransport:
         ip, _port = address
         self.connected.append(ip)
         ours, theirs = socket.socketpair()
-        theirs.sendall(self.responses.get(ip, _response(404, b"nope")))
+        canned = self.responses.get(ip, _response(404, b"nope"))
+        if isinstance(canned, list):  # one per connection, the last one repeats
+            canned = canned.pop(0) if len(canned) > 1 else canned[0]
+        theirs.sendall(canned)
         theirs.shutdown(socket.SHUT_WR)
         self._peers.append(theirs)
         return ours
