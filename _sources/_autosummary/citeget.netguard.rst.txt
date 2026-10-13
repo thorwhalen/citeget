@@ -9,22 +9,36 @@ citeget.netguard
    .. autosummary::
    
       ALLOW_PRIVATE_ENV_VAR
+      DEAD_PROXY
+      CHROMIUM_GUARD_ARGS
+      BLOCKED_RESOURCE_TYPES
+      DOCUMENT_TIMEOUT
+      STALE_SPOOL_SECONDS
    
    .. rubric:: Functions
 
    .. autosummary::
    
+      adopt_browser_download
+      browser_route_handler
+      check_navigation
       check_url
       default_policy
       get
+      guard_browser_context
       guarded_session
       is_public_address
+      launch_guarded_chromium
+      remove_stale_spools
+      request
       resolve_public
+      spool_dir
    
    .. rubric:: Classes
 
    .. autosummary::
    
+      BrowserDownloads
       NetPolicy
    
    .. rubric:: Exceptions

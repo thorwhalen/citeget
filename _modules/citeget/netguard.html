@@ -512,10 +512,10 @@
 
 </span><span id="line-319">
 </span><span id="line-320">
-<div class="viewcode-block" id="get">
-<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.get">[docs]</a>
-</span><span id="line-321"><span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NetPolicy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span id="line-322"><span class="w">    </span><span class="sd">"""``requests.get`` with the destination guard. Same arguments and return.</span>
+<div class="viewcode-block" id="request">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.request">[docs]</a>
+</span><span id="line-321"><span class="k">def</span><span class="w"> </span><span class="nf">request</span><span class="p">(</span><span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NetPolicy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="line-322"><span class="w">    </span><span class="sd">"""``requests.request`` with the destination guard. Same arguments and return.</span>
 </span><span id="line-323">
 </span><span id="line-324"><span class="sd">    Raises :class:`UnsafeURLError` if the URL, a redirect target, or an address</span>
 </span><span id="line-325"><span class="sd">    a host resolves to is refused; ``proxies=`` is refused as well.</span>
@@ -525,7 +525,432 @@
 </span><span id="line-329">        <span class="k">raise</span> <span class="n">_refuse</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="s2">"requests through a proxy are not allowed"</span><span class="p">)</span>
 </span><span id="line-330">    <span class="n">check_url</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">)</span>
 </span><span id="line-331">    <span class="k">with</span> <span class="n">guarded_session</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">)</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
-</span><span id="line-332">        <span class="k">return</span> <span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</span><span id="line-332">        <span class="k">return</span> <span class="n">session</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+</span><span id="line-333">
+</span><span id="line-334">
+<div class="viewcode-block" id="get">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.get">[docs]</a>
+</span><span id="line-335"><span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NetPolicy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span id="line-336"><span class="w">    </span><span class="sd">"""``requests.get`` with the destination guard (see :func:`request`)."""</span>
+</span><span id="line-337">    <span class="k">return</span> <span class="n">request</span><span class="p">(</span><span class="s2">"GET"</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+</span><span id="line-338">
+</span><span id="line-339">
+</span><span id="line-340"><span class="c1"># ---------------------------------------------------------------------------</span>
+</span><span id="line-341"><span class="c1"># Playwright / Chromium integration</span>
+</span><span id="line-342"><span class="c1"># ---------------------------------------------------------------------------</span>
+</span><span id="line-343"><span class="c1">#</span>
+</span><span id="line-344"><span class="c1"># A route handler that only vets and then calls ``route.continue_()`` is not a</span>
+</span><span id="line-345"><span class="c1"># guard: Playwright calls the handler for the first URL of a redirect chain</span>
+</span><span id="line-346"><span class="c1"># only, and Chromium follows the rest (and does its own DNS, so it can be</span>
+</span><span id="line-347"><span class="c1"># rebound). So the browser is given no network of its own at all:</span>
+</span><span id="line-348"><span class="c1">#</span>
+</span><span id="line-349"><span class="c1"># - every request it makes is answered by :func:`browser_route_handler`, which</span>
+</span><span id="line-350"><span class="c1">#   fetches it through :func:`request` (connect-time vetting, every redirect</span>
+</span><span id="line-351"><span class="c1">#   followed and vetted here, never handed back to the browser) and fulfills</span>
+</span><span id="line-352"><span class="c1">#   the final response;</span>
+</span><span id="line-353"><span class="c1"># - Chromium itself is pointed at a proxy that is not there, with the implicit</span>
+</span><span id="line-354"><span class="c1">#   loopback bypass removed, so anything that escapes interception (a</span>
+</span><span id="line-355"><span class="c1">#   preconnect, a redirect, a request type routes do not see) goes nowhere;</span>
+</span><span id="line-356"><span class="c1"># - service workers, which bypass routes, are blocked; WebSockets are routed and</span>
+</span><span id="line-357"><span class="c1">#   never connected; WebRTC is kept off non-proxied UDP.</span>
+</span><span id="line-358">
+</span><span id="line-359"><span class="c1">#: Where Chromium's own traffic is sent: a port nothing listens on.</span>
+</span><span id="line-360"><span class="n">DEAD_PROXY</span> <span class="o">=</span> <span class="s2">"http://127.0.0.1:9"</span>
+</span><span id="line-361">
+</span><span id="line-362"><span class="c1">#: Chromium flags that leave the browser no network path of its own.</span>
+</span><span id="line-363"><span class="n">CHROMIUM_GUARD_ARGS</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="line-364">    <span class="sa">f</span><span class="s2">"--proxy-server=</span><span class="si">{</span><span class="n">DEAD_PROXY</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+</span><span id="line-365">    <span class="s2">"--proxy-bypass-list=&lt;-loopback&gt;"</span><span class="p">,</span>  <span class="c1"># also proxy loopback (bypassed by default)</span>
+</span><span id="line-366">    <span class="s2">"--force-webrtc-ip-handling-policy=disable_non_proxied_udp"</span><span class="p">,</span>
+</span><span id="line-367">    <span class="s2">"--dns-prefetch-disable"</span><span class="p">,</span>
+</span><span id="line-368"><span class="p">)</span>
+</span><span id="line-369">
+</span><span id="line-370"><span class="c1">#: Resource types refused outright: nothing citeget reads needs them, and every</span>
+</span><span id="line-371"><span class="c1">#: request the route serves holds up the page (the handler runs on Playwright's</span>
+</span><span id="line-372"><span class="c1">#: one thread), so ad frames, long polls and beacons are not worth a fetch.</span>
+</span><span id="line-373"><span class="n">BLOCKED_RESOURCE_TYPES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+</span><span id="line-374">    <span class="p">{</span>
+</span><span id="line-375">        <span class="s2">"image"</span><span class="p">,</span>
+</span><span id="line-376">        <span class="s2">"media"</span><span class="p">,</span>
+</span><span id="line-377">        <span class="s2">"font"</span><span class="p">,</span>
+</span><span id="line-378">        <span class="s2">"sub_frame"</span><span class="p">,</span>
+</span><span id="line-379">        <span class="s2">"ping"</span><span class="p">,</span>
+</span><span id="line-380">        <span class="s2">"eventsource"</span><span class="p">,</span>
+</span><span id="line-381">        <span class="s2">"csp_report"</span><span class="p">,</span>
+</span><span id="line-382">        <span class="s2">"manifest"</span><span class="p">,</span>
+</span><span id="line-383">        <span class="s2">"texttrack"</span><span class="p">,</span>
+</span><span id="line-384">        <span class="s2">"other"</span><span class="p">,</span>
+</span><span id="line-385">    <span class="p">}</span>
+</span><span id="line-386"><span class="p">)</span>
+</span><span id="line-387">
+</span><span id="line-388"><span class="c1">#: Timeouts (connect, read), in seconds, for a page itself and for what it loads.</span>
+</span><span id="line-389"><span class="n">DOCUMENT_TIMEOUT</span> <span class="o">=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+</span><span id="line-390"><span class="n">SUBRESOURCE_TIMEOUT</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</span><span id="line-391">
+</span><span id="line-392"><span class="c1">#: Content types a navigation renders; any other navigation is a download.</span>
+</span><span id="line-393"><span class="n">_RENDERED_TYPES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+</span><span id="line-394">    <span class="p">{</span>
+</span><span id="line-395">        <span class="s2">"text/html"</span><span class="p">,</span>
+</span><span id="line-396">        <span class="s2">"application/xhtml+xml"</span><span class="p">,</span>
+</span><span id="line-397">        <span class="s2">"text/plain"</span><span class="p">,</span>
+</span><span id="line-398">        <span class="s2">"text/xml"</span><span class="p">,</span>
+</span><span id="line-399">        <span class="s2">"application/xml"</span><span class="p">,</span>
+</span><span id="line-400">        <span class="s2">""</span><span class="p">,</span>
+</span><span id="line-401">    <span class="p">}</span>
+</span><span id="line-402"><span class="p">)</span>
+</span><span id="line-403">
+</span><span id="line-404"><span class="c1">#: Removed from every page before its scripts run: a SharedWorker's requests and</span>
+</span><span id="line-405"><span class="c1">#: WebRTC's TURN-over-TCP do not pass through routes (the dead proxy stops them,</span>
+</span><span id="line-406"><span class="c1">#: but it should not be the only wall).</span>
+</span><span id="line-407"><span class="n">_PAGE_INIT_SCRIPT</span> <span class="o">=</span> <span class="s2">"""</span>
+</span><span id="line-408"><span class="s2">for (const name of ["SharedWorker", "RTCPeerConnection", "webkitRTCPeerConnection",</span>
+</span><span id="line-409"><span class="s2">                    "RTCDataChannel", "RTCSessionDescription", "RTCIceCandidate"]) {</span>
+</span><span id="line-410"><span class="s2">  try { delete window[name]; } catch (e) </span><span class="si">{}</span>
+</span><span id="line-411"><span class="s2">}</span>
+</span><span id="line-412"><span class="s2">"""</span>
+</span><span id="line-413">
+</span><span id="line-414"><span class="c1">#: Request headers not forwarded from the browser (requests sets its own).</span>
+</span><span id="line-415"><span class="n">_HOP_BY_HOP_REQUEST_HEADERS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+</span><span id="line-416">    <span class="p">{</span>
+</span><span id="line-417">        <span class="s2">"host"</span><span class="p">,</span>
+</span><span id="line-418">        <span class="s2">"content-length"</span><span class="p">,</span>
+</span><span id="line-419">        <span class="s2">"connection"</span><span class="p">,</span>
+</span><span id="line-420">        <span class="s2">"keep-alive"</span><span class="p">,</span>
+</span><span id="line-421">        <span class="s2">"proxy-connection"</span><span class="p">,</span>
+</span><span id="line-422">        <span class="s2">"transfer-encoding"</span><span class="p">,</span>
+</span><span id="line-423">        <span class="s2">"upgrade"</span><span class="p">,</span>
+</span><span id="line-424">        <span class="s2">"te"</span><span class="p">,</span>
+</span><span id="line-425">        <span class="s2">"accept-encoding"</span><span class="p">,</span>
+</span><span id="line-426">    <span class="p">}</span>
+</span><span id="line-427"><span class="p">)</span>
+</span><span id="line-428"><span class="c1">#: Response headers dropped before fulfilling: the body is already decoded and</span>
+</span><span id="line-429"><span class="c1">#: re-framed, so these would describe bytes the browser never gets.</span>
+</span><span id="line-430"><span class="n">_DROPPED_RESPONSE_HEADERS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+</span><span id="line-431">    <span class="p">{</span>
+</span><span id="line-432">        <span class="s2">"content-encoding"</span><span class="p">,</span>
+</span><span id="line-433">        <span class="s2">"content-length"</span><span class="p">,</span>
+</span><span id="line-434">        <span class="s2">"transfer-encoding"</span><span class="p">,</span>
+</span><span id="line-435">        <span class="s2">"connection"</span><span class="p">,</span>
+</span><span id="line-436">        <span class="s2">"keep-alive"</span><span class="p">,</span>
+</span><span id="line-437">        <span class="s2">"set-cookie"</span><span class="p">,</span>
+</span><span id="line-438">    <span class="p">}</span>
+</span><span id="line-439"><span class="p">)</span>
+</span><span id="line-440">
+</span><span id="line-441">
+</span><span id="line-442"><span class="k">def</span><span class="w"> </span><span class="nf">_safe_header_value</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="line-443">    <span class="c1"># A value with CR/LF (obs-fold from the origin) makes Chromium drop the</span>
+</span><span id="line-444">    <span class="c1"># fulfilled response silently, stalling the navigation until it times out.</span>
+</span><span id="line-445">    <span class="k">return</span> <span class="s2">"</span><span class="se">\r</span><span class="s2">"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">value</span> <span class="ow">and</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">value</span>
+</span><span id="line-446">
+</span><span id="line-447">
+</span><span id="line-448"><span class="k">def</span><span class="w"> </span><span class="nf">_fulfill_headers</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">request_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span id="line-449"><span class="w">    </span><span class="sd">"""The headers to fulfill *resp* with: re-framing headers dropped, every</span>
+</span><span id="line-450"><span class="sd">    ``Set-Cookie`` kept (also from redirect hops on the request's own host)."""</span>
+</span><span id="line-451">    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-452">        <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+</span><span id="line-453">        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+</span><span id="line-454">        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_DROPPED_RESPONSE_HEADERS</span> <span class="ow">and</span> <span class="n">_safe_header_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+</span><span id="line-455">    <span class="p">}</span>
+</span><span id="line-456">    <span class="n">host</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="n">request_url</span><span class="p">)</span><span class="o">.</span><span class="n">hostname</span>
+</span><span id="line-457">    <span class="n">hops</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="s2">"history"</span><span class="p">,</span> <span class="p">[])</span> <span class="k">if</span> <span class="n">urlsplit</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">hostname</span> <span class="o">==</span> <span class="n">host</span><span class="p">]</span>
+</span><span id="line-458">    <span class="n">cookies</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-459">    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="p">[</span><span class="o">*</span><span class="n">hops</span><span class="p">,</span> <span class="n">resp</span><span class="p">]:</span>
+</span><span id="line-460">        <span class="n">raw</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">raw</span><span class="p">,</span> <span class="s2">"headers"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="line-461">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">raw</span><span class="p">,</span> <span class="s2">"getlist"</span><span class="p">):</span>
+</span><span id="line-462">            <span class="n">cookies</span> <span class="o">+=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">raw</span><span class="o">.</span><span class="n">getlist</span><span class="p">(</span><span class="s2">"Set-Cookie"</span><span class="p">)</span> <span class="k">if</span> <span class="n">_safe_header_value</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span>
+</span><span id="line-463">    <span class="k">if</span> <span class="n">cookies</span><span class="p">:</span>
+</span><span id="line-464">        <span class="n">headers</span><span class="p">[</span><span class="s2">"set-cookie"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cookies</span><span class="p">)</span>  <span class="c1"># Playwright's multi-value form</span>
+</span><span id="line-465">    <span class="k">return</span> <span class="n">headers</span>
+</span><span id="line-466">
+</span><span id="line-467">
+</span><span id="line-468"><span class="k">def</span><span class="w"> </span><span class="nf">_is_download</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="line-469">    <span class="n">disposition</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Content-Disposition"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span id="line-470">    <span class="n">content_type</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Content-Type"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">";"</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span id="line-471">    <span class="k">return</span> <span class="s2">"attachment"</span> <span class="ow">in</span> <span class="n">disposition</span> <span class="ow">or</span> <span class="n">content_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_RENDERED_TYPES</span>
+</span><span id="line-472">
+</span><span id="line-473">
+</span><span id="line-474"><span class="c1">#: Spooled browser downloads older than this are removed at the next launch:</span>
+</span><span id="line-475"><span class="c1">#: what a killed job left behind.</span>
+</span><span id="line-476"><span class="n">STALE_SPOOL_SECONDS</span> <span class="o">=</span> <span class="mi">6</span> <span class="o">*</span> <span class="mi">3600</span>
+</span><span id="line-477">
+</span><span id="line-478">
+<div class="viewcode-block" id="spool_dir">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.spool_dir">[docs]</a>
+</span><span id="line-479"><span class="k">def</span><span class="w"> </span><span class="nf">spool_dir</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-480"><span class="w">    </span><span class="sd">"""The directory browser downloads are spooled to (per uid, created 0700)."""</span>
+</span><span id="line-481">    <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+</span><span id="line-482">
+</span><span id="line-483">    <span class="n">uid</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getuid</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">os</span><span class="p">,</span> <span class="s2">"getuid"</span><span class="p">)</span> <span class="k">else</span> <span class="s2">"user"</span>
+</span><span id="line-484">    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="o">.</span><span class="n">gettempdir</span><span class="p">(),</span> <span class="sa">f</span><span class="s2">"citeget-browser-spool-</span><span class="si">{</span><span class="n">uid</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-485">    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mo">0o700</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-486">    <span class="k">return</span> <span class="n">path</span></div>
+
+</span><span id="line-487">
+</span><span id="line-488">
+<div class="viewcode-block" id="remove_stale_spools">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.remove_stale_spools">[docs]</a>
+</span><span id="line-489"><span class="k">def</span><span class="w"> </span><span class="nf">remove_stale_spools</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">max_age</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">STALE_SPOOL_SECONDS</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-490"><span class="w">    </span><span class="sd">"""Delete spooled downloads older than *max_age* seconds."""</span>
+</span><span id="line-491">    <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+</span><span id="line-492">
+</span><span id="line-493">    <span class="n">cutoff</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">max_age</span>
+</span><span id="line-494">    <span class="k">with</span> <span class="n">os</span><span class="o">.</span><span class="n">scandir</span><span class="p">(</span><span class="n">spool_dir</span><span class="p">())</span> <span class="k">as</span> <span class="n">entries</span><span class="p">:</span>
+</span><span id="line-495">        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+</span><span id="line-496">            <span class="k">try</span><span class="p">:</span>
+</span><span id="line-497">                <span class="k">if</span> <span class="p">(</span>
+</span><span id="line-498">                    <span class="n">entry</span><span class="o">.</span><span class="n">is_file</span><span class="p">(</span><span class="n">follow_symlinks</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span id="line-499">                    <span class="ow">and</span> <span class="n">entry</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span> <span class="o">&lt;</span> <span class="n">cutoff</span>
+</span><span id="line-500">                <span class="p">):</span>
+</span><span id="line-501">                    <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+</span><span id="line-502">            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span id="line-503">                <span class="k">pass</span></div>
+
+</span><span id="line-504">
+</span><span id="line-505">
+</span><span id="line-506"><span class="k">def</span><span class="w"> </span><span class="nf">_spool</span><span class="p">(</span><span class="n">resp</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-507"><span class="w">    </span><span class="sd">"""Stream *resp*'s body to a file in :func:`spool_dir`; return its path."""</span>
+</span><span id="line-508">    <span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+</span><span id="line-509">
+</span><span id="line-510">    <span class="n">fd</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">"dl-"</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">".download"</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="n">spool_dir</span><span class="p">())</span>
+</span><span id="line-511">    <span class="k">try</span><span class="p">:</span>
+</span><span id="line-512">        <span class="k">with</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span id="line-513">            <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">resp</span><span class="o">.</span><span class="n">iter_content</span><span class="p">(</span><span class="mi">64</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">):</span>
+</span><span id="line-514">                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</span><span id="line-515">    <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
+</span><span id="line-516">        <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span id="line-517">        <span class="k">raise</span>
+</span><span id="line-518">    <span class="k">finally</span><span class="p">:</span>
+</span><span id="line-519">        <span class="n">resp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</span><span id="line-520">    <span class="k">return</span> <span class="n">path</span>
+</span><span id="line-521">
+</span><span id="line-522">
+<div class="viewcode-block" id="BrowserDownloads">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.BrowserDownloads">[docs]</a>
+</span><span id="line-523"><span class="k">class</span><span class="w"> </span><span class="nc">BrowserDownloads</span><span class="p">:</span>
+</span><span id="line-524"><span class="w">    </span><span class="sd">"""Files the route handler streamed to disk for download navigations.</span>
+</span><span id="line-525">
+</span><span id="line-526"><span class="sd">    Fulfilling a whole book through Playwright copies it several times over</span>
+</span><span id="line-527"><span class="sd">    (base64, a JSON pipe, the driver, CDP) and holds the ``download`` event</span>
+</span><span id="line-528"><span class="sd">    until the last byte has crossed, so a large book times out. Instead the</span>
+</span><span id="line-529"><span class="sd">    handler streams a download to a temp file itself and hands Chromium an</span>
+</span><span id="line-530"><span class="sd">    empty attachment; the caller then takes the real file from here.</span>
+</span><span id="line-531"><span class="sd">    """</span>
+</span><span id="line-532">
+</span><span id="line-533">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="line-534">        <span class="bp">self</span><span class="o">.</span><span class="n">_paths</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="line-535">
+</span><span id="line-536">    <span class="nd">@staticmethod</span>
+</span><span id="line-537">    <span class="k">def</span><span class="w"> </span><span class="nf">_key</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-538">        <span class="kn">from</span><span class="w"> </span><span class="nn">requests.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">requote_uri</span>
+</span><span id="line-539">
+</span><span id="line-540">        <span class="k">return</span> <span class="n">requote_uri</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span><span id="line-541">
+</span><span id="line-542">    <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-543">        <span class="n">old</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paths</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">(</span><span class="n">url</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="line-544">        <span class="k">if</span> <span class="n">old</span><span class="p">:</span>
+</span><span id="line-545">            <span class="n">_unlink_quietly</span><span class="p">(</span><span class="n">old</span><span class="p">)</span>
+</span><span id="line-546">        <span class="bp">self</span><span class="o">.</span><span class="n">_paths</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">(</span><span class="n">url</span><span class="p">)]</span> <span class="o">=</span> <span class="n">path</span>
+</span><span id="line-547">
+<div class="viewcode-block" id="BrowserDownloads.peek">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.BrowserDownloads.peek">[docs]</a>
+</span><span id="line-548">    <span class="k">def</span><span class="w"> </span><span class="nf">peek</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span id="line-549"><span class="w">        </span><span class="sd">"""The file downloaded from *url* (by URL only: never "the latest one",</span>
+</span><span id="line-550"><span class="sd">        which could be a tracking pixel a page navigated to), or ``None``."""</span>
+</span><span id="line-551">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paths</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">(</span><span class="n">url</span><span class="p">))</span></div>
+
+</span><span id="line-552">
+<div class="viewcode-block" id="BrowserDownloads.take">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.BrowserDownloads.take">[docs]</a>
+</span><span id="line-553">    <span class="k">def</span><span class="w"> </span><span class="nf">take</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span id="line-554"><span class="w">        </span><span class="sd">"""Pop and return the file downloaded from *url*; the caller owns it."""</span>
+</span><span id="line-555">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paths</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key</span><span class="p">(</span><span class="n">url</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span></div>
+
+</span><span id="line-556">
+</span><span id="line-557">    <span class="k">def</span><span class="w"> </span><span class="nf">discard_all</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-558">        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_paths</span><span class="p">:</span>
+</span><span id="line-559">            <span class="n">_unlink_quietly</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_paths</span><span class="o">.</span><span class="n">popitem</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span></div>
+
+</span><span id="line-560">
+</span><span id="line-561">
+</span><span id="line-562"><span class="k">def</span><span class="w"> </span><span class="nf">_unlink_quietly</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-563">    <span class="k">try</span><span class="p">:</span>
+</span><span id="line-564">        <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span id="line-565">    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+</span><span id="line-566">        <span class="k">pass</span>
+</span><span id="line-567">
+</span><span id="line-568">
+<div class="viewcode-block" id="browser_route_handler">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.browser_route_handler">[docs]</a>
+</span><span id="line-569"><span class="k">def</span><span class="w"> </span><span class="nf">browser_route_handler</span><span class="p">(</span>
+</span><span id="line-570">    <span class="o">*</span><span class="p">,</span>
+</span><span id="line-571">    <span class="n">policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NetPolicy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-572">    <span class="n">document_timeout</span><span class="o">=</span><span class="n">DOCUMENT_TIMEOUT</span><span class="p">,</span>
+</span><span id="line-573">    <span class="n">subresource_timeout</span><span class="o">=</span><span class="n">SUBRESOURCE_TIMEOUT</span><span class="p">,</span>
+</span><span id="line-574">    <span class="n">blocked_resource_types</span><span class="o">=</span><span class="n">BLOCKED_RESOURCE_TYPES</span><span class="p">,</span>
+</span><span id="line-575">    <span class="n">downloads</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BrowserDownloads</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-576">    <span class="n">fetch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="line-577"><span class="p">):</span>
+</span><span id="line-578"><span class="w">    </span><span class="sd">"""A ``context.route("**/*", ...)`` handler that fetches through the guard.</span>
+</span><span id="line-579">
+</span><span id="line-580"><span class="sd">    Args:</span>
+</span><span id="line-581"><span class="sd">        policy: The :class:`NetPolicy` (default: :func:`default_policy` now).</span>
+</span><span id="line-582"><span class="sd">        document_timeout: ``requests`` timeout for navigations.</span>
+</span><span id="line-583"><span class="sd">        subresource_timeout: ``requests`` timeout for everything a page loads.</span>
+</span><span id="line-584"><span class="sd">        blocked_resource_types: Playwright resource types aborted unfetched.</span>
+</span><span id="line-585"><span class="sd">        downloads: Where download navigations are streamed to (see</span>
+</span><span id="line-586"><span class="sd">            :class:`BrowserDownloads`); a new one if not given. Exposed on the</span>
+</span><span id="line-587"><span class="sd">            handler as ``handler.downloads``.</span>
+</span><span id="line-588"><span class="sd">        fetch: The fetcher, ``(method, url, **requests_kwargs) -&gt; Response``;</span>
+</span><span id="line-589"><span class="sd">            defaults to :func:`request` with *policy*. A seam for tests.</span>
+</span><span id="line-590"><span class="sd">    """</span>
+</span><span id="line-591">    <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+</span><span id="line-592">
+</span><span id="line-593">    <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+</span><span id="line-594">    <span class="n">policy</span> <span class="o">=</span> <span class="n">policy</span> <span class="ow">or</span> <span class="n">default_policy</span><span class="p">()</span>
+</span><span id="line-595">    <span class="n">fetch</span> <span class="o">=</span> <span class="n">fetch</span> <span class="ow">or</span> <span class="p">(</span>
+</span><span id="line-596">        <span class="k">lambda</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">:</span> <span class="n">request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</span><span id="line-597">    <span class="p">)</span>
+</span><span id="line-598">    <span class="n">downloads</span> <span class="o">=</span> <span class="n">downloads</span> <span class="k">if</span> <span class="n">downloads</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">BrowserDownloads</span><span class="p">()</span>
+</span><span id="line-599">
+</span><span id="line-600">    <span class="k">def</span><span class="w"> </span><span class="nf">handler</span><span class="p">(</span><span class="n">route</span><span class="p">):</span>
+</span><span id="line-601">        <span class="n">req</span> <span class="o">=</span> <span class="n">route</span><span class="o">.</span><span class="n">request</span>
+</span><span id="line-602">        <span class="k">if</span> <span class="n">req</span><span class="o">.</span><span class="n">resource_type</span> <span class="ow">in</span> <span class="n">blocked_resource_types</span><span class="p">:</span>
+</span><span id="line-603">            <span class="k">return</span> <span class="n">route</span><span class="o">.</span><span class="n">abort</span><span class="p">(</span><span class="s2">"blockedbyclient"</span><span class="p">)</span>
+</span><span id="line-604">        <span class="n">is_document</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">resource_type</span> <span class="o">==</span> <span class="s2">"document"</span>
+</span><span id="line-605">        <span class="k">try</span><span class="p">:</span>
+</span><span id="line-606">            <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-607">                <span class="n">k</span><span class="p">:</span> <span class="n">v</span>
+</span><span id="line-608">                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">req</span><span class="o">.</span><span class="n">all_headers</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+</span><span id="line-609">                <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">":"</span><span class="p">)</span>
+</span><span id="line-610">                <span class="ow">and</span> <span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_HOP_BY_HOP_REQUEST_HEADERS</span>
+</span><span id="line-611">            <span class="p">}</span>
+</span><span id="line-612">            <span class="n">resp</span> <span class="o">=</span> <span class="n">fetch</span><span class="p">(</span>
+</span><span id="line-613">                <span class="n">req</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+</span><span id="line-614">                <span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+</span><span id="line-615">                <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+</span><span id="line-616">                <span class="n">data</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">post_data_buffer</span><span class="p">,</span>
+</span><span id="line-617">                <span class="n">timeout</span><span class="o">=</span><span class="n">document_timeout</span> <span class="k">if</span> <span class="n">is_document</span> <span class="k">else</span> <span class="n">subresource_timeout</span><span class="p">,</span>
+</span><span id="line-618">                <span class="n">allow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="line-619">                <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="line-620">            <span class="p">)</span>
+</span><span id="line-621">            <span class="n">fulfill_headers</span> <span class="o">=</span> <span class="n">_fulfill_headers</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">request_url</span><span class="o">=</span><span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+</span><span id="line-622">            <span class="k">if</span> <span class="n">is_document</span> <span class="ow">and</span> <span class="n">resp</span><span class="o">.</span><span class="n">ok</span> <span class="ow">and</span> <span class="n">_is_download</span><span class="p">(</span><span class="n">resp</span><span class="p">):</span>
+</span><span id="line-623">                <span class="n">downloads</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">_spool</span><span class="p">(</span><span class="n">resp</span><span class="p">))</span>
+</span><span id="line-624">                <span class="n">disposition</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">fulfill_headers</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+</span><span id="line-625">                    <span class="s2">"content-disposition"</span>
+</span><span id="line-626">                <span class="p">)</span>
+</span><span id="line-627">                <span class="k">if</span> <span class="p">(</span>
+</span><span id="line-628">                    <span class="n">disposition</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span id="line-629">                    <span class="ow">or</span> <span class="s2">"attachment"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fulfill_headers</span><span class="p">[</span><span class="n">disposition</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span id="line-630">                <span class="p">):</span>
+</span><span id="line-631">                    <span class="n">fulfill_headers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">disposition</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="line-632">                    <span class="n">fulfill_headers</span><span class="p">[</span><span class="s2">"Content-Disposition"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"attachment"</span>
+</span><span id="line-633">                <span class="k">return</span> <span class="n">route</span><span class="o">.</span><span class="n">fulfill</span><span class="p">(</span>
+</span><span id="line-634">                    <span class="n">status</span><span class="o">=</span><span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">fulfill_headers</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="sa">b</span><span class="s2">""</span>
+</span><span id="line-635">                <span class="p">)</span>
+</span><span id="line-636">            <span class="n">body</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">content</span>
+</span><span id="line-637">        <span class="k">except</span> <span class="n">UnsafeURLError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="line-638">            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Browser request refused: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+</span><span id="line-639">            <span class="k">return</span> <span class="n">route</span><span class="o">.</span><span class="n">abort</span><span class="p">(</span><span class="s2">"blockedbyclient"</span><span class="p">)</span>
+</span><span id="line-640">        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="line-641">            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Browser request failed: </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">req</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+</span><span id="line-642">            <span class="k">return</span> <span class="n">route</span><span class="o">.</span><span class="n">abort</span><span class="p">(</span><span class="s2">"failed"</span><span class="p">)</span>
+</span><span id="line-643">        <span class="k">return</span> <span class="n">route</span><span class="o">.</span><span class="n">fulfill</span><span class="p">(</span>
+</span><span id="line-644">            <span class="n">status</span><span class="o">=</span><span class="n">resp</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">fulfill_headers</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span>
+</span><span id="line-645">        <span class="p">)</span>
+</span><span id="line-646">
+</span><span id="line-647">    <span class="n">handler</span><span class="o">.</span><span class="n">downloads</span> <span class="o">=</span> <span class="n">downloads</span>
+</span><span id="line-648">    <span class="k">return</span> <span class="n">handler</span></div>
+
+</span><span id="line-649">
+</span><span id="line-650">
+</span><span id="line-651"><span class="c1">#: The download stash of each guarded context, by ``id(context)``.</span>
+</span><span id="line-652"><span class="n">_CONTEXT_DOWNLOADS</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="line-653">
+</span><span id="line-654">
+<div class="viewcode-block" id="adopt_browser_download">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.adopt_browser_download">[docs]</a>
+</span><span id="line-655"><span class="k">def</span><span class="w"> </span><span class="nf">adopt_browser_download</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="line-656"><span class="w">    </span><span class="sd">"""Move the file a guarded *context* streamed for *url* to *dest*.</span>
+</span><span id="line-657">
+</span><span id="line-658"><span class="sd">    Works across filesystems; the stash entry is dropped only once the move</span>
+</span><span id="line-659"><span class="sd">    has succeeded. False if there is no such file (or *context* is unguarded).</span>
+</span><span id="line-660"><span class="sd">    """</span>
+</span><span id="line-661">    <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+</span><span id="line-662">
+</span><span id="line-663">    <span class="n">stash</span> <span class="o">=</span> <span class="n">_CONTEXT_DOWNLOADS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">context</span><span class="p">))</span>
+</span><span id="line-664">    <span class="n">path</span> <span class="o">=</span> <span class="n">stash</span><span class="o">.</span><span class="n">peek</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="k">if</span> <span class="n">stash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span id="line-665">    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+</span><span id="line-666">        <span class="k">return</span> <span class="kc">False</span>
+</span><span id="line-667">    <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">dest</span><span class="p">))</span>
+</span><span id="line-668">    <span class="n">stash</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span><span id="line-669">    <span class="k">return</span> <span class="kc">True</span></div>
+
+</span><span id="line-670">
+</span><span id="line-671">
+<div class="viewcode-block" id="guard_browser_context">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.guard_browser_context">[docs]</a>
+</span><span id="line-672"><span class="k">def</span><span class="w"> </span><span class="nf">guard_browser_context</span><span class="p">(</span>
+</span><span id="line-673">    <span class="n">context</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NetPolicy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">handler_kwargs</span>
+</span><span id="line-674"><span class="p">):</span>
+</span><span id="line-675"><span class="w">    </span><span class="sd">"""Route all of a Playwright ``BrowserContext``'s traffic through the guard.</span>
+</span><span id="line-676">
+</span><span id="line-677"><span class="sd">    The context should come from a browser launched with</span>
+</span><span id="line-678"><span class="sd">    :data:`CHROMIUM_GUARD_ARGS` and be created with ``service_workers="block"``</span>
+</span><span id="line-679"><span class="sd">    (see :func:`launch_guarded_chromium`); this installs the request route, the</span>
+</span><span id="line-680"><span class="sd">    WebSocket block and the page init script. Returns *context*.</span>
+</span><span id="line-681"><span class="sd">    """</span>
+</span><span id="line-682">    <span class="n">handler</span> <span class="o">=</span> <span class="n">browser_route_handler</span><span class="p">(</span><span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">,</span> <span class="o">**</span><span class="n">handler_kwargs</span><span class="p">)</span>
+</span><span id="line-683">    <span class="n">_CONTEXT_DOWNLOADS</span><span class="p">[</span><span class="nb">id</span><span class="p">(</span><span class="n">context</span><span class="p">)]</span> <span class="o">=</span> <span class="n">handler</span><span class="o">.</span><span class="n">downloads</span>
+</span><span id="line-684">
+</span><span id="line-685">    <span class="k">def</span><span class="w"> </span><span class="nf">_on_close</span><span class="p">(</span><span class="o">*</span><span class="n">_</span><span class="p">):</span>
+</span><span id="line-686">        <span class="n">stash</span> <span class="o">=</span> <span class="n">_CONTEXT_DOWNLOADS</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">context</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="line-687">        <span class="k">if</span> <span class="n">stash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-688">            <span class="n">stash</span><span class="o">.</span><span class="n">discard_all</span><span class="p">()</span>
+</span><span id="line-689">
+</span><span id="line-690">    <span class="n">context</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">"**/*"</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
+</span><span id="line-691">    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s2">"route_web_socket"</span><span class="p">):</span>  <span class="c1"># Playwright &gt;= 1.48</span>
+</span><span id="line-692">        <span class="c1"># A WebSocket route that never calls connect_to_server is never connected.</span>
+</span><span id="line-693">        <span class="n">context</span><span class="o">.</span><span class="n">route_web_socket</span><span class="p">(</span><span class="s2">"**/*"</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">ws</span><span class="p">:</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="line-694">    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s2">"add_init_script"</span><span class="p">):</span>
+</span><span id="line-695">        <span class="n">context</span><span class="o">.</span><span class="n">add_init_script</span><span class="p">(</span><span class="n">_PAGE_INIT_SCRIPT</span><span class="p">)</span>
+</span><span id="line-696">    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s2">"on"</span><span class="p">):</span>
+</span><span id="line-697">        <span class="n">context</span><span class="o">.</span><span class="n">on</span><span class="p">(</span><span class="s2">"close"</span><span class="p">,</span> <span class="n">_on_close</span><span class="p">)</span>
+</span><span id="line-698">    <span class="k">return</span> <span class="n">context</span></div>
+
+</span><span id="line-699">
+</span><span id="line-700">
+<div class="viewcode-block" id="launch_guarded_chromium">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.launch_guarded_chromium">[docs]</a>
+</span><span id="line-701"><span class="k">def</span><span class="w"> </span><span class="nf">launch_guarded_chromium</span><span class="p">(</span>
+</span><span id="line-702">    <span class="n">playwright</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">headless</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">context_kwargs</span>
+</span><span id="line-703"><span class="p">):</span>
+</span><span id="line-704"><span class="w">    </span><span class="sd">"""Launch Chromium with no network of its own and return ``(browser, context)``.</span>
+</span><span id="line-705">
+</span><span id="line-706"><span class="sd">    Every request the context makes is fetched through the guard.</span>
+</span><span id="line-707"><span class="sd">    """</span>
+</span><span id="line-708">    <span class="n">remove_stale_spools</span><span class="p">()</span>
+</span><span id="line-709">    <span class="n">browser</span> <span class="o">=</span> <span class="n">playwright</span><span class="o">.</span><span class="n">chromium</span><span class="o">.</span><span class="n">launch</span><span class="p">(</span>
+</span><span id="line-710">        <span class="n">headless</span><span class="o">=</span><span class="n">headless</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">CHROMIUM_GUARD_ARGS</span><span class="p">)</span>
+</span><span id="line-711">    <span class="p">)</span>
+</span><span id="line-712">    <span class="n">context</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">new_context</span><span class="p">(</span><span class="n">service_workers</span><span class="o">=</span><span class="s2">"block"</span><span class="p">,</span> <span class="o">**</span><span class="n">context_kwargs</span><span class="p">)</span>
+</span><span id="line-713">    <span class="k">return</span> <span class="n">browser</span><span class="p">,</span> <span class="n">guard_browser_context</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">)</span></div>
+
+</span><span id="line-714">
+</span><span id="line-715">
+<div class="viewcode-block" id="check_navigation">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.check_navigation">[docs]</a>
+</span><span id="line-716"><span class="k">def</span><span class="w"> </span><span class="nf">check_navigation</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NetPolicy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-717"><span class="w">    </span><span class="sd">"""Vet a URL before ``page.goto``: refuses ``file:``, ``data:``, internal IPs.</span>
+</span><span id="line-718">
+</span><span id="line-719"><span class="sd">    &gt;&gt;&gt; check_navigation("data:text/html,&lt;p&gt;hi&lt;/p&gt;")</span>
+</span><span id="line-720"><span class="sd">    Traceback (most recent call last):</span>
+</span><span id="line-721"><span class="sd">      ...</span>
+</span><span id="line-722"><span class="sd">    citeget.netguard.UnsafeURLError: Refused data:text/html,&lt;p&gt;hi&lt;/p&gt;: scheme 'data' is not allowed (allowed: http, https)</span>
+</span><span id="line-723"><span class="sd">    """</span>
+</span><span id="line-724">    <span class="k">return</span> <span class="n">check_url</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">policy</span><span class="o">=</span><span class="n">policy</span><span class="p">)</span></div>
 
 </span></code></pre></div>
     </div></div>
@@ -540,7 +965,7 @@
 </footer>
     </div>
     
-    <script src="../../_static/documentation_options.js?v=1e30946d"></script>
+    <script src="../../_static/documentation_options.js?v=ba481074"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -20,7 +20,7 @@
 - [citeget.resolve](_autosummary/citeget.resolve.html.md): Composable download and URL-resolution for academic references.
 - [citeget.validate](_autosummary/citeget.validate.html.md): Validate that a downloaded file is actually the book or paper it claims to be.
 - [For AI agents](ai-agents.html.md): &#96;citeget&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-13 11:26 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-13 12:02 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
 ## Optional
 
