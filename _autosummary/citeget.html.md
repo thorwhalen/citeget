@@ -160,7 +160,7 @@ Distinct from an empty result set: this means every candidate mirror
 failed to connect (down, moved, or blocked by local DNS/network), so the
 caller gets an actionable message instead of a raw Playwright stack trace.
 
-### *class* citeget.NetPolicy(allow_private=False, allowed_schemes=('http', 'https'), max_redirects=10)
+### *class* citeget.NetPolicy(allow_private=False, allowed_schemes=('http', 'https'), max_redirects=10, max_response_bytes=104857600, max_text_bytes=10485760, max_response_seconds=600)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -172,6 +172,10 @@ What outbound requests are allowed to reach.
   * **allowed_schemes** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – URL schemes allowed on the first request and on every
     redirect hop.
   * **max_redirects** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Redirect hops followed before giving up.
+  * **max_response_bytes** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Largest (decoded) response body read; a larger one
+    raises `ResponseTooLargeError`. `None` or `0`: no ceiling.
+  * **max_text_bytes** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Largest body that `.text` / `.json()` will decode.
+  * **max_response_seconds** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Longest a body may take to arrive, in total.
 
 ### *class* citeget.Reference(number, raw, title='', authors='', year='', venue='', url='', doi='', source_text='')
 

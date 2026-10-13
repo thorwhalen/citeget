@@ -9,6 +9,11 @@ citeget.netguard
    .. autosummary::
    
       ALLOW_PRIVATE_ENV_VAR
+      MAX_RESPONSE_BYTES_ENV_VAR
+      DEFAULT_MAX_RESPONSE_BYTES
+      DEFAULT_MAX_TEXT_BYTES
+      DEFAULT_MAX_RESPONSE_SECONDS
+      DEFAULT_TIMEOUT
       DEAD_PROXY
       CHROMIUM_GUARD_ARGS
       BLOCKED_RESOURCE_TYPES
@@ -39,11 +44,13 @@ citeget.netguard
    .. autosummary::
    
       BrowserDownloads
+      GuardedResponse
       NetPolicy
    
    .. rubric:: Exceptions
 
    .. autosummary::
    
+      ResponseTooLargeError
       UnsafeURLError
    

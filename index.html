@@ -429,7 +429,8 @@ IEEE TSE, ACM Queue.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nb">export</span><span class="w"> </span><span class="nv">CITEGET_ALLOW_PRIVATE_NETWORK</span><span class="o">=</span><span class="m">1</span>
 </span></code></pre></div>
 </div>
-<p>A refused URL raises <code class="docutils literal notranslate"><span class="pre">citeget.netguard.UnsafeURLError</span></code>; in <code class="docutils literal notranslate"><span class="pre">fetch</span></code> it shows up as a failed result whose <code class="docutils literal notranslate"><span class="pre">error</span></code> starts with <code class="docutils literal notranslate"><span class="pre">Refused</span></code>.</p>
+<p>Response bodies are capped at 100 MB (decoded; <code class="docutils literal notranslate"><span class="pre">CITEGET_MAX_RESPONSE_BYTES</span></code>), a body read as text (HTML, XML, JSON) at 10 MB (<code class="docutils literal notranslate"><span class="pre">CITEGET_MAX_TEXT_BYTES</span></code>), and the time a body may take to arrive at 600 s (<code class="docutils literal notranslate"><span class="pre">CITEGET_MAX_RESPONSE_SECONDS</span></code>); <code class="docutils literal notranslate"><span class="pre">0</span></code> lifts a ceiling. An oversized or too-slow response is refused like an internal one.</p>
+<p>A refused URL raises <code class="docutils literal notranslate"><span class="pre">citeget.netguard.UnsafeURLError</span></code> (<code class="docutils literal notranslate"><span class="pre">ResponseTooLargeError</span></code> for an oversized body); in <code class="docutils literal notranslate"><span class="pre">fetch</span></code> it shows up as a failed result whose <code class="docutils literal notranslate"><span class="pre">error</span></code> starts with <code class="docutils literal notranslate"><span class="pre">Refused</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">acquire_all_references</span></code> also caps concurrent runs per owner (default 2; <code class="docutils literal notranslate"><span class="pre">CITEGET_MAX_CONCURRENT_JOBS</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code> for no cap). By default, runs whose <code class="docutils literal notranslate"><span class="pre">work_dir</span></code>s share a parent directory share the cap, which is one cap per user in a hosted app that keeps each user’s jobs side by side. Pass <code class="docutils literal notranslate"><span class="pre">concurrency_key=</span></code> to choose the owner explicitly, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to switch the cap off. Over the cap, the run raises <code class="docutils literal notranslate"><span class="pre">citeget.joblimit.JobLimitExceeded</span></code> before doing any work.</p>
 </section>
 <section id="mirrors">
@@ -477,7 +478,7 @@ audit what was tried, what matched, and what failed.</p>
 
 </section>
 </section>
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 12:02 UTC from <a href="https://github.com/thorwhalen/citeget/commit/2a88797a355e32b56edd43fd718a0b58c245b13f">2a88797</a> (main) · citeget 0.2.13 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-13 12:10 UTC from <a href="https://github.com/thorwhalen/citeget/commit/63e47744355261ee141685e8e3954e585f36c6ee">63e4774</a> (main) · citeget 0.2.14 · <a href="about-this-build.html">about this build</a></p>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
@@ -512,7 +513,7 @@ audit what was tried, what matched, and what failed.</p>
 </div>
 </footer>
 </div>
-<script src="_static/documentation_options.js?v=ba481074"></script>
+<script src="_static/documentation_options.js?v=71c180b9"></script>
 <script src="_static/doctools.js?v=fd6eb6e6"></script>
 <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
 <script src="_static/clipboard.min.js?v=a7894cd8"></script>

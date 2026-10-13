@@ -50,13 +50,18 @@ citeget.netguard.UnsafeURLError: Refused file:///etc/passwd: scheme 'file' is no
 
 ### Module Attributes
 
-| [`ALLOW_PRIVATE_ENV_VAR`](#citeget.netguard.ALLOW_PRIVATE_ENV_VAR)   | Environment variable that switches the guard off (`1`/`true`/`yes`).                                                                                                                              |
-|--------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`DEAD_PROXY`](#citeget.netguard.DEAD_PROXY)              | a port nothing listens on.                                                                                                                                                                        |
-| [`CHROMIUM_GUARD_ARGS`](#citeget.netguard.CHROMIUM_GUARD_ARGS)     | Chromium flags that leave the browser no network path of its own.                                                                                                                                 |
-| [`BLOCKED_RESOURCE_TYPES`](#citeget.netguard.BLOCKED_RESOURCE_TYPES)  | nothing citeget reads needs them, and every request the route serves holds up the page (the handler runs on Playwright's one thread), so ad frames, long polls and beacons are not worth a fetch. |
-| [`DOCUMENT_TIMEOUT`](#citeget.netguard.DOCUMENT_TIMEOUT)        | Timeouts (connect, read), in seconds, for a page itself and for what it loads.                                                                                                                    |
-| [`STALE_SPOOL_SECONDS`](#citeget.netguard.STALE_SPOOL_SECONDS)     | Spooled browser downloads older than this are removed at the next launch: what a killed job left behind.                                                                                          |
+| [`ALLOW_PRIVATE_ENV_VAR`](#citeget.netguard.ALLOW_PRIVATE_ENV_VAR)        | Environment variable that switches the guard off (`1`/`true`/`yes`).                                                                                                                              |
+|-------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`MAX_RESPONSE_BYTES_ENV_VAR`](#citeget.netguard.MAX_RESPONSE_BYTES_ENV_VAR)   | no ceiling).                                                                                                                                                                                      |
+| [`DEFAULT_MAX_RESPONSE_BYTES`](#citeget.netguard.DEFAULT_MAX_RESPONSE_BYTES)   | room for most books, small enough that a few at once fit in a small server's RAM (the browser path holds a body ~5x over).                                                                        |
+| [`DEFAULT_MAX_TEXT_BYTES`](#citeget.netguard.DEFAULT_MAX_TEXT_BYTES)       | parsing HTML or XML costs tens of times its size in memory, so text gets a far smaller ceiling.                                                                                                   |
+| [`DEFAULT_MAX_RESPONSE_SECONDS`](#citeget.netguard.DEFAULT_MAX_RESPONSE_SECONDS) | Longest a body may take to arrive.                                                                                                                                                                |
+| [`DEFAULT_TIMEOUT`](#citeget.netguard.DEFAULT_TIMEOUT)              | the total deadline is only checked between reads, so a read must not hang.                                                                                                                        |
+| [`DEAD_PROXY`](#citeget.netguard.DEAD_PROXY)                   | a port nothing listens on.                                                                                                                                                                        |
+| [`CHROMIUM_GUARD_ARGS`](#citeget.netguard.CHROMIUM_GUARD_ARGS)          | Chromium flags that leave the browser no network path of its own.                                                                                                                                 |
+| [`BLOCKED_RESOURCE_TYPES`](#citeget.netguard.BLOCKED_RESOURCE_TYPES)       | nothing citeget reads needs them, and every request the route serves holds up the page (the handler runs on Playwright's one thread), so ad frames, long polls and beacons are not worth a fetch. |
+| [`DOCUMENT_TIMEOUT`](#citeget.netguard.DOCUMENT_TIMEOUT)             | Timeouts (connect, read), in seconds, for a page itself and for what it loads.                                                                                                                    |
+| [`STALE_SPOOL_SECONDS`](#citeget.netguard.STALE_SPOOL_SECONDS)          | Spooled browser downloads older than this are removed at the next launch: what a killed job left behind.                                                                                          |
 
 ### Functions
 
@@ -78,14 +83,16 @@ citeget.netguard.UnsafeURLError: Refused file:///etc/passwd: scheme 'file' is no
 
 ### Classes
 
-| [`BrowserDownloads`](#citeget.netguard.BrowserDownloads)()                               | Files the route handler streamed to disk for download navigations.   |
-|---------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| [`NetPolicy`](#citeget.netguard.NetPolicy)([allow_private, allowed_schemes, ...]) | What outbound requests are allowed to reach.                         |
+| [`BrowserDownloads`](#citeget.netguard.BrowserDownloads)()                               | Files the route handler streamed to disk for download navigations.                                          |
+|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| [`GuardedResponse`](#citeget.netguard.GuardedResponse)()                                | A `requests.Response` that honours a [`NetPolicy`](#citeget.netguard.NetPolicy)'s ceilings. |
+| [`NetPolicy`](#citeget.netguard.NetPolicy)([allow_private, allowed_schemes, ...]) | What outbound requests are allowed to reach.                                                                |
 
 ### Exceptions
 
-| [`UnsafeURLError`](#citeget.netguard.UnsafeURLError)   | A URL, or an address it resolved to, is outside what the policy allows.   |
-|-------------------------------------------------------------------|---------------------------------------------------------------------------|
+| [`ResponseTooLargeError`](#citeget.netguard.ResponseTooLargeError)   | A response body is larger than the policy's `max_response_bytes`.       |
+|--------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| [`UnsafeURLError`](#citeget.netguard.UnsafeURLError)          | A URL, or an address it resolved to, is outside what the policy allows. |
 
 ### citeget.netguard.ALLOW_PRIVATE_ENV_VAR *= 'CITEGET_ALLOW_PRIVATE_NETWORK'*
 
@@ -138,11 +145,102 @@ a port nothing listens on.
 * **Type:**
   Where Chromium’s own traffic is sent
 
+### citeget.netguard.DEFAULT_MAX_RESPONSE_BYTES *= 104857600*
+
+room for most books, small enough that a few at
+once fit in a small server’s RAM (the browser path holds a body ~5x over).
+
+* **Type:**
+  Largest response body read
+
+### citeget.netguard.DEFAULT_MAX_RESPONSE_SECONDS *= 600*
+
+Longest a body may take to arrive. Socket timeouts are per read, so without
+this a server could trickle a body for hours and hold a job slot throughout.
+
+### citeget.netguard.DEFAULT_MAX_TEXT_BYTES *= 10485760*
+
+parsing HTML or XML
+costs tens of times its size in memory, so text gets a far smaller ceiling.
+
+* **Type:**
+  Largest body decoded as text (`.text` / `.json()`)
+
+### citeget.netguard.DEFAULT_TIMEOUT *= (10, 60)*
+
+the
+total deadline is only checked between reads, so a read must not hang.
+
+* **Type:**
+  Default `requests` timeout (connect, read) when the caller gives none
+
 ### citeget.netguard.DOCUMENT_TIMEOUT *= (10, 60)*
 
 Timeouts (connect, read), in seconds, for a page itself and for what it loads.
 
-### *class* citeget.netguard.NetPolicy(allow_private=False, allowed_schemes=('http', 'https'), max_redirects=10)
+### *class* citeget.netguard.GuardedResponse
+
+Bases: `Response`
+
+A `requests.Response` that honours a [`NetPolicy`](#citeget.netguard.NetPolicy)’s ceilings.
+
+`iter_content` (and so `.content`, which reads through it) is capped by
+size and by a deadline, both counted per response however many times the
+body is iterated; `.text` / `.json()` refuse a body over the text
+ceiling. Parsing `.content` directly bypasses the text ceiling (not the
+size one): citeget’s parsers all go through `.text` / `.json()`.
+
+#### iter_content(chunk_size=1, decode_unicode=False)
+
+Iterates over the response data.  When stream=True is set on the
+request, this avoids reading the content at once into memory for
+large responses.  The chunk size is the number of bytes it should
+read into memory.  This is not necessarily the length of each item
+returned as decoding can take place.
+
+chunk_size must be of type int or None. A value of None will
+function differently depending on the value of `stream`.
+stream=True will read data as it arrives in whatever size the
+chunks are received. If stream=False, data is returned as
+a single chunk.
+
+If decode_unicode is True, content will be decoded using encoding
+information from the response. If no encoding information is available,
+bytes will be returned. This can be bypassed by manually setting
+`encoding` on the response.
+
+#### json(\*\*kwargs)
+
+Decodes the JSON response body (if any) as a Python object.
+
+This may return a dictionary, list, etc. depending on what is in the response.
+
+* **Parameters:**
+  **\*\*kwargs** – Optional arguments that `json.loads` takes.
+* **Raises:**
+  **requests.exceptions.JSONDecodeError** – If the response body does not
+  contain valid json.
+
+#### *property* text
+
+Content of the response, in unicode.
+
+If Response.encoding is None, encoding will be guessed using
+`charset_normalizer` or `chardet`.
+
+The encoding of the response content is determined based solely on HTTP
+headers, following RFC 2616 to the letter. If you can take advantage of
+non-HTTP knowledge to make a better guess at the encoding, you should
+set `r.encoding` appropriately before accessing this property.
+
+### citeget.netguard.MAX_RESPONSE_BYTES_ENV_VAR *= 'CITEGET_MAX_RESPONSE_BYTES'*
+
+no ceiling).
+
+* **Type:**
+  Environment variables for the response ceilings (`0`
+
+### *class* citeget.netguard.NetPolicy(allow_private=False, allowed_schemes=('http', 'https'), max_redirects=10, max_response_bytes=104857600, max_text_bytes=10485760, max_response_seconds=600)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -154,6 +252,19 @@ What outbound requests are allowed to reach.
   * **allowed_schemes** ([`tuple`](https://docs.python.org/3/builtins/stdtypes.html#tuple)) – URL schemes allowed on the first request and on every
     redirect hop.
   * **max_redirects** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Redirect hops followed before giving up.
+  * **max_response_bytes** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Largest (decoded) response body read; a larger one
+    raises [`ResponseTooLargeError`](#citeget.netguard.ResponseTooLargeError). `None` or `0`: no ceiling.
+  * **max_text_bytes** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Largest body that `.text` / `.json()` will decode.
+  * **max_response_seconds** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Longest a body may take to arrive, in total.
+
+### *exception* citeget.netguard.ResponseTooLargeError
+
+Bases: [`UnsafeURLError`](#citeget.netguard.UnsafeURLError)
+
+A response body is larger than the policy’s `max_response_bytes`.
+
+A refusal like any other: callers that report refusals report this too,
+and nobody retries it.
 
 ### citeget.netguard.STALE_SPOOL_SECONDS *= 21600*
 
@@ -299,8 +410,16 @@ Delete spooled downloads older than *max_age* seconds.
 
 `requests.request` with the destination guard. Same arguments and return.
 
+The body is read before returning (or, with `stream=True`, as the caller
+iterates), up to `policy.max_response_bytes`, and the whole exchange,
+redirects included, must finish within `policy.max_response_seconds` of
+the call. `timeout` defaults to [`DEFAULT_TIMEOUT`](#citeget.netguard.DEFAULT_TIMEOUT).
+
 Raises [`UnsafeURLError`](#citeget.netguard.UnsafeURLError) if the URL, a redirect target, or an address
-a host resolves to is refused; `proxies=` is refused as well.
+a host resolves to is refused, or `proxies=` is given;
+[`ResponseTooLargeError`](#citeget.netguard.ResponseTooLargeError) (a subclass) if the body is over the size or
+time ceiling, or if `.text` / `.json()` is asked of a body over the text
+ceiling.
 
 ### citeget.netguard.resolve_public(host, port, , policy=None)
 

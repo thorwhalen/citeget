@@ -2,7 +2,7 @@
 
 # About this build
 
-This documentation was built on **2026-10-13 12:02 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/2a88797a355e32b56edd43fd718a0b58c245b13f"><code>2a88797</code></a> on branch <code>main</code>, for **citeget 0.2.13** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 12:10 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/63e47744355261ee141685e8e3954e585f36c6ee"><code>63e4774</code></a> on branch <code>main</code>, for **citeget 0.2.14** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -11,9 +11,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/2a88797a355e32b56edd43fd718a0b58c245b13f"><code>2a88797a355e32b56edd43fd718a0b58c245b13f</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/63e47744355261ee141685e8e3954e585f36c6ee"><code>63e47744355261ee141685e8e3954e585f36c6ee</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.2.13</code>                                                                                                                                       |
+| Tags at this commit | <code>0.2.14</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/citeget</code>                                                                                                        |
 
@@ -22,9 +22,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/citeget</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/38394129706">38394129706</a>   |
+| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/38395161512">38395161512</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>fd7adaf7f41eeb6319fe17497cafbd51c913d2cc</code> (in the history of the built commit) |
+| Event commit | <code>15486a488cd9b6801b0ff3dad283dd570b209eb1</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -49,13 +49,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/citeget/0.2.13/">0.2.13</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/citeget/0.2.14/">0.2.14</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/citeget && cd citeget
-git checkout 2a88797a355e32b56edd43fd718a0b58c245b13f
+git checkout 63e47744355261ee141685e8e3954e585f36c6ee
 pip install "epythet==0.2.15"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

@@ -174,19 +174,34 @@ their own LAN or <code class="docutils literal notranslate"><span class="pre">lo
 <tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.ALLOW_PRIVATE_ENV_VAR" title="citeget.netguard.ALLOW_PRIVATE_ENV_VAR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ALLOW_PRIVATE_ENV_VAR</span></code></a></p></td>
 <td><p>Environment variable that switches the guard off (<code class="docutils literal notranslate"><span class="pre">1</span></code>/<code class="docutils literal notranslate"><span class="pre">true</span></code>/<code class="docutils literal notranslate"><span class="pre">yes</span></code>).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.DEAD_PROXY" title="citeget.netguard.DEAD_PROXY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEAD_PROXY</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.MAX_RESPONSE_BYTES_ENV_VAR" title="citeget.netguard.MAX_RESPONSE_BYTES_ENV_VAR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_RESPONSE_BYTES_ENV_VAR</span></code></a></p></td>
+<td><p>no ceiling).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.DEFAULT_MAX_RESPONSE_BYTES" title="citeget.netguard.DEFAULT_MAX_RESPONSE_BYTES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_MAX_RESPONSE_BYTES</span></code></a></p></td>
+<td><p>room for most books, small enough that a few at once fit in a small server's RAM (the browser path holds a body ~5x over).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.DEFAULT_MAX_TEXT_BYTES" title="citeget.netguard.DEFAULT_MAX_TEXT_BYTES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_MAX_TEXT_BYTES</span></code></a></p></td>
+<td><p>parsing HTML or XML costs tens of times its size in memory, so text gets a far smaller ceiling.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.DEFAULT_MAX_RESPONSE_SECONDS" title="citeget.netguard.DEFAULT_MAX_RESPONSE_SECONDS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_MAX_RESPONSE_SECONDS</span></code></a></p></td>
+<td><p>Longest a body may take to arrive.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.DEFAULT_TIMEOUT" title="citeget.netguard.DEFAULT_TIMEOUT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEFAULT_TIMEOUT</span></code></a></p></td>
+<td><p>the total deadline is only checked between reads, so a read must not hang.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.DEAD_PROXY" title="citeget.netguard.DEAD_PROXY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DEAD_PROXY</span></code></a></p></td>
 <td><p>a port nothing listens on.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.CHROMIUM_GUARD_ARGS" title="citeget.netguard.CHROMIUM_GUARD_ARGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CHROMIUM_GUARD_ARGS</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.CHROMIUM_GUARD_ARGS" title="citeget.netguard.CHROMIUM_GUARD_ARGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CHROMIUM_GUARD_ARGS</span></code></a></p></td>
 <td><p>Chromium flags that leave the browser no network path of its own.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.BLOCKED_RESOURCE_TYPES" title="citeget.netguard.BLOCKED_RESOURCE_TYPES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BLOCKED_RESOURCE_TYPES</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.BLOCKED_RESOURCE_TYPES" title="citeget.netguard.BLOCKED_RESOURCE_TYPES"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BLOCKED_RESOURCE_TYPES</span></code></a></p></td>
 <td><p>nothing citeget reads needs them, and every request the route serves holds up the page (the handler runs on Playwright's one thread), so ad frames, long polls and beacons are not worth a fetch.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.DOCUMENT_TIMEOUT" title="citeget.netguard.DOCUMENT_TIMEOUT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DOCUMENT_TIMEOUT</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.DOCUMENT_TIMEOUT" title="citeget.netguard.DOCUMENT_TIMEOUT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DOCUMENT_TIMEOUT</span></code></a></p></td>
 <td><p>Timeouts (connect, read), in seconds, for a page itself and for what it loads.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.STALE_SPOOL_SECONDS" title="citeget.netguard.STALE_SPOOL_SECONDS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">STALE_SPOOL_SECONDS</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.STALE_SPOOL_SECONDS" title="citeget.netguard.STALE_SPOOL_SECONDS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">STALE_SPOOL_SECONDS</span></code></a></p></td>
 <td><p>Spooled browser downloads older than this are removed at the next launch: what a killed job left behind.</p></td>
 </tr>
 </tbody>
@@ -244,7 +259,10 @@ their own LAN or <code class="docutils literal notranslate"><span class="pre">lo
 <tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.BrowserDownloads" title="citeget.netguard.BrowserDownloads"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BrowserDownloads</span></code></a>()</p></td>
 <td><p>Files the route handler streamed to disk for download navigations.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.NetPolicy" title="citeget.netguard.NetPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NetPolicy</span></code></a>([allow_private, allowed_schemes, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.GuardedResponse" title="citeget.netguard.GuardedResponse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GuardedResponse</span></code></a>()</p></td>
+<td><p>A <code class="docutils literal notranslate"><span class="pre">requests.Response</span></code> that honours a <a class="reference internal" href="#citeget.netguard.NetPolicy" title="citeget.netguard.NetPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">NetPolicy</span></code></a>'s ceilings.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.NetPolicy" title="citeget.netguard.NetPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NetPolicy</span></code></a>([allow_private, allowed_schemes, ...])</p></td>
 <td><p>What outbound requests are allowed to reach.</p></td>
 </tr>
 </tbody>
@@ -252,7 +270,10 @@ their own LAN or <code class="docutils literal notranslate"><span class="pre">lo
 <p class="rubric">Exceptions</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.UnsafeURLError" title="citeget.netguard.UnsafeURLError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UnsafeURLError</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.ResponseTooLargeError" title="citeget.netguard.ResponseTooLargeError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ResponseTooLargeError</span></code></a></p></td>
+<td><p>A response body is larger than the policy's <code class="docutils literal notranslate"><span class="pre">max_response_bytes</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.UnsafeURLError" title="citeget.netguard.UnsafeURLError"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UnsafeURLError</span></code></a></p></td>
 <td><p>A URL, or an address it resolved to, is outside what the policy allows.</p></td>
 </tr>
 </tbody>
@@ -322,13 +343,119 @@ which could be a tracking pixel a page navigated to), or <code class="docutils l
 </dl>
 </dd></dl>
 <dl class="py data">
+<dt class="sig sig-object py" id="citeget.netguard.DEFAULT_MAX_RESPONSE_BYTES">
+<span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_MAX_RESPONSE_BYTES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">104857600</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.DEFAULT_MAX_RESPONSE_BYTES" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.DEFAULT_MAX_RESPONSE_BYTES'">¶</a></dt>
+<dd><p>room for most books, small enough that a few at
+once fit in a small server’s RAM (the browser path holds a body ~5x over).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Largest response body read</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py data">
+<dt class="sig sig-object py" id="citeget.netguard.DEFAULT_MAX_RESPONSE_SECONDS">
+<span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_MAX_RESPONSE_SECONDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">600</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.DEFAULT_MAX_RESPONSE_SECONDS" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.DEFAULT_MAX_RESPONSE_SECONDS'">¶</a></dt>
+<dd><p>Longest a body may take to arrive. Socket timeouts are per read, so without
+this a server could trickle a body for hours and hold a job slot throughout.</p>
+</dd></dl>
+<dl class="py data">
+<dt class="sig sig-object py" id="citeget.netguard.DEFAULT_MAX_TEXT_BYTES">
+<span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_MAX_TEXT_BYTES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10485760</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.DEFAULT_MAX_TEXT_BYTES" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.DEFAULT_MAX_TEXT_BYTES'">¶</a></dt>
+<dd><p>parsing HTML or XML
+costs tens of times its size in memory, so text gets a far smaller ceiling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Largest body decoded as text (<code class="docutils literal notranslate"><span class="pre">.text</span></code> / <code class="docutils literal notranslate"><span class="pre">.json()</span></code>)</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py data">
+<dt class="sig sig-object py" id="citeget.netguard.DEFAULT_TIMEOUT">
+<span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">DEFAULT_TIMEOUT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(10,</span> <span class="pre">60)</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.DEFAULT_TIMEOUT" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.DEFAULT_TIMEOUT'">¶</a></dt>
+<dd><p>the
+total deadline is only checked between reads, so a read must not hang.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Default <code class="docutils literal notranslate"><span class="pre">requests</span></code> timeout (connect, read) when the caller gives none</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py data">
 <dt class="sig sig-object py" id="citeget.netguard.DOCUMENT_TIMEOUT">
 <span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">DOCUMENT_TIMEOUT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(10,</span> <span class="pre">60)</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.DOCUMENT_TIMEOUT" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.DOCUMENT_TIMEOUT'">¶</a></dt>
 <dd><p>Timeouts (connect, read), in seconds, for a page itself and for what it loads.</p>
 </dd></dl>
 <dl class="py class">
+<dt class="sig sig-object py" id="citeget.netguard.GuardedResponse">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">GuardedResponse</span></span><a class="reference internal" href="../_modules/citeget/netguard.html#GuardedResponse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.GuardedResponse" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.GuardedResponse'">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code></p>
+<p>A <code class="docutils literal notranslate"><span class="pre">requests.Response</span></code> that honours a <a class="reference internal" href="#citeget.netguard.NetPolicy" title="citeget.netguard.NetPolicy"><code class="xref py py-class docutils literal notranslate"><span class="pre">NetPolicy</span></code></a>’s ceilings.</p>
+<p><code class="docutils literal notranslate"><span class="pre">iter_content</span></code> (and so <code class="docutils literal notranslate"><span class="pre">.content</span></code>, which reads through it) is capped by
+size and by a deadline, both counted per response however many times the
+body is iterated; <code class="docutils literal notranslate"><span class="pre">.text</span></code> / <code class="docutils literal notranslate"><span class="pre">.json()</span></code> refuse a body over the text
+ceiling. Parsing <code class="docutils literal notranslate"><span class="pre">.content</span></code> directly bypasses the text ceiling (not the
+size one): citeget’s parsers all go through <code class="docutils literal notranslate"><span class="pre">.text</span></code> / <code class="docutils literal notranslate"><span class="pre">.json()</span></code>.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="citeget.netguard.GuardedResponse.iter_content">
+<span class="sig-name descname"><span class="pre">iter_content</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decode_unicode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/netguard.html#GuardedResponse.iter_content"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.GuardedResponse.iter_content" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.GuardedResponse.iter_content'">¶</a></dt>
+<dd><p>Iterates over the response data.  When stream=True is set on the
+request, this avoids reading the content at once into memory for
+large responses.  The chunk size is the number of bytes it should
+read into memory.  This is not necessarily the length of each item
+returned as decoding can take place.</p>
+<p>chunk_size must be of type int or None. A value of None will
+function differently depending on the value of <code class="code docutils literal notranslate"><span class="pre">stream</span></code>.
+stream=True will read data as it arrives in whatever size the
+chunks are received. If stream=False, data is returned as
+a single chunk.</p>
+<p>If decode_unicode is True, content will be decoded using encoding
+information from the response. If no encoding information is available,
+bytes will be returned. This can be bypassed by manually setting
+<code class="code docutils literal notranslate"><span class="pre">encoding</span></code> on the response.</p>
+</dd></dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="citeget.netguard.GuardedResponse.json">
+<span class="sig-name descname"><span class="pre">json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/netguard.html#GuardedResponse.json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.GuardedResponse.json" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.GuardedResponse.json'">¶</a></dt>
+<dd><p>Decodes the JSON response body (if any) as a Python object.</p>
+<p>This may return a dictionary, list, etc. depending on what is in the response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> – Optional arguments that <code class="docutils literal notranslate"><span class="pre">json.loads</span></code> takes.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>requests.exceptions.JSONDecodeError</strong> – If the response body does not
+contain valid json.</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="citeget.netguard.GuardedResponse.text">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">text</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.GuardedResponse.text" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.GuardedResponse.text'">¶</a></dt>
+<dd><p>Content of the response, in unicode.</p>
+<p>If Response.encoding is None, encoding will be guessed using
+<code class="docutils literal notranslate"><span class="pre">charset_normalizer</span></code> or <code class="docutils literal notranslate"><span class="pre">chardet</span></code>.</p>
+<p>The encoding of the response content is determined based solely on HTTP
+headers, following RFC 2616 to the letter. If you can take advantage of
+non-HTTP knowledge to make a better guess at the encoding, you should
+set <code class="docutils literal notranslate"><span class="pre">r.encoding</span></code> appropriately before accessing this property.</p>
+</dd></dl>
+</dd></dl>
+<dl class="py data">
+<dt class="sig sig-object py" id="citeget.netguard.MAX_RESPONSE_BYTES_ENV_VAR">
+<span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">MAX_RESPONSE_BYTES_ENV_VAR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CITEGET_MAX_RESPONSE_BYTES'</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.MAX_RESPONSE_BYTES_ENV_VAR" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.MAX_RESPONSE_BYTES_ENV_VAR'">¶</a></dt>
+<dd><p>no ceiling).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Environment variables for the response ceilings (<code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py class">
 <dt class="sig sig-object py" id="citeget.netguard.NetPolicy">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">NetPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">allow_private</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_schemes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('http',</span> <span class="pre">'https')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_redirects</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/netguard.html#NetPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.NetPolicy" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.NetPolicy'">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">NetPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">allow_private</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_schemes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('http',</span> <span class="pre">'https')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_redirects</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_response_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">104857600</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_text_bytes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10485760</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_response_seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/netguard.html#NetPolicy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.NetPolicy" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.NetPolicy'">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p>
 <p>What outbound requests are allowed to reach.</p>
 <dl class="field-list simple">
@@ -339,9 +466,21 @@ Off by default; this is what a hosted deployment relies on.</p></li>
 <li><p><strong>allowed_schemes</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></span>) – URL schemes allowed on the first request and on every
 redirect hop.</p></li>
 <li><p><strong>max_redirects</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></span>) – Redirect hops followed before giving up.</p></li>
+<li><p><strong>max_response_bytes</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a>]</span>) – Largest (decoded) response body read; a larger one
+raises <a class="reference internal" href="#citeget.netguard.ResponseTooLargeError" title="citeget.netguard.ResponseTooLargeError"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResponseTooLargeError</span></code></a>. <code class="docutils literal notranslate"><span class="pre">None</span></code> or <code class="docutils literal notranslate"><span class="pre">0</span></code>: no ceiling.</p></li>
+<li><p><strong>max_text_bytes</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a>]</span>) – Largest body that <code class="docutils literal notranslate"><span class="pre">.text</span></code> / <code class="docutils literal notranslate"><span class="pre">.json()</span></code> will decode.</p></li>
+<li><p><strong>max_response_seconds</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a>[<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a>]</span>) – Longest a body may take to arrive, in total.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+<dl class="py exception">
+<dt class="sig sig-object py" id="citeget.netguard.ResponseTooLargeError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">ResponseTooLargeError</span></span><a class="reference internal" href="../_modules/citeget/netguard.html#ResponseTooLargeError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.ResponseTooLargeError" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.ResponseTooLargeError'">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#citeget.netguard.UnsafeURLError" title="citeget.netguard.UnsafeURLError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnsafeURLError</span></code></a></p>
+<p>A response body is larger than the policy’s <code class="docutils literal notranslate"><span class="pre">max_response_bytes</span></code>.</p>
+<p>A refusal like any other: callers that report refusals report this too,
+and nobody retries it.</p>
 </dd></dl>
 <dl class="py data">
 <dt class="sig sig-object py" id="citeget.netguard.STALE_SPOOL_SECONDS">
@@ -513,8 +652,15 @@ DNS points and honours environment proxies like plain <code class="docutils lite
 <dt class="sig sig-object py" id="citeget.netguard.request">
 <span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/netguard.html#request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.request" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.request'">¶</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">requests.request</span></code> with the destination guard. Same arguments and return.</p>
+<p>The body is read before returning (or, with <code class="docutils literal notranslate"><span class="pre">stream=True</span></code>, as the caller
+iterates), up to <code class="docutils literal notranslate"><span class="pre">policy.max_response_bytes</span></code>, and the whole exchange,
+redirects included, must finish within <code class="docutils literal notranslate"><span class="pre">policy.max_response_seconds</span></code> of
+the call. <code class="docutils literal notranslate"><span class="pre">timeout</span></code> defaults to <a class="reference internal" href="#citeget.netguard.DEFAULT_TIMEOUT" title="citeget.netguard.DEFAULT_TIMEOUT"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT_TIMEOUT</span></code></a>.</p>
 <p>Raises <a class="reference internal" href="#citeget.netguard.UnsafeURLError" title="citeget.netguard.UnsafeURLError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnsafeURLError</span></code></a> if the URL, a redirect target, or an address
-a host resolves to is refused; <code class="docutils literal notranslate"><span class="pre">proxies=</span></code> is refused as well.</p>
+a host resolves to is refused, or <code class="docutils literal notranslate"><span class="pre">proxies=</span></code> is given;
+<a class="reference internal" href="#citeget.netguard.ResponseTooLargeError" title="citeget.netguard.ResponseTooLargeError"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResponseTooLargeError</span></code></a> (a subclass) if the body is over the size or
+time ceiling, or if <code class="docutils literal notranslate"><span class="pre">.text</span></code> / <code class="docutils literal notranslate"><span class="pre">.json()</span></code> is asked of a body over the text
+ceiling.</p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -554,8 +700,20 @@ refused outright rather than connected to “the good one”.</p>
 </li>
 <li><a :data-current="activeSection === '#citeget.netguard.CHROMIUM_GUARD_ARGS'" class="reference internal" href="#citeget.netguard.CHROMIUM_GUARD_ARGS"><code class="docutils literal notranslate"><span class="pre">CHROMIUM_GUARD_ARGS</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.netguard.DEAD_PROXY'" class="reference internal" href="#citeget.netguard.DEAD_PROXY"><code class="docutils literal notranslate"><span class="pre">DEAD_PROXY</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.netguard.DEFAULT_MAX_RESPONSE_BYTES'" class="reference internal" href="#citeget.netguard.DEFAULT_MAX_RESPONSE_BYTES"><code class="docutils literal notranslate"><span class="pre">DEFAULT_MAX_RESPONSE_BYTES</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.netguard.DEFAULT_MAX_RESPONSE_SECONDS'" class="reference internal" href="#citeget.netguard.DEFAULT_MAX_RESPONSE_SECONDS"><code class="docutils literal notranslate"><span class="pre">DEFAULT_MAX_RESPONSE_SECONDS</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.netguard.DEFAULT_MAX_TEXT_BYTES'" class="reference internal" href="#citeget.netguard.DEFAULT_MAX_TEXT_BYTES"><code class="docutils literal notranslate"><span class="pre">DEFAULT_MAX_TEXT_BYTES</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.netguard.DEFAULT_TIMEOUT'" class="reference internal" href="#citeget.netguard.DEFAULT_TIMEOUT"><code class="docutils literal notranslate"><span class="pre">DEFAULT_TIMEOUT</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.netguard.DOCUMENT_TIMEOUT'" class="reference internal" href="#citeget.netguard.DOCUMENT_TIMEOUT"><code class="docutils literal notranslate"><span class="pre">DOCUMENT_TIMEOUT</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.netguard.GuardedResponse'" class="reference internal" href="#citeget.netguard.GuardedResponse"><code class="docutils literal notranslate"><span class="pre">GuardedResponse</span></code></a><ul>
+<li><a :data-current="activeSection === '#citeget.netguard.GuardedResponse.iter_content'" class="reference internal" href="#citeget.netguard.GuardedResponse.iter_content"><code class="docutils literal notranslate"><span class="pre">GuardedResponse.iter_content()</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.netguard.GuardedResponse.json'" class="reference internal" href="#citeget.netguard.GuardedResponse.json"><code class="docutils literal notranslate"><span class="pre">GuardedResponse.json()</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.netguard.GuardedResponse.text'" class="reference internal" href="#citeget.netguard.GuardedResponse.text"><code class="docutils literal notranslate"><span class="pre">GuardedResponse.text</span></code></a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#citeget.netguard.MAX_RESPONSE_BYTES_ENV_VAR'" class="reference internal" href="#citeget.netguard.MAX_RESPONSE_BYTES_ENV_VAR"><code class="docutils literal notranslate"><span class="pre">MAX_RESPONSE_BYTES_ENV_VAR</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.netguard.NetPolicy'" class="reference internal" href="#citeget.netguard.NetPolicy"><code class="docutils literal notranslate"><span class="pre">NetPolicy</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.netguard.ResponseTooLargeError'" class="reference internal" href="#citeget.netguard.ResponseTooLargeError"><code class="docutils literal notranslate"><span class="pre">ResponseTooLargeError</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.netguard.STALE_SPOOL_SECONDS'" class="reference internal" href="#citeget.netguard.STALE_SPOOL_SECONDS"><code class="docutils literal notranslate"><span class="pre">STALE_SPOOL_SECONDS</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.netguard.UnsafeURLError'" class="reference internal" href="#citeget.netguard.UnsafeURLError"><code class="docutils literal notranslate"><span class="pre">UnsafeURLError</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.netguard.adopt_browser_download'" class="reference internal" href="#citeget.netguard.adopt_browser_download"><code class="docutils literal notranslate"><span class="pre">adopt_browser_download()</span></code></a></li>
@@ -585,7 +743,7 @@ refused outright rather than connected to “the good one”.</p>
 </div>
 </footer>
 </div>
-<script src="../_static/documentation_options.js?v=ba481074"></script>
+<script src="../_static/documentation_options.js?v=71c180b9"></script>
 <script src="../_static/doctools.js?v=fd6eb6e6"></script>
 <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
 <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -699,12 +699,12 @@
 </span><span id="line-512">    <span class="k">if</span> <span class="ow">not</span> <span class="n">html</span><span class="p">:</span>
 </span><span id="line-513">        <span class="k">try</span><span class="p">:</span>
 </span><span id="line-514">            <span class="n">resp</span> <span class="o">=</span> <span class="n">_http_get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-</span><span id="line-515">        <span class="k">except</span> <span class="n">netguard</span><span class="o">.</span><span class="n">UnsafeURLError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="line-516">            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
-</span><span id="line-517">            <span class="k">return</span> <span class="kc">None</span>
-</span><span id="line-518">        <span class="k">if</span> <span class="n">resp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-519">            <span class="k">return</span> <span class="kc">None</span>
-</span><span id="line-520">        <span class="n">html</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">text</span>
+</span><span id="line-515">            <span class="k">if</span> <span class="n">resp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-516">                <span class="k">return</span> <span class="kc">None</span>
+</span><span id="line-517">            <span class="n">html</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">text</span>
+</span><span id="line-518">        <span class="k">except</span> <span class="n">netguard</span><span class="o">.</span><span class="n">UnsafeURLError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="line-519">            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+</span><span id="line-520">            <span class="k">return</span> <span class="kc">None</span>
 </span><span id="line-521">    <span class="c1"># pdfkit turns ``&lt;meta name="&lt;prefix&gt;..."&gt;`` tags in a string source into</span>
 </span><span id="line-522">    <span class="c1"># wkhtmltopdf command-line options (``--allow``, ``--header-html``...). The</span>
 </span><span id="line-523">    <span class="c1"># sanitizer removes meta tags; a prefix nobody can guess makes sure.</span>
@@ -808,240 +808,245 @@
 </span><span id="line-615">            <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
 </span><span id="line-616">        <span class="p">)</span>
 </span><span id="line-617">
-</span><span id="line-618">    <span class="n">html</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">text</span>
-</span><span id="line-619">
-</span><span id="line-620">    <span class="c1"># --- prefer=pdf: try direct PDF link, then HTML→PDF --------------------</span>
-</span><span id="line-621">    <span class="k">if</span> <span class="n">prefer</span> <span class="o">==</span> <span class="s2">"pdf"</span><span class="p">:</span>
-</span><span id="line-622">        <span class="n">pdf_url</span> <span class="o">=</span> <span class="n">_find_pdf_link</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">html</span><span class="p">)</span>
-</span><span id="line-623">        <span class="k">if</span> <span class="n">pdf_url</span><span class="p">:</span>
-</span><span id="line-624">            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Found embedded PDF link: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">pdf_url</span><span class="p">)</span>
-</span><span id="line-625">            <span class="k">try</span><span class="p">:</span>
-</span><span id="line-626">                <span class="n">pdf_resp</span> <span class="o">=</span> <span class="n">_http_get</span><span class="p">(</span><span class="n">pdf_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
-</span><span id="line-627">            <span class="k">except</span> <span class="n">netguard</span><span class="o">.</span><span class="n">UnsafeURLError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="line-628">                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
-</span><span id="line-629">                <span class="n">pdf_resp</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span id="line-630">            <span class="k">if</span> <span class="n">pdf_resp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_is_pdf_response</span><span class="p">(</span><span class="n">pdf_resp</span><span class="p">):</span>
-</span><span id="line-631">                <span class="k">return</span> <span class="n">_save_bytes</span><span class="p">(</span>
-</span><span id="line-632">                    <span class="n">entry</span><span class="p">,</span>
-</span><span id="line-633">                    <span class="n">output_dir</span><span class="p">,</span>
-</span><span id="line-634">                    <span class="n">pdf_resp</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
-</span><span id="line-635">                    <span class="n">ext</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
-</span><span id="line-636">                    <span class="n">fmt</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
-</span><span id="line-637">                    <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
-</span><span id="line-638">                    <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
-</span><span id="line-639">                <span class="p">)</span>
-</span><span id="line-640">
-</span><span id="line-641">        <span class="n">pdf_bytes</span> <span class="o">=</span> <span class="n">html_to_pdf</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">html</span><span class="o">=</span><span class="n">html</span><span class="p">)</span>
-</span><span id="line-642">        <span class="k">if</span> <span class="n">pdf_bytes</span><span class="p">:</span>
-</span><span id="line-643">            <span class="k">return</span> <span class="n">_save_bytes</span><span class="p">(</span>
-</span><span id="line-644">                <span class="n">entry</span><span class="p">,</span>
-</span><span id="line-645">                <span class="n">output_dir</span><span class="p">,</span>
-</span><span id="line-646">                <span class="n">pdf_bytes</span><span class="p">,</span>
-</span><span id="line-647">                <span class="n">ext</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
-</span><span id="line-648">                <span class="n">fmt</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
-</span><span id="line-649">                <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
-</span><span id="line-650">                <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
-</span><span id="line-651">            <span class="p">)</span>
-</span><span id="line-652">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"HTML→PDF unavailable; falling back to Markdown for </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
-</span><span id="line-653">
-</span><span id="line-654">    <span class="c1"># --- prefer=original: save raw response --------------------------------</span>
-</span><span id="line-655">    <span class="k">if</span> <span class="n">prefer</span> <span class="o">==</span> <span class="s2">"original"</span><span class="p">:</span>
-</span><span id="line-656">        <span class="n">ct</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"content-type"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-</span><span id="line-657">        <span class="n">ext</span> <span class="o">=</span> <span class="s2">"html"</span> <span class="k">if</span> <span class="s2">"html"</span> <span class="ow">in</span> <span class="n">ct</span> <span class="ow">or</span> <span class="s2">"xml"</span> <span class="ow">in</span> <span class="n">ct</span> <span class="k">else</span> <span class="s2">"bin"</span>
-</span><span id="line-658">        <span class="k">return</span> <span class="n">_save_bytes</span><span class="p">(</span>
-</span><span id="line-659">            <span class="n">entry</span><span class="p">,</span>
-</span><span id="line-660">            <span class="n">output_dir</span><span class="p">,</span>
-</span><span id="line-661">            <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
-</span><span id="line-662">            <span class="n">ext</span><span class="o">=</span><span class="n">ext</span><span class="p">,</span>
-</span><span id="line-663">            <span class="n">fmt</span><span class="o">=</span><span class="s2">"original"</span><span class="p">,</span>
-</span><span id="line-664">            <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
-</span><span id="line-665">            <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
-</span><span id="line-666">        <span class="p">)</span>
-</span><span id="line-667">
-</span><span id="line-668">    <span class="c1"># --- Default: Markdown -------------------------------------------------</span>
-</span><span id="line-669">    <span class="n">md</span> <span class="o">=</span> <span class="n">html_to_markdown</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="n">source_url</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
-</span><span id="line-670">    <span class="k">return</span> <span class="n">_save_text</span><span class="p">(</span>
-</span><span id="line-671">        <span class="n">entry</span><span class="p">,</span>
-</span><span id="line-672">        <span class="n">output_dir</span><span class="p">,</span>
-</span><span id="line-673">        <span class="n">md</span><span class="p">,</span>
-</span><span id="line-674">        <span class="n">ext</span><span class="o">=</span><span class="s2">"md"</span><span class="p">,</span>
-</span><span id="line-675">        <span class="n">fmt</span><span class="o">=</span><span class="s2">"md"</span><span class="p">,</span>
-</span><span id="line-676">        <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
-</span><span id="line-677">        <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
-</span><span id="line-678">    <span class="p">)</span></div>
+</span><span id="line-618">    <span class="k">try</span><span class="p">:</span>
+</span><span id="line-619">        <span class="n">html</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">text</span>
+</span><span id="line-620">    <span class="k">except</span> <span class="n">netguard</span><span class="o">.</span><span class="n">UnsafeURLError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># over the text ceiling</span>
+</span><span id="line-621">        <span class="n">result</span><span class="o">.</span><span class="n">error</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</span><span id="line-622">        <span class="k">return</span> <span class="n">result</span>
+</span><span id="line-623">
+</span><span id="line-624">    <span class="c1"># --- prefer=pdf: try direct PDF link, then HTML→PDF --------------------</span>
+</span><span id="line-625">    <span class="k">if</span> <span class="n">prefer</span> <span class="o">==</span> <span class="s2">"pdf"</span><span class="p">:</span>
+</span><span id="line-626">        <span class="n">pdf_url</span> <span class="o">=</span> <span class="n">_find_pdf_link</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">html</span><span class="p">)</span>
+</span><span id="line-627">        <span class="k">if</span> <span class="n">pdf_url</span><span class="p">:</span>
+</span><span id="line-628">            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Found embedded PDF link: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">pdf_url</span><span class="p">)</span>
+</span><span id="line-629">            <span class="k">try</span><span class="p">:</span>
+</span><span id="line-630">                <span class="n">pdf_resp</span> <span class="o">=</span> <span class="n">_http_get</span><span class="p">(</span><span class="n">pdf_url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+</span><span id="line-631">            <span class="k">except</span> <span class="n">netguard</span><span class="o">.</span><span class="n">UnsafeURLError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="line-632">                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+</span><span id="line-633">                <span class="n">pdf_resp</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="line-634">            <span class="k">if</span> <span class="n">pdf_resp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">_is_pdf_response</span><span class="p">(</span><span class="n">pdf_resp</span><span class="p">):</span>
+</span><span id="line-635">                <span class="k">return</span> <span class="n">_save_bytes</span><span class="p">(</span>
+</span><span id="line-636">                    <span class="n">entry</span><span class="p">,</span>
+</span><span id="line-637">                    <span class="n">output_dir</span><span class="p">,</span>
+</span><span id="line-638">                    <span class="n">pdf_resp</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+</span><span id="line-639">                    <span class="n">ext</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
+</span><span id="line-640">                    <span class="n">fmt</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
+</span><span id="line-641">                    <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
+</span><span id="line-642">                    <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+</span><span id="line-643">                <span class="p">)</span>
+</span><span id="line-644">
+</span><span id="line-645">        <span class="n">pdf_bytes</span> <span class="o">=</span> <span class="n">html_to_pdf</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">html</span><span class="o">=</span><span class="n">html</span><span class="p">)</span>
+</span><span id="line-646">        <span class="k">if</span> <span class="n">pdf_bytes</span><span class="p">:</span>
+</span><span id="line-647">            <span class="k">return</span> <span class="n">_save_bytes</span><span class="p">(</span>
+</span><span id="line-648">                <span class="n">entry</span><span class="p">,</span>
+</span><span id="line-649">                <span class="n">output_dir</span><span class="p">,</span>
+</span><span id="line-650">                <span class="n">pdf_bytes</span><span class="p">,</span>
+</span><span id="line-651">                <span class="n">ext</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
+</span><span id="line-652">                <span class="n">fmt</span><span class="o">=</span><span class="s2">"pdf"</span><span class="p">,</span>
+</span><span id="line-653">                <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
+</span><span id="line-654">                <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+</span><span id="line-655">            <span class="p">)</span>
+</span><span id="line-656">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"HTML→PDF unavailable; falling back to Markdown for </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+</span><span id="line-657">
+</span><span id="line-658">    <span class="c1"># --- prefer=original: save raw response --------------------------------</span>
+</span><span id="line-659">    <span class="k">if</span> <span class="n">prefer</span> <span class="o">==</span> <span class="s2">"original"</span><span class="p">:</span>
+</span><span id="line-660">        <span class="n">ct</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"content-type"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span id="line-661">        <span class="n">ext</span> <span class="o">=</span> <span class="s2">"html"</span> <span class="k">if</span> <span class="s2">"html"</span> <span class="ow">in</span> <span class="n">ct</span> <span class="ow">or</span> <span class="s2">"xml"</span> <span class="ow">in</span> <span class="n">ct</span> <span class="k">else</span> <span class="s2">"bin"</span>
+</span><span id="line-662">        <span class="k">return</span> <span class="n">_save_bytes</span><span class="p">(</span>
+</span><span id="line-663">            <span class="n">entry</span><span class="p">,</span>
+</span><span id="line-664">            <span class="n">output_dir</span><span class="p">,</span>
+</span><span id="line-665">            <span class="n">resp</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+</span><span id="line-666">            <span class="n">ext</span><span class="o">=</span><span class="n">ext</span><span class="p">,</span>
+</span><span id="line-667">            <span class="n">fmt</span><span class="o">=</span><span class="s2">"original"</span><span class="p">,</span>
+</span><span id="line-668">            <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
+</span><span id="line-669">            <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+</span><span id="line-670">        <span class="p">)</span>
+</span><span id="line-671">
+</span><span id="line-672">    <span class="c1"># --- Default: Markdown -------------------------------------------------</span>
+</span><span id="line-673">    <span class="n">md</span> <span class="o">=</span> <span class="n">html_to_markdown</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="n">source_url</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+</span><span id="line-674">    <span class="k">return</span> <span class="n">_save_text</span><span class="p">(</span>
+</span><span id="line-675">        <span class="n">entry</span><span class="p">,</span>
+</span><span id="line-676">        <span class="n">output_dir</span><span class="p">,</span>
+</span><span id="line-677">        <span class="n">md</span><span class="p">,</span>
+</span><span id="line-678">        <span class="n">ext</span><span class="o">=</span><span class="s2">"md"</span><span class="p">,</span>
+</span><span id="line-679">        <span class="n">fmt</span><span class="o">=</span><span class="s2">"md"</span><span class="p">,</span>
+</span><span id="line-680">        <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
+</span><span id="line-681">        <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+</span><span id="line-682">    <span class="p">)</span></div>
 
-</span><span id="line-679">
-</span><span id="line-680">
-</span><span id="line-681"><span class="k">def</span><span class="w"> </span><span class="nf">_save_bytes</span><span class="p">(</span>
-</span><span id="line-682">    <span class="n">entry</span><span class="p">:</span> <span class="n">UrlEntry</span><span class="p">,</span>
-</span><span id="line-683">    <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-</span><span id="line-684">    <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
-</span><span id="line-685">    <span class="o">*</span><span class="p">,</span>
-</span><span id="line-686">    <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span id="line-687">    <span class="n">fmt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span id="line-688">    <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-</span><span id="line-689">    <span class="n">result</span><span class="p">:</span> <span class="n">FetchResult</span><span class="p">,</span>
-</span><span id="line-690"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FetchResult</span><span class="p">:</span>
-</span><span id="line-691">    <span class="n">out_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">infer_filename</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
-</span><span id="line-692">    <span class="k">if</span> <span class="n">skip_existing</span> <span class="ow">and</span> <span class="n">out_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span id="line-693">        <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"skipped"</span>
-</span><span id="line-694">        <span class="n">result</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">out_path</span>
-</span><span id="line-695">        <span class="n">result</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">fmt</span>
-</span><span id="line-696">        <span class="k">return</span> <span class="n">result</span>
-</span><span id="line-697">    <span class="n">out_path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-</span><span id="line-698">    <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"ok"</span>
-</span><span id="line-699">    <span class="n">result</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">out_path</span>
-</span><span id="line-700">    <span class="n">result</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">fmt</span>
-</span><span id="line-701">    <span class="k">return</span> <span class="n">result</span>
-</span><span id="line-702">
-</span><span id="line-703">
-</span><span id="line-704"><span class="k">def</span><span class="w"> </span><span class="nf">_save_text</span><span class="p">(</span>
-</span><span id="line-705">    <span class="n">entry</span><span class="p">:</span> <span class="n">UrlEntry</span><span class="p">,</span>
-</span><span id="line-706">    <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
-</span><span id="line-707">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span id="line-708">    <span class="o">*</span><span class="p">,</span>
-</span><span id="line-709">    <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span id="line-710">    <span class="n">fmt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span id="line-711">    <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-</span><span id="line-712">    <span class="n">result</span><span class="p">:</span> <span class="n">FetchResult</span><span class="p">,</span>
-</span><span id="line-713"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FetchResult</span><span class="p">:</span>
-</span><span id="line-714">    <span class="n">out_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">infer_filename</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
-</span><span id="line-715">    <span class="k">if</span> <span class="n">skip_existing</span> <span class="ow">and</span> <span class="n">out_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-</span><span id="line-716">        <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"skipped"</span>
-</span><span id="line-717">        <span class="n">result</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">out_path</span>
-</span><span id="line-718">        <span class="n">result</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">fmt</span>
-</span><span id="line-719">        <span class="k">return</span> <span class="n">result</span>
-</span><span id="line-720">    <span class="n">out_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
-</span><span id="line-721">    <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"ok"</span>
-</span><span id="line-722">    <span class="n">result</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">out_path</span>
-</span><span id="line-723">    <span class="n">result</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">fmt</span>
-</span><span id="line-724">    <span class="k">return</span> <span class="n">result</span>
-</span><span id="line-725">
-</span><span id="line-726">
-</span><span id="line-727"><span class="c1"># ---------------------------------------------------------------------------</span>
-</span><span id="line-728"><span class="c1"># Multi-source entry point</span>
-</span><span id="line-729"><span class="c1"># ---------------------------------------------------------------------------</span>
+</span><span id="line-683">
+</span><span id="line-684">
+</span><span id="line-685"><span class="k">def</span><span class="w"> </span><span class="nf">_save_bytes</span><span class="p">(</span>
+</span><span id="line-686">    <span class="n">entry</span><span class="p">:</span> <span class="n">UrlEntry</span><span class="p">,</span>
+</span><span id="line-687">    <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+</span><span id="line-688">    <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span>
+</span><span id="line-689">    <span class="o">*</span><span class="p">,</span>
+</span><span id="line-690">    <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="line-691">    <span class="n">fmt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="line-692">    <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span id="line-693">    <span class="n">result</span><span class="p">:</span> <span class="n">FetchResult</span><span class="p">,</span>
+</span><span id="line-694"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FetchResult</span><span class="p">:</span>
+</span><span id="line-695">    <span class="n">out_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">infer_filename</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
+</span><span id="line-696">    <span class="k">if</span> <span class="n">skip_existing</span> <span class="ow">and</span> <span class="n">out_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+</span><span id="line-697">        <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"skipped"</span>
+</span><span id="line-698">        <span class="n">result</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">out_path</span>
+</span><span id="line-699">        <span class="n">result</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">fmt</span>
+</span><span id="line-700">        <span class="k">return</span> <span class="n">result</span>
+</span><span id="line-701">    <span class="n">out_path</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span><span id="line-702">    <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"ok"</span>
+</span><span id="line-703">    <span class="n">result</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">out_path</span>
+</span><span id="line-704">    <span class="n">result</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">fmt</span>
+</span><span id="line-705">    <span class="k">return</span> <span class="n">result</span>
+</span><span id="line-706">
+</span><span id="line-707">
+</span><span id="line-708"><span class="k">def</span><span class="w"> </span><span class="nf">_save_text</span><span class="p">(</span>
+</span><span id="line-709">    <span class="n">entry</span><span class="p">:</span> <span class="n">UrlEntry</span><span class="p">,</span>
+</span><span id="line-710">    <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+</span><span id="line-711">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="line-712">    <span class="o">*</span><span class="p">,</span>
+</span><span id="line-713">    <span class="n">ext</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="line-714">    <span class="n">fmt</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="line-715">    <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span id="line-716">    <span class="n">result</span><span class="p">:</span> <span class="n">FetchResult</span><span class="p">,</span>
+</span><span id="line-717"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FetchResult</span><span class="p">:</span>
+</span><span id="line-718">    <span class="n">out_path</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="o">/</span> <span class="n">infer_filename</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">ext</span><span class="p">)</span>
+</span><span id="line-719">    <span class="k">if</span> <span class="n">skip_existing</span> <span class="ow">and</span> <span class="n">out_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+</span><span id="line-720">        <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"skipped"</span>
+</span><span id="line-721">        <span class="n">result</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">out_path</span>
+</span><span id="line-722">        <span class="n">result</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">fmt</span>
+</span><span id="line-723">        <span class="k">return</span> <span class="n">result</span>
+</span><span id="line-724">    <span class="n">out_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+</span><span id="line-725">    <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s2">"ok"</span>
+</span><span id="line-726">    <span class="n">result</span><span class="o">.</span><span class="n">output_file</span> <span class="o">=</span> <span class="n">out_path</span>
+</span><span id="line-727">    <span class="n">result</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="n">fmt</span>
+</span><span id="line-728">    <span class="k">return</span> <span class="n">result</span>
+</span><span id="line-729">
 </span><span id="line-730">
-</span><span id="line-731">
-</span><span id="line-732"><span class="k">def</span><span class="w"> </span><span class="nf">_coerce_to_entries</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">UrlEntry</span><span class="p">]:</span>
-</span><span id="line-733"><span class="w">    </span><span class="sd">"""Turn flexible *source* input into a deduped list of :class:`UrlEntry`.</span>
+</span><span id="line-731"><span class="c1"># ---------------------------------------------------------------------------</span>
+</span><span id="line-732"><span class="c1"># Multi-source entry point</span>
+</span><span id="line-733"><span class="c1"># ---------------------------------------------------------------------------</span>
 </span><span id="line-734">
-</span><span id="line-735"><span class="sd">    Accepts:</span>
-</span><span id="line-736"><span class="sd">    - a single URL string</span>
-</span><span id="line-737"><span class="sd">    - a path-like to a file containing URLs in any form</span>
-</span><span id="line-738"><span class="sd">    - a string with prose / markdown / reference citations</span>
-</span><span id="line-739"><span class="sd">    - an iterable of any of the above (including UrlEntry instances)</span>
-</span><span id="line-740"><span class="sd">    """</span>
-</span><span id="line-741">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">UrlEntry</span><span class="p">):</span>
-</span><span id="line-742">        <span class="k">return</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span>
-</span><span id="line-743">
-</span><span id="line-744">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
-</span><span id="line-745">        <span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
-</span><span id="line-746">        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
-</span><span id="line-747">        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
-</span><span id="line-748">            <span class="k">return</span> <span class="n">extract_urls_from_text</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
-</span><span id="line-749">        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">"http://"</span><span class="p">,</span> <span class="s2">"https://"</span><span class="p">))</span> <span class="ow">and</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
-</span><span id="line-750">            <span class="k">return</span> <span class="p">[</span><span class="n">UrlEntry</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">())]</span>
-</span><span id="line-751">        <span class="k">return</span> <span class="n">extract_urls_from_text</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-</span><span id="line-752">
-</span><span id="line-753">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
-</span><span id="line-754">        <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">UrlEntry</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="line-755">        <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-</span><span id="line-756">        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">source</span><span class="p">:</span>
-</span><span id="line-757">            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">_coerce_to_entries</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
-</span><span id="line-758">                <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">url</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
-</span><span id="line-759">                    <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
-</span><span id="line-760">                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
-</span><span id="line-761">        <span class="k">return</span> <span class="n">out</span>
-</span><span id="line-762">
-</span><span id="line-763">    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported source type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-764">
-</span><span id="line-765">
+</span><span id="line-735">
+</span><span id="line-736"><span class="k">def</span><span class="w"> </span><span class="nf">_coerce_to_entries</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">UrlEntry</span><span class="p">]:</span>
+</span><span id="line-737"><span class="w">    </span><span class="sd">"""Turn flexible *source* input into a deduped list of :class:`UrlEntry`.</span>
+</span><span id="line-738">
+</span><span id="line-739"><span class="sd">    Accepts:</span>
+</span><span id="line-740"><span class="sd">    - a single URL string</span>
+</span><span id="line-741"><span class="sd">    - a path-like to a file containing URLs in any form</span>
+</span><span id="line-742"><span class="sd">    - a string with prose / markdown / reference citations</span>
+</span><span id="line-743"><span class="sd">    - an iterable of any of the above (including UrlEntry instances)</span>
+</span><span id="line-744"><span class="sd">    """</span>
+</span><span id="line-745">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">UrlEntry</span><span class="p">):</span>
+</span><span id="line-746">        <span class="k">return</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span>
+</span><span id="line-747">
+</span><span id="line-748">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
+</span><span id="line-749">        <span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+</span><span id="line-750">        <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+</span><span id="line-751">        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+</span><span id="line-752">            <span class="k">return</span> <span class="n">extract_urls_from_text</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">))</span>
+</span><span id="line-753">        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">"http://"</span><span class="p">,</span> <span class="s2">"https://"</span><span class="p">))</span> <span class="ow">and</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+</span><span id="line-754">            <span class="k">return</span> <span class="p">[</span><span class="n">UrlEntry</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">())]</span>
+</span><span id="line-755">        <span class="k">return</span> <span class="n">extract_urls_from_text</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</span><span id="line-756">
+</span><span id="line-757">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+</span><span id="line-758">        <span class="n">out</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">UrlEntry</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-759">        <span class="n">seen</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+</span><span id="line-760">        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">source</span><span class="p">:</span>
+</span><span id="line-761">            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">_coerce_to_entries</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+</span><span id="line-762">                <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">url</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+</span><span id="line-763">                    <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+</span><span id="line-764">                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+</span><span id="line-765">        <span class="k">return</span> <span class="n">out</span>
+</span><span id="line-766">
+</span><span id="line-767">    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported source type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-768">
+</span><span id="line-769">
 <div class="viewcode-block" id="fetch">
 <a class="viewcode-back" href="../../_autosummary/citeget.html#citeget.fetch">[docs]</a>
-</span><span id="line-766"><span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span>
-</span><span id="line-767">    <span class="n">source</span><span class="p">,</span>
-</span><span id="line-768">    <span class="o">*</span><span class="p">,</span>
-</span><span id="line-769">    <span class="n">output_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"~/Downloads"</span><span class="p">,</span>
-</span><span id="line-770">    <span class="n">prefer</span><span class="p">:</span> <span class="n">PreferFormat</span> <span class="o">=</span> <span class="s2">"md"</span><span class="p">,</span>
-</span><span id="line-771">    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
-</span><span id="line-772">    <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span id="line-773">    <span class="n">on_result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="line-774"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">FetchResult</span><span class="p">]:</span>
-</span><span id="line-775"><span class="w">    </span><span class="sd">"""Fetch one or many URLs from a flexible *source*.</span>
-</span><span id="line-776">
-</span><span id="line-777"><span class="sd">    Args:</span>
-</span><span id="line-778"><span class="sd">        source: A URL, list of URLs, path to a file containing URLs, or</span>
-</span><span id="line-779"><span class="sd">            a string of prose / markdown / reference-style text.</span>
-</span><span id="line-780"><span class="sd">        output_dir: Where to save files (created if missing).</span>
-</span><span id="line-781"><span class="sd">        prefer: ``"md"`` (default), ``"pdf"``, ``"original"``, or ``"auto"``.</span>
-</span><span id="line-782"><span class="sd">            See :func:`fetch_one` for details.</span>
-</span><span id="line-783"><span class="sd">        timeout: HTTP timeout per request.</span>
-</span><span id="line-784"><span class="sd">        skip_existing: Skip URLs whose inferred output file exists.</span>
-</span><span id="line-785"><span class="sd">        on_result: Optional callback ``(index, total, FetchResult) -&gt; None``</span>
-</span><span id="line-786"><span class="sd">            invoked after each fetch (for progress reporting).</span>
-</span><span id="line-787">
-</span><span id="line-788"><span class="sd">    Returns:</span>
-</span><span id="line-789"><span class="sd">        A list of :class:`FetchResult`, one per unique URL.</span>
-</span><span id="line-790"><span class="sd">    """</span>
-</span><span id="line-791">    <span class="n">entries</span> <span class="o">=</span> <span class="n">_coerce_to_entries</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
-</span><span id="line-792">    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
-</span><span id="line-793">
-</span><span id="line-794">    <span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FetchResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="line-795">    <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
-</span><span id="line-796">    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">entry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
-</span><span id="line-797">        <span class="n">result</span> <span class="o">=</span> <span class="n">fetch_one</span><span class="p">(</span>
-</span><span id="line-798">            <span class="n">entry</span><span class="p">,</span>
-</span><span id="line-799">            <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
-</span><span id="line-800">            <span class="n">prefer</span><span class="o">=</span><span class="n">prefer</span><span class="p">,</span>
-</span><span id="line-801">            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-</span><span id="line-802">            <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
-</span><span id="line-803">        <span class="p">)</span>
-</span><span id="line-804">        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-</span><span id="line-805">        <span class="k">if</span> <span class="n">on_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-806">            <span class="n">on_result</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">total</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
-</span><span id="line-807">    <span class="k">return</span> <span class="n">results</span></div>
+</span><span id="line-770"><span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span>
+</span><span id="line-771">    <span class="n">source</span><span class="p">,</span>
+</span><span id="line-772">    <span class="o">*</span><span class="p">,</span>
+</span><span id="line-773">    <span class="n">output_dir</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"~/Downloads"</span><span class="p">,</span>
+</span><span id="line-774">    <span class="n">prefer</span><span class="p">:</span> <span class="n">PreferFormat</span> <span class="o">=</span> <span class="s2">"md"</span><span class="p">,</span>
+</span><span id="line-775">    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+</span><span id="line-776">    <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="line-777">    <span class="n">on_result</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="line-778"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">FetchResult</span><span class="p">]:</span>
+</span><span id="line-779"><span class="w">    </span><span class="sd">"""Fetch one or many URLs from a flexible *source*.</span>
+</span><span id="line-780">
+</span><span id="line-781"><span class="sd">    Args:</span>
+</span><span id="line-782"><span class="sd">        source: A URL, list of URLs, path to a file containing URLs, or</span>
+</span><span id="line-783"><span class="sd">            a string of prose / markdown / reference-style text.</span>
+</span><span id="line-784"><span class="sd">        output_dir: Where to save files (created if missing).</span>
+</span><span id="line-785"><span class="sd">        prefer: ``"md"`` (default), ``"pdf"``, ``"original"``, or ``"auto"``.</span>
+</span><span id="line-786"><span class="sd">            See :func:`fetch_one` for details.</span>
+</span><span id="line-787"><span class="sd">        timeout: HTTP timeout per request.</span>
+</span><span id="line-788"><span class="sd">        skip_existing: Skip URLs whose inferred output file exists.</span>
+</span><span id="line-789"><span class="sd">        on_result: Optional callback ``(index, total, FetchResult) -&gt; None``</span>
+</span><span id="line-790"><span class="sd">            invoked after each fetch (for progress reporting).</span>
+</span><span id="line-791">
+</span><span id="line-792"><span class="sd">    Returns:</span>
+</span><span id="line-793"><span class="sd">        A list of :class:`FetchResult`, one per unique URL.</span>
+</span><span id="line-794"><span class="sd">    """</span>
+</span><span id="line-795">    <span class="n">entries</span> <span class="o">=</span> <span class="n">_coerce_to_entries</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+</span><span id="line-796">    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+</span><span id="line-797">
+</span><span id="line-798">    <span class="n">results</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">FetchResult</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="line-799">    <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+</span><span id="line-800">    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">entry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">entries</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+</span><span id="line-801">        <span class="n">result</span> <span class="o">=</span> <span class="n">fetch_one</span><span class="p">(</span>
+</span><span id="line-802">            <span class="n">entry</span><span class="p">,</span>
+</span><span id="line-803">            <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
+</span><span id="line-804">            <span class="n">prefer</span><span class="o">=</span><span class="n">prefer</span><span class="p">,</span>
+</span><span id="line-805">            <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+</span><span id="line-806">            <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
+</span><span id="line-807">        <span class="p">)</span>
+</span><span id="line-808">        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span id="line-809">        <span class="k">if</span> <span class="n">on_result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-810">            <span class="n">on_result</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">total</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</span><span id="line-811">    <span class="k">return</span> <span class="n">results</span></div>
 
-</span><span id="line-808">
-</span><span id="line-809">
-</span><span id="line-810"><span class="c1"># ---------------------------------------------------------------------------</span>
-</span><span id="line-811"><span class="c1"># Register HTML converters as citeget downloaders (for resolve.py composition)</span>
-</span><span id="line-812"><span class="c1"># ---------------------------------------------------------------------------</span>
+</span><span id="line-812">
 </span><span id="line-813">
-</span><span id="line-814">
-</span><span id="line-815"><span class="k">def</span><span class="w"> </span><span class="nf">_html_to_pdf_downloader</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="line-816"><span class="w">    </span><span class="sd">"""Downloader: render *url* (HTML) to PDF at *filepath*."""</span>
-</span><span id="line-817">    <span class="n">pdf_bytes</span> <span class="o">=</span> <span class="n">html_to_pdf</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-</span><span id="line-818">    <span class="k">if</span> <span class="ow">not</span> <span class="n">pdf_bytes</span><span class="p">:</span>
-</span><span id="line-819">        <span class="k">return</span> <span class="kc">False</span>
-</span><span id="line-820">    <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="line-821">    <span class="n">filepath</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">pdf_bytes</span><span class="p">)</span>
-</span><span id="line-822">    <span class="k">return</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">1000</span>
-</span><span id="line-823">
-</span><span id="line-824">
-</span><span id="line-825"><span class="k">def</span><span class="w"> </span><span class="nf">_html_to_md_downloader</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="line-826"><span class="w">    </span><span class="sd">"""Downloader: fetch *url* (HTML) and save Markdown at *filepath*."""</span>
-</span><span id="line-827">    <span class="k">try</span><span class="p">:</span>
-</span><span id="line-828">        <span class="n">resp</span> <span class="o">=</span> <span class="n">_http_get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
-</span><span id="line-829">    <span class="k">except</span> <span class="n">netguard</span><span class="o">.</span><span class="n">UnsafeURLError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-</span><span id="line-830">        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
-</span><span id="line-831">        <span class="k">return</span> <span class="kc">False</span>
-</span><span id="line-832">    <span class="k">if</span> <span class="n">resp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-833">        <span class="k">return</span> <span class="kc">False</span>
-</span><span id="line-834">    <span class="n">md</span> <span class="o">=</span> <span class="n">html_to_markdown</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">source_url</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
-</span><span id="line-835">    <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="line-836">    <span class="n">filepath</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
-</span><span id="line-837">    <span class="k">return</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">100</span>
-</span><span id="line-838">
-</span><span id="line-839">
-</span><span id="line-840"><span class="c1"># Register only if resolve module is importable (it always is, but be defensive)</span>
-</span><span id="line-841"><span class="k">try</span><span class="p">:</span>
-</span><span id="line-842">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.resolve</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_downloader</span>
+</span><span id="line-814"><span class="c1"># ---------------------------------------------------------------------------</span>
+</span><span id="line-815"><span class="c1"># Register HTML converters as citeget downloaders (for resolve.py composition)</span>
+</span><span id="line-816"><span class="c1"># ---------------------------------------------------------------------------</span>
+</span><span id="line-817">
+</span><span id="line-818">
+</span><span id="line-819"><span class="k">def</span><span class="w"> </span><span class="nf">_html_to_pdf_downloader</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="line-820"><span class="w">    </span><span class="sd">"""Downloader: render *url* (HTML) to PDF at *filepath*."""</span>
+</span><span id="line-821">    <span class="n">pdf_bytes</span> <span class="o">=</span> <span class="n">html_to_pdf</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</span><span id="line-822">    <span class="k">if</span> <span class="ow">not</span> <span class="n">pdf_bytes</span><span class="p">:</span>
+</span><span id="line-823">        <span class="k">return</span> <span class="kc">False</span>
+</span><span id="line-824">    <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-825">    <span class="n">filepath</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">pdf_bytes</span><span class="p">)</span>
+</span><span id="line-826">    <span class="k">return</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">1000</span>
+</span><span id="line-827">
+</span><span id="line-828">
+</span><span id="line-829"><span class="k">def</span><span class="w"> </span><span class="nf">_html_to_md_downloader</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="line-830"><span class="w">    </span><span class="sd">"""Downloader: fetch *url* (HTML) and save Markdown at *filepath*."""</span>
+</span><span id="line-831">    <span class="k">try</span><span class="p">:</span>
+</span><span id="line-832">        <span class="n">resp</span> <span class="o">=</span> <span class="n">_http_get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+</span><span id="line-833">        <span class="k">if</span> <span class="n">resp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-834">            <span class="k">return</span> <span class="kc">False</span>
+</span><span id="line-835">        <span class="n">html</span> <span class="o">=</span> <span class="n">resp</span><span class="o">.</span><span class="n">text</span>
+</span><span id="line-836">    <span class="k">except</span> <span class="n">netguard</span><span class="o">.</span><span class="n">UnsafeURLError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span id="line-837">        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+</span><span id="line-838">        <span class="k">return</span> <span class="kc">False</span>
+</span><span id="line-839">    <span class="n">md</span> <span class="o">=</span> <span class="n">html_to_markdown</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="n">source_url</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
+</span><span id="line-840">    <span class="n">filepath</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-841">    <span class="n">filepath</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">md</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">)</span>
+</span><span id="line-842">    <span class="k">return</span> <span class="n">filepath</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span> <span class="o">&gt;</span> <span class="mi">100</span>
 </span><span id="line-843">
-</span><span id="line-844">    <span class="n">register_downloader</span><span class="p">(</span><span class="s2">"html_to_pdf"</span><span class="p">,</span> <span class="n">_html_to_pdf_downloader</span><span class="p">)</span>
-</span><span id="line-845">    <span class="n">register_downloader</span><span class="p">(</span><span class="s2">"html_to_md"</span><span class="p">,</span> <span class="n">_html_to_md_downloader</span><span class="p">)</span>
-</span><span id="line-846"><span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-</span><span id="line-847">    <span class="k">pass</span>
+</span><span id="line-844">
+</span><span id="line-845"><span class="c1"># Register only if resolve module is importable (it always is, but be defensive)</span>
+</span><span id="line-846"><span class="k">try</span><span class="p">:</span>
+</span><span id="line-847">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget.resolve</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_downloader</span>
+</span><span id="line-848">
+</span><span id="line-849">    <span class="n">register_downloader</span><span class="p">(</span><span class="s2">"html_to_pdf"</span><span class="p">,</span> <span class="n">_html_to_pdf_downloader</span><span class="p">)</span>
+</span><span id="line-850">    <span class="n">register_downloader</span><span class="p">(</span><span class="s2">"html_to_md"</span><span class="p">,</span> <span class="n">_html_to_md_downloader</span><span class="p">)</span>
+</span><span id="line-851"><span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+</span><span id="line-852">    <span class="k">pass</span>
 </span></code></pre></div>
     </div></div>
           </main>
@@ -1055,7 +1060,7 @@
 </footer>
     </div>
     
-    <script src="../../_static/documentation_options.js?v=ba481074"></script>
+    <script src="../../_static/documentation_options.js?v=71c180b9"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
