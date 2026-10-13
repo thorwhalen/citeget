@@ -520,6 +520,7 @@ def test_a_streamed_body_is_capped_as_the_caller_reads(net):
 
 
 def test_an_oversized_browser_download_leaves_no_temp_file(net, monkeypatch, tmp_path):
+    import os
     import tempfile
 
     from tests.test_browserguard import FakeRequest, FakeRoute
@@ -536,5 +537,90 @@ def test_an_oversized_browser_download_leaves_no_temp_file(net, monkeypatch, tmp
     route = FakeRoute(FakeRequest("http://good.example/get.php"))
     handler(route)
     assert route.outcome == ("abort", "blockedbyclient")
-    assert handler.downloads.take() is None
-    assert list(tmp_path.iterdir()) == []
+    assert not handler.downloads._paths
+    assert os.listdir(netguard.spool_dir()) == []
+
+
+def test_the_size_budget_is_per_response_not_per_iteration(net):
+    net.transport.responses[PUBLIC_IP] = (
+        b"HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n"
+        + b"".join(b"400\r\n" + b"r" * 1024 + b"\r\n" for _ in range(8))
+        + b"0\r\n\r\n"
+    )
+    resp = netguard.get("http://good.example/", policy=_capped(7500), stream=True)
+    first = resp.iter_content(1024)
+    next(first)
+    with pytest.raises(netguard.ResponseTooLargeError):
+        resp.content  # a second reader shares the budget of the first
+
+
+def test_the_deadline_runs_from_the_request_not_from_each_read(net, monkeypatch):
+    import time
+
+    now = [0.0]
+    monkeypatch.setattr(time, "monotonic", lambda: now[0])
+    net.transport.responses[PUBLIC_IP] = _response(200, b"q" * 200_000)
+    resp = netguard.get(
+        "http://good.example/", policy=NetPolicy(max_response_seconds=10), stream=True
+    )
+    now[0] = 11.0  # the caller waited before reading
+    with pytest.raises(netguard.ResponseTooLargeError, match="took over"):
+        resp.content
+
+
+def test_a_refused_body_cannot_be_reread_as_empty(net):
+    import requests
+
+    net.transport.responses[PUBLIC_IP] = _response(200, b"x" * 2000)
+    resp = netguard.get(
+        "http://good.example/", policy=NetPolicy(max_response_bytes=0, max_text_bytes=0),
+        stream=True,
+    )
+    resp._citeget_policy = _capped(1000)
+    with pytest.raises(netguard.ResponseTooLargeError):
+        resp.content
+    with pytest.raises((RuntimeError, requests.exceptions.StreamConsumedError)):
+        resp.content  # "already consumed", never a silent b"" with status 200
+
+
+def test_decode_unicode_is_honoured_when_streaming(net):
+    net.transport.responses[PUBLIC_IP] = _response(
+        200, "héllo\nwörld".encode(), headers=[("Content-Type", "text/plain; charset=utf-8")]
+    )
+    resp = netguard.get("http://good.example/", stream=True)
+    assert list(resp.iter_lines(decode_unicode=True)) == ["héllo", "wörld"]
+
+
+def test_guarded_responses_pickle(net):
+    import pickle
+
+    net.transport.responses[PUBLIC_IP] = _response(200, b"ok")
+    assert pickle.loads(pickle.dumps(netguard.get("http://good.example/"))).content == b"ok"
+
+
+def test_a_timeout_is_always_set(net, monkeypatch):
+    seen = {}
+    import requests
+
+    original = requests.Session.request
+
+    def spy(self, method, url, **kw):
+        seen.update(kw)
+        return original(self, method, url, **kw)
+
+    monkeypatch.setattr(requests.Session, "request", spy)
+    net.transport.responses[PUBLIC_IP] = _response(200, b"ok")
+    netguard.get("http://good.example/")
+    assert seen["timeout"] == netguard.DEFAULT_TIMEOUT
+
+
+def test_the_browser_route_bounds_pages_by_the_text_ceiling(net, monkeypatch):
+    from tests.test_browserguard import FakeRequest, FakeRoute
+
+    monkeypatch.setenv(netguard.MAX_TEXT_BYTES_ENV_VAR, "100")
+    net.transport.responses[PUBLIC_IP] = _response(
+        200, b"<p>" + b"h" * 500, headers=[("Content-Type", "text/html")]
+    )
+    route = FakeRoute(FakeRequest("http://good.example/"))
+    netguard.browser_route_handler()(route)
+    assert route.outcome == ("abort", "blockedbyclient")

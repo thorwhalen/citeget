@@ -358,7 +358,7 @@ def guarded_session(*, policy: Optional[NetPolicy] = None):
                 check_url(urljoin(resp.url, target), policy=policy)
                 # requests reads a redirect's body in full before following it;
                 # read it here instead, under the same ceiling.
-                _read_capped(resp, policy)
+                _read_capped(resp, policy, deadline=getattr(self, "_citeget_deadline", None))
             return target
 
     session = _GuardedSession()
@@ -376,35 +376,80 @@ def _too_large(url, detail: str) -> ResponseTooLargeError:
     return ResponseTooLargeError(f"Refused {url}: {detail}")
 
 
-def _guarded_response_class():
-    """A ``requests.Response`` whose ``.text`` / ``.json()`` honour a text ceiling."""
-    import requests
+#: Default ``requests`` timeout (connect, read) when the caller gives none: the
+#: total deadline is only checked between reads, so a read must not hang.
+DEFAULT_TIMEOUT = (10, 60)
 
-    class GuardedResponse(requests.Response):
-        _max_text_bytes: Optional[int] = None
+try:
+    import requests as _requests
+except ImportError:  # pragma: no cover - requests is a hard dependency
+    _requests = None
 
-        def _check_text_size(self):
-            limit = self._max_text_bytes
-            if limit and len(self.content) > limit:
-                raise _too_large(
-                    self.url,
-                    f"{len(self.content):,} bytes is over the {limit:,}-byte limit "
-                    f"for text ({MAX_TEXT_BYTES_ENV_VAR})",
+
+class GuardedResponse(_requests.Response if _requests else object):
+    """A ``requests.Response`` that honours a :class:`NetPolicy`'s ceilings.
+
+    ``iter_content`` (and so ``.content``, which reads through it) is capped by
+    size and by a deadline, both counted per response however many times the
+    body is iterated; ``.text`` / ``.json()`` refuse a body over the text
+    ceiling. Parsing ``.content`` directly bypasses the text ceiling (not the
+    size one): citeget's parsers all go through ``.text`` / ``.json()``.
+    """
+
+    _citeget_policy: Optional[NetPolicy] = None
+    _citeget_deadline: Optional[float] = None
+    _citeget_read = 0
+
+    def iter_content(self, chunk_size=1, decode_unicode=False):
+        if self._content_consumed or self._citeget_policy is None:
+            return super().iter_content(chunk_size, decode_unicode)
+        chunks = self._capped(super().iter_content(chunk_size or _READ_CHUNK_BYTES))
+        if decode_unicode:
+            from requests.utils import stream_decode_response_unicode
+
+            return stream_decode_response_unicode(chunks, self)
+        return chunks
+
+    def _capped(self, chunks):
+        import time
+
+        limit = self._citeget_policy.max_response_bytes
+        for chunk in chunks:
+            self._citeget_read += len(chunk)
+            if limit and self._citeget_read > limit:
+                self._refuse_body(
+                    f"response passed the {limit:,}-byte limit ({MAX_RESPONSE_BYTES_ENV_VAR})"
                 )
+            if self._citeget_deadline is not None and time.monotonic() > self._citeget_deadline:
+                self._refuse_body(
+                    f"response took over {self._citeget_policy.max_response_seconds:g}s "
+                    f"to arrive ({MAX_RESPONSE_SECONDS_ENV_VAR})"
+                )
+            yield chunk
 
-        @property
-        def text(self):
-            self._check_text_size()
-            return super().text
+    def _refuse_body(self, detail: str):
+        self.close()
+        # A later read raises StreamConsumedError instead of returning b"".
+        self._content_consumed = True
+        raise _too_large(self.url, detail)
 
-        def json(self, **kwargs):
-            self._check_text_size()
-            return super().json(**kwargs)
+    def _check_text_size(self):
+        limit = self._citeget_policy.max_text_bytes if self._citeget_policy else None
+        if limit and len(self.content) > limit:
+            raise _too_large(
+                self.url,
+                f"{len(self.content):,} bytes is over the {limit:,}-byte limit "
+                f"for text ({MAX_TEXT_BYTES_ENV_VAR})",
+            )
 
-    return GuardedResponse
+    @property
+    def text(self):
+        self._check_text_size()
+        return super().text
 
-
-_GuardedResponse = None
+    def json(self, **kwargs):
+        self._check_text_size()
+        return super().json(**kwargs)
 
 
 def _check_declared(resp, policy: NetPolicy) -> None:
@@ -423,60 +468,21 @@ def _check_declared(resp, policy: NetPolicy) -> None:
         )
 
 
-def _capped_chunks(resp, policy: NetPolicy, iter_content, chunk_size):
-    """*resp*'s decoded body in chunks, refusing past the size or time ceiling."""
-    import time
-
-    limit, deadline_s = policy.max_response_bytes, policy.max_response_seconds
-    deadline = time.monotonic() + deadline_s if deadline_s else None
-    total = 0
-    for chunk in iter_content(chunk_size):
-        total += len(chunk)
-        if limit and total > limit:
-            resp.close()
-            raise _too_large(
-                resp.url,
-                f"response passed the {limit:,}-byte limit ({MAX_RESPONSE_BYTES_ENV_VAR})",
-            )
-        if deadline is not None and time.monotonic() > deadline:
-            resp.close()
-            raise _too_large(
-                resp.url,
-                f"response took over {deadline_s:g}s to arrive "
-                f"({MAX_RESPONSE_SECONDS_ENV_VAR})",
-            )
-        yield chunk
-
-
-def _guard_response(resp, policy: NetPolicy):
-    """Make *resp* honour *policy*'s ceilings however its body is read.
-
-    ``iter_content`` (and so ``.content``, which reads through it) is capped by
-    size and time, and ``.text`` / ``.json()`` by the text ceiling. Decoded
-    bytes are counted, so a small compressed bomb is caught too.
-    """
-    global _GuardedResponse
+def _guard_response(resp, policy: NetPolicy, *, deadline: Optional[float] = None):
+    """Make *resp* a :class:`GuardedResponse` under *policy* (deadline: monotonic)."""
     _check_declared(resp, policy)
-    raw_iter = resp.iter_content
-
-    def iter_content(chunk_size=1, decode_unicode=False):
-        if resp._content_consumed:  # already read (and capped): replay it
-            return raw_iter(chunk_size, decode_unicode)
-        return _capped_chunks(resp, policy, raw_iter, chunk_size or _READ_CHUNK_BYTES)
-
-    resp.iter_content = iter_content
-    if _GuardedResponse is None:
-        _GuardedResponse = _guarded_response_class()
-    resp.__class__ = _GuardedResponse
-    resp._max_text_bytes = policy.max_text_bytes
+    resp.__class__ = GuardedResponse
+    resp._citeget_policy = policy
+    resp._citeget_deadline = deadline
+    resp._citeget_read = 0
     return resp
 
 
-def _read_capped(resp, policy: NetPolicy):
+def _read_capped(resp, policy: NetPolicy, *, deadline: Optional[float] = None):
     """Read *resp*'s whole body now, under *policy*'s ceilings (one buffer)."""
     import io
 
-    _guard_response(resp, policy)
+    _guard_response(resp, policy, deadline=deadline)
     buf = io.BytesIO()
     for chunk in resp.iter_content(_READ_CHUNK_BYTES):
         buf.write(chunk)
@@ -485,12 +491,20 @@ def _read_capped(resp, policy: NetPolicy):
     return resp
 
 
+def _deadline(policy: NetPolicy) -> Optional[float]:
+    import time
+
+    seconds = policy.max_response_seconds
+    return time.monotonic() + seconds if seconds else None
+
+
 def request(method: str, url: str, *, policy: Optional[NetPolicy] = None, **kwargs):
     """``requests.request`` with the destination guard. Same arguments and return.
 
     The body is read before returning (or, with ``stream=True``, as the caller
-    iterates), up to ``policy.max_response_bytes`` and within
-    ``policy.max_response_seconds``.
+    iterates), up to ``policy.max_response_bytes``, and the whole exchange,
+    redirects included, must finish within ``policy.max_response_seconds`` of
+    the call. ``timeout`` defaults to :data:`DEFAULT_TIMEOUT`.
 
     Raises :class:`UnsafeURLError` if the URL, a redirect target, or an address
     a host resolves to is refused, or ``proxies=`` is given;
@@ -503,11 +517,16 @@ def request(method: str, url: str, *, policy: Optional[NetPolicy] = None, **kwar
         raise _refuse(url, "requests through a proxy are not allowed")
     check_url(url, policy=policy)
     stream = kwargs.pop("stream", False)
+    kwargs.setdefault("timeout", DEFAULT_TIMEOUT)
+    deadline = _deadline(policy)
     with guarded_session(policy=policy) as session:
+        session._citeget_deadline = deadline
         resp = session.request(method, url, stream=True, **kwargs)
         # stream=True: the caller reads, through a capped iterator, at constant
         # memory. Otherwise the body is read here, capped, like requests does.
-        return _guard_response(resp, policy) if stream else _read_capped(resp, policy)
+        if stream:
+            return _guard_response(resp, policy, deadline=deadline)
+        return _read_capped(resp, policy, deadline=deadline)
 
 
 def get(url: str, *, policy: Optional[NetPolicy] = None, **kwargs):
@@ -744,6 +763,23 @@ def _unlink_quietly(path: str) -> None:
         pass
 
 
+def _read_at_most(resp, limit: Optional[int]) -> bytes:
+    """*resp*'s body, refusing it as soon as it passes *limit* bytes."""
+    import io
+
+    declared = resp.headers.get("Content-Length", "")
+    if limit and declared.isdigit() and int(declared) > limit:
+        resp.close()
+        raise _too_large(resp.url, f"{int(declared):,} bytes is over the {limit:,}-byte limit")
+    buf = io.BytesIO()
+    for chunk in resp.iter_content(_READ_CHUNK_BYTES):
+        buf.write(chunk)
+        if limit and buf.tell() > limit:
+            resp.close()
+            raise _too_large(resp.url, f"passed the {limit:,}-byte limit for a page")
+    return buf.getvalue()
+
+
 def browser_route_handler(
     *,
     policy: Optional[NetPolicy] = None,
@@ -811,7 +847,10 @@ def browser_route_handler(
                 return route.fulfill(
                     status=resp.status_code, headers=fulfill_headers, body=b""
                 )
-            body = resp.content
+            # A page or a script is parsed by the browser after a base64 trip
+            # through Playwright: bound it by the text ceiling, not the
+            # download one.
+            body = _read_at_most(resp, policy.max_text_bytes)
         except UnsafeURLError as e:
             log.warning("Browser request refused: %s", e)
             return route.abort("blockedbyclient")
