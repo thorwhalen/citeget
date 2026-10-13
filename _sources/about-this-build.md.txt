@@ -5,7 +5,7 @@ orphan: true
 
 # About this build
 
-This documentation was built on **2026-10-13 12:10 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/63e47744355261ee141685e8e3954e585f36c6ee"><code>63e4774</code></a> on branch <code>main</code>, for **citeget 0.2.14** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 23:46 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/44869cfa7c04db40de4c17417efe1e89fbbabaf6"><code>44869cf</code></a> on branch <code>main</code>, for **citeget 0.2.15** (from <code>pyproject.toml</code>).
 
 :::{note}
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -15,9 +15,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 | | |
 |---|---|
-| Commit | <a href="https://github.com/thorwhalen/citeget/commit/63e47744355261ee141685e8e3954e585f36c6ee"><code>63e47744355261ee141685e8e3954e585f36c6ee</code></a> |
+| Commit | <a href="https://github.com/thorwhalen/citeget/commit/44869cfa7c04db40de4c17417efe1e89fbbabaf6"><code>44869cfa7c04db40de4c17417efe1e89fbbabaf6</code></a> |
 | Branch | <code>main</code> |
-| Tags at this commit | <code>0.2.14</code> |
+| Tags at this commit | <code>0.2.15</code> |
 | Working tree | clean |
 | Remote | <code>https://github.com/thorwhalen/citeget</code> |
 
@@ -26,15 +26,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 | | |
 |---|---|
 | Repository | <code>thorwhalen/citeget</code> |
-| Run | <a href="https://github.com/thorwhalen/citeget/actions/runs/38395161512">38395161512</a> |
+| Run | <a href="https://github.com/thorwhalen/citeget/actions/runs/38486085643">38486085643</a> |
 | Ref | <code>refs/heads/main</code> |
-| Event commit | <code>15486a488cd9b6801b0ff3dad283dd570b209eb1</code> (in the history of the built commit) |
+| Event commit | <code>8fdfb9c5c2796bd59a7d86b35130824364565bf1</code> (in the history of the built commit) |
 
 ## Tools
 
 | | |
 |---|---|
-| epythet | 0.2.15 |
+| epythet | 0.2.17 |
 | Sphinx | 9.1.0 |
 | docutils | 0.22.4 |
 | Python | 3.12.15 |
@@ -53,14 +53,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/citeget/0.2.14/">0.2.14</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/citeget/0.2.15/">0.2.15</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/citeget && cd citeget
-git checkout 63e47744355261ee141685e8e3954e585f36c6ee
-pip install "epythet==0.2.15"
+git checkout 44869cfa7c04db40de4c17417efe1e89fbbabaf6
+pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

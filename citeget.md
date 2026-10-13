@@ -1,4 +1,4 @@
-> built 2026-10-13 12:10 UTC from 63e4774 (main) · citeget 0.2.14. Details: build_info.json
+> built 2026-10-13 23:46 UTC from 44869cf (main) · citeget 0.2.15. Details: build_info.json
 
 # index.html.md
 
@@ -334,7 +334,7 @@ On a desktop, to let citeget fetch from your own LAN or `localhost`:
 export CITEGET_ALLOW_PRIVATE_NETWORK=1
 ```
 
-Response bodies are capped at 100 MB (decoded; `CITEGET_MAX_RESPONSE_BYTES`), a body read as text (HTML, XML, JSON) at 10 MB (`CITEGET_MAX_TEXT_BYTES`), and the time a body may take to arrive at 600 s (`CITEGET_MAX_RESPONSE_SECONDS`); `0` lifts a ceiling. An oversized or too-slow response is refused like an internal one.
+Response bodies are capped at 100 MB (decoded; `CITEGET_MAX_RESPONSE_BYTES`), a body read as text (HTML, XML, JSON) at 10 MB (`CITEGET_MAX_TEXT_BYTES`), and the time a body may take to arrive at 600 s (`CITEGET_MAX_RESPONSE_SECONDS`); `0` lifts a ceiling. An oversized or too-slow response is refused like an internal one. A whole `acquire_all_references` run may add at most 512 MiB to its download directory (`CITEGET_MAX_JOB_BYTES`, or `max_job_bytes=`; `0` means no budget). Once that is spent, the remaining references fail with “job byte budget reached” instead of being fetched.
 
 A refused URL raises `citeget.netguard.UnsafeURLError` (`ResponseTooLargeError` for an oversized body); in `fetch` it shows up as a failed result whose `error` starts with `Refused`.
 
@@ -412,6 +412,13 @@ The query strategy for libgen searches:
 - If no results: try shorter title (first 5 words)
 - If still no results: try author + key title words
 
+### Module Attributes
+
+| [`MAX_JOB_BYTES_ENV_VAR`](_autosummary/citeget.acquire_references.html.md#citeget.acquire_references.MAX_JOB_BYTES_ENV_VAR)   | no budget).                                                                                                                         |
+|--------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| [`DEFAULT_MAX_JOB_BYTES`](_autosummary/citeget.acquire_references.html.md#citeget.acquire_references.DEFAULT_MAX_JOB_BYTES)   | Most bytes one [`acquire_all_references()`](_autosummary/citeget.acquire_references.html.md#citeget.acquire_references.acquire_all_references) run may write into its download directory. |
+| [`JOB_BUDGET_NOTE`](_autosummary/citeget.acquire_references.html.md#citeget.acquire_references.JOB_BUDGET_NOTE)         | The note on a reference refused because the job's byte budget was spent.                                                            |
+
 ### Functions
 
 | [`acquire_all_references`](_autosummary/citeget.acquire_references.html.md#citeget.acquire_references.acquire_all_references)(references, ...[, ...])    | Acquire files for a list of references.                              |
@@ -437,13 +444,32 @@ Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 Result of trying to acquire a reference.
 
+### citeget.acquire_references.DEFAULT_MAX_JOB_BYTES *= 536870912*
+
+Most bytes one [`acquire_all_references()`](_autosummary/citeget.acquire_references.html.md#citeget.acquire_references.acquire_all_references) run may write into its download
+directory. The per-response ceiling (`CITEGET_MAX_RESPONSE_BYTES`) bounds one
+file; this bounds a job of many references, on a disk shared by every user of
+a hosted deployment (#22). Five full-size responses: a job of many books needs
+the variable raised, which is the point on a small shared server.
+
+### citeget.acquire_references.JOB_BUDGET_NOTE *= 'job byte budget reached'*
+
+The note on a reference refused because the job’s byte budget was spent.
+
+### citeget.acquire_references.MAX_JOB_BYTES_ENV_VAR *= 'CITEGET_MAX_JOB_BYTES'*
+
+no budget).
+
+* **Type:**
+  Environment variable for the per-job byte budget (`0`
+
 ### *class* citeget.acquire_references.Reference(number, raw, title='', authors='', year='', venue='', url='', doi='', source_text='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
 A parsed academic reference.
 
-### citeget.acquire_references.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True, concurrency_key='auto', max_concurrent_jobs=None)
+### citeget.acquire_references.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True, concurrency_key='auto', max_concurrent_jobs=None, max_job_bytes=None)
 
 Acquire files for a list of references.
 
@@ -486,6 +512,18 @@ non-PDF is never renamed to `.pdf`.
     `CITEGET_MAX_CONCURRENT_JOBS` environment variable, else
     [`citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS`](_autosummary/citeget.joblimit.html.md#citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS); `0` means
     no cap.
+  * **max_job_bytes** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Most bytes this run may add to `download_dir`.
+    Defaults to the `CITEGET_MAX_JOB_BYTES` environment variable, else
+    [`DEFAULT_MAX_JOB_BYTES`](_autosummary/citeget.acquire_references.html.md#citeget.acquire_references.DEFAULT_MAX_JOB_BYTES); `0` means no budget. Once it is
+    spent, the remaining references fail with [`JOB_BUDGET_NOTE`](_autosummary/citeget.acquire_references.html.md#citeget.acquire_references.JOB_BUDGET_NOTE)
+    instead of being fetched. A reference whose download would overshoot
+    it is refused the same way, its file is removed, and the budget
+    counts as spent. Every file that appears in `download_dir` while a
+    reference is acquired counts, which over-counts (never under-counts)
+    when another run shares the directory; files already there before
+    the run do not count. A browser download’s temporary spool file
+    lives outside `download_dir` and is bounded by the per-response
+    ceiling instead.
 * **Raises:**
   [**JobLimitExceeded**](_autosummary/citeget.joblimit.html.md#citeget.joblimit.JobLimitExceeded) – the key already has
       `max_concurrent_jobs` runs in progress. Raised before any work.
@@ -1533,7 +1571,7 @@ Return self when valid, else raise [`InvalidDownloadError`](_autosummary/citeget
 * **Return type:**
   [`ValidationResult`](_autosummary/citeget.validate.html.md#citeget.validate.ValidationResult)
 
-### citeget.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True, concurrency_key='auto', max_concurrent_jobs=None)
+### citeget.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True, concurrency_key='auto', max_concurrent_jobs=None, max_job_bytes=None)
 
 Acquire files for a list of references.
 
@@ -1576,6 +1614,18 @@ non-PDF is never renamed to `.pdf`.
     `CITEGET_MAX_CONCURRENT_JOBS` environment variable, else
     [`citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS`](_autosummary/citeget.joblimit.html.md#citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS); `0` means
     no cap.
+  * **max_job_bytes** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Most bytes this run may add to `download_dir`.
+    Defaults to the `CITEGET_MAX_JOB_BYTES` environment variable, else
+    `DEFAULT_MAX_JOB_BYTES`; `0` means no budget. Once it is
+    spent, the remaining references fail with `JOB_BUDGET_NOTE`
+    instead of being fetched. A reference whose download would overshoot
+    it is refused the same way, its file is removed, and the budget
+    counts as spent. Every file that appears in `download_dir` while a
+    reference is acquired counts, which over-counts (never under-counts)
+    when another run shares the directory; files already there before
+    the run do not count. A browser download’s temporary spool file
+    lives outside `download_dir` and is bounded by the per-response
+    ceiling instead.
 * **Raises:**
   [**JobLimitExceeded**](_autosummary/citeget.joblimit.html.md#citeget.joblimit.JobLimitExceeded) – the key already has
       `max_concurrent_jobs` runs in progress. Raised before any work.
@@ -2683,6 +2733,7 @@ citeget.netguard.UnsafeURLError: Refused file:///etc/passwd: scheme 'file' is no
 | [`check_navigation`](_autosummary/citeget.netguard.html.md#citeget.netguard.check_navigation)(url, \*[, policy])            | Vet a URL before `page.goto`: refuses `file:`, `data:`, internal IPs.                                       |
 | [`check_url`](_autosummary/citeget.netguard.html.md#citeget.netguard.check_url)(url, \*[, policy])                   | Check the parts of *url* that can be judged without DNS; return it.                                         |
 | [`default_policy`](_autosummary/citeget.netguard.html.md#citeget.netguard.default_policy)()                               | The policy in force when none is passed, read from the environment now.                                     |
+| [`env_limit`](_autosummary/citeget.netguard.html.md#citeget.netguard.env_limit)(var, default)                        | A non-negative integer from environment variable *var*, else *default*.                                     |
 | [`get`](_autosummary/citeget.netguard.html.md#citeget.netguard.get)(url, \*[, policy])                         | `requests.get` with the destination guard (see [`request()`](_autosummary/citeget.netguard.html.md#citeget.netguard.request)). |
 | [`guard_browser_context`](_autosummary/citeget.netguard.html.md#citeget.netguard.guard_browser_context)(context, \*[, policy])   | Route all of a Playwright `BrowserContext`'s traffic through the guard.                                     |
 | [`guarded_session`](_autosummary/citeget.netguard.html.md#citeget.netguard.guarded_session)(\*[, policy])                  | A `requests.Session` that enforces *policy* on every connection and hop.                                    |
@@ -2963,6 +3014,13 @@ The policy in force when none is passed, read from the environment now.
 >>> default_policy().allow_private in (True, False)
 True
 ```
+
+### citeget.netguard.env_limit(var, default)
+
+A non-negative integer from environment variable *var*, else *default*.
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
 ### citeget.netguard.get(url, , policy=None, \*\*kwargs)
 
@@ -3742,7 +3800,7 @@ Validate a file on disk. Extension defaults to the file’s own suffix.
 
 # About this build
 
-This documentation was built on **2026-10-13 12:10 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/63e47744355261ee141685e8e3954e585f36c6ee"><code>63e4774</code></a> on branch <code>main</code>, for **citeget 0.2.14** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-13 23:46 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/44869cfa7c04db40de4c17417efe1e89fbbabaf6"><code>44869cf</code></a> on branch <code>main</code>, for **citeget 0.2.15** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -3751,9 +3809,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/63e47744355261ee141685e8e3954e585f36c6ee"><code>63e47744355261ee141685e8e3954e585f36c6ee</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/44869cfa7c04db40de4c17417efe1e89fbbabaf6"><code>44869cfa7c04db40de4c17417efe1e89fbbabaf6</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.2.14</code>                                                                                                                                       |
+| Tags at this commit | <code>0.2.15</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/citeget</code>                                                                                                        |
 
@@ -3762,15 +3820,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/citeget</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/38395161512">38395161512</a>   |
+| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/38486085643">38486085643</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>15486a488cd9b6801b0ff3dad283dd570b209eb1</code> (in the history of the built commit) |
+| Event commit | <code>8fdfb9c5c2796bd59a7d86b35130824364565bf1</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.15  |
+| epythet  | 0.2.17  |
 | Sphinx   | 9.1.0   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
@@ -3789,14 +3847,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/citeget/0.2.14/">0.2.14</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/citeget/0.2.15/">0.2.15</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/citeget && cd citeget
-git checkout 63e47744355261ee141685e8e3954e585f36c6ee
-pip install "epythet==0.2.15"
+git checkout 44869cfa7c04db40de4c17417efe1e89fbbabaf6
+pip install "epythet==0.2.17"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

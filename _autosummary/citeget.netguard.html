@@ -224,31 +224,34 @@ their own LAN or <code class="docutils literal notranslate"><span class="pre">lo
 <tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.default_policy" title="citeget.netguard.default_policy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_policy</span></code></a>()</p></td>
 <td><p>The policy in force when none is passed, read from the environment now.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.get" title="citeget.netguard.get"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code></a>(url, *[, policy])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.env_limit" title="citeget.netguard.env_limit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">env_limit</span></code></a>(var, default)</p></td>
+<td><p>A non-negative integer from environment variable <em>var</em>, else <em>default</em>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.get" title="citeget.netguard.get"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code></a>(url, *[, policy])</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">requests.get</span></code> with the destination guard (see <a class="reference internal" href="#citeget.netguard.request" title="citeget.netguard.request"><code class="xref py py-func docutils literal notranslate"><span class="pre">request()</span></code></a>).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.guard_browser_context" title="citeget.netguard.guard_browser_context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">guard_browser_context</span></code></a>(context, *[, policy])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.guard_browser_context" title="citeget.netguard.guard_browser_context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">guard_browser_context</span></code></a>(context, *[, policy])</p></td>
 <td><p>Route all of a Playwright <code class="docutils literal notranslate"><span class="pre">BrowserContext</span></code>'s traffic through the guard.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.guarded_session" title="citeget.netguard.guarded_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">guarded_session</span></code></a>(*[, policy])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.guarded_session" title="citeget.netguard.guarded_session"><code class="xref py py-obj docutils literal notranslate"><span class="pre">guarded_session</span></code></a>(*[, policy])</p></td>
 <td><p>A <code class="docutils literal notranslate"><span class="pre">requests.Session</span></code> that enforces <em>policy</em> on every connection and hop.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.is_public_address" title="citeget.netguard.is_public_address"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_public_address</span></code></a>(address)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.is_public_address" title="citeget.netguard.is_public_address"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_public_address</span></code></a>(address)</p></td>
 <td><p>True if <em>address</em> (an IP literal, possibly with a <code class="docutils literal notranslate"><span class="pre">%zone</span></code>) is public.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.launch_guarded_chromium" title="citeget.netguard.launch_guarded_chromium"><code class="xref py py-obj docutils literal notranslate"><span class="pre">launch_guarded_chromium</span></code></a>(playwright, *[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.launch_guarded_chromium" title="citeget.netguard.launch_guarded_chromium"><code class="xref py py-obj docutils literal notranslate"><span class="pre">launch_guarded_chromium</span></code></a>(playwright, *[, ...])</p></td>
 <td><p>Launch Chromium with no network of its own and return <code class="docutils literal notranslate"><span class="pre">(browser,</span> <span class="pre">context)</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.remove_stale_spools" title="citeget.netguard.remove_stale_spools"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_stale_spools</span></code></a>(*[, max_age])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.remove_stale_spools" title="citeget.netguard.remove_stale_spools"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_stale_spools</span></code></a>(*[, max_age])</p></td>
 <td><p>Delete spooled downloads older than <em>max_age</em> seconds.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.request" title="citeget.netguard.request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span></code></a>(method, url, *[, policy])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.request" title="citeget.netguard.request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span></code></a>(method, url, *[, policy])</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">requests.request</span></code> with the destination guard.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.resolve_public" title="citeget.netguard.resolve_public"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_public</span></code></a>(host, port, *[, policy])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.resolve_public" title="citeget.netguard.resolve_public"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_public</span></code></a>(host, port, *[, policy])</p></td>
 <td><p>Resolve <em>host</em> and return its addresses, refusing if any is not public.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.spool_dir" title="citeget.netguard.spool_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spool_dir</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.spool_dir" title="citeget.netguard.spool_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spool_dir</span></code></a>()</p></td>
 <td><p>The directory browser downloads are spooled to (per uid, created 0700).</p></td>
 </tr>
 </tbody>
@@ -581,6 +584,16 @@ rebind cannot race.</p>
 </div>
 </dd></dl>
 <dl class="py function">
+<dt class="sig sig-object py" id="citeget.netguard.env_limit">
+<span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">env_limit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">var</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/netguard.html#env_limit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.env_limit" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.env_limit'">¶</a></dt>
+<dd><p>A non-negative integer from environment variable <em>var</em>, else <em>default</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
 <dt class="sig sig-object py" id="citeget.netguard.get">
 <span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/netguard.html#get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.get" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.get'">¶</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">requests.get</span></code> with the destination guard (see <a class="reference internal" href="#citeget.netguard.request" title="citeget.netguard.request"><code class="xref py py-func docutils literal notranslate"><span class="pre">request()</span></code></a>).</p>
@@ -721,6 +734,7 @@ refused outright rather than connected to “the good one”.</p>
 <li><a :data-current="activeSection === '#citeget.netguard.check_navigation'" class="reference internal" href="#citeget.netguard.check_navigation"><code class="docutils literal notranslate"><span class="pre">check_navigation()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.netguard.check_url'" class="reference internal" href="#citeget.netguard.check_url"><code class="docutils literal notranslate"><span class="pre">check_url()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.netguard.default_policy'" class="reference internal" href="#citeget.netguard.default_policy"><code class="docutils literal notranslate"><span class="pre">default_policy()</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.netguard.env_limit'" class="reference internal" href="#citeget.netguard.env_limit"><code class="docutils literal notranslate"><span class="pre">env_limit()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.netguard.get'" class="reference internal" href="#citeget.netguard.get"><code class="docutils literal notranslate"><span class="pre">get()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.netguard.guard_browser_context'" class="reference internal" href="#citeget.netguard.guard_browser_context"><code class="docutils literal notranslate"><span class="pre">guard_browser_context()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.netguard.guarded_session'" class="reference internal" href="#citeget.netguard.guarded_session"><code class="docutils literal notranslate"><span class="pre">guarded_session()</span></code></a></li>
@@ -743,7 +757,7 @@ refused outright rather than connected to “the good one”.</p>
 </div>
 </footer>
 </div>
-<script src="../_static/documentation_options.js?v=71c180b9"></script>
+<script src="../_static/documentation_options.js?v=d5b904a0"></script>
 <script src="../_static/doctools.js?v=fd6eb6e6"></script>
 <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
 <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -284,7 +284,7 @@ Return self when valid, else raise [`InvalidDownloadError`](#citeget.InvalidDown
 * **Return type:**
   [`ValidationResult`](citeget.validate.html.md#citeget.validate.ValidationResult)
 
-### citeget.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True, concurrency_key='auto', max_concurrent_jobs=None)
+### citeget.acquire_all_references(references, download_dir, , work_dir=None, log_file=None, strategy=None, libgen_topics=('articles', 'books'), delay=2.0, verbose=True, convert_to_pdf=False, fetch_fallback=True, concurrency_key='auto', max_concurrent_jobs=None, max_job_bytes=None)
 
 Acquire files for a list of references.
 
@@ -327,6 +327,18 @@ non-PDF is never renamed to `.pdf`.
     `CITEGET_MAX_CONCURRENT_JOBS` environment variable, else
     [`citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS`](citeget.joblimit.html.md#citeget.joblimit.DEFAULT_MAX_CONCURRENT_JOBS); `0` means
     no cap.
+  * **max_job_bytes** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Most bytes this run may add to `download_dir`.
+    Defaults to the `CITEGET_MAX_JOB_BYTES` environment variable, else
+    `DEFAULT_MAX_JOB_BYTES`; `0` means no budget. Once it is
+    spent, the remaining references fail with `JOB_BUDGET_NOTE`
+    instead of being fetched. A reference whose download would overshoot
+    it is refused the same way, its file is removed, and the budget
+    counts as spent. Every file that appears in `download_dir` while a
+    reference is acquired counts, which over-counts (never under-counts)
+    when another run shares the directory; files already there before
+    the run do not count. A browser download’s temporary spool file
+    lives outside `download_dir` and is bounded by the per-response
+    ceiling instead.
 * **Raises:**
   [**JobLimitExceeded**](citeget.joblimit.html.md#citeget.joblimit.JobLimitExceeded) – the key already has
       `max_concurrent_jobs` runs in progress. Raised before any work.

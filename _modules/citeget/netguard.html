@@ -316,18 +316,20 @@
 </span><span id="line-132">    <span class="n">flag</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ALLOW_PRIVATE_ENV_VAR</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 </span><span id="line-133">    <span class="k">return</span> <span class="n">NetPolicy</span><span class="p">(</span>
 </span><span id="line-134">        <span class="n">allow_private</span><span class="o">=</span><span class="n">flag</span> <span class="ow">in</span> <span class="n">_TRUTHY</span><span class="p">,</span>
-</span><span id="line-135">        <span class="n">max_response_bytes</span><span class="o">=</span><span class="n">_env_limit</span><span class="p">(</span>
+</span><span id="line-135">        <span class="n">max_response_bytes</span><span class="o">=</span><span class="n">env_limit</span><span class="p">(</span>
 </span><span id="line-136">            <span class="n">MAX_RESPONSE_BYTES_ENV_VAR</span><span class="p">,</span> <span class="n">DEFAULT_MAX_RESPONSE_BYTES</span>
 </span><span id="line-137">        <span class="p">),</span>
-</span><span id="line-138">        <span class="n">max_text_bytes</span><span class="o">=</span><span class="n">_env_limit</span><span class="p">(</span><span class="n">MAX_TEXT_BYTES_ENV_VAR</span><span class="p">,</span> <span class="n">DEFAULT_MAX_TEXT_BYTES</span><span class="p">),</span>
-</span><span id="line-139">        <span class="n">max_response_seconds</span><span class="o">=</span><span class="n">_env_limit</span><span class="p">(</span>
+</span><span id="line-138">        <span class="n">max_text_bytes</span><span class="o">=</span><span class="n">env_limit</span><span class="p">(</span><span class="n">MAX_TEXT_BYTES_ENV_VAR</span><span class="p">,</span> <span class="n">DEFAULT_MAX_TEXT_BYTES</span><span class="p">),</span>
+</span><span id="line-139">        <span class="n">max_response_seconds</span><span class="o">=</span><span class="n">env_limit</span><span class="p">(</span>
 </span><span id="line-140">            <span class="n">MAX_RESPONSE_SECONDS_ENV_VAR</span><span class="p">,</span> <span class="n">DEFAULT_MAX_RESPONSE_SECONDS</span>
 </span><span id="line-141">        <span class="p">),</span>
 </span><span id="line-142">    <span class="p">)</span></div>
 
 </span><span id="line-143">
 </span><span id="line-144">
-</span><span id="line-145"><span class="k">def</span><span class="w"> </span><span class="nf">_env_limit</span><span class="p">(</span><span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="env_limit">
+<a class="viewcode-back" href="../../_autosummary/citeget.netguard.html#citeget.env_limit">[docs]</a>
+</span><span id="line-145"><span class="k">def</span><span class="w"> </span><span class="nf">env_limit</span><span class="p">(</span><span class="n">var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 </span><span id="line-146"><span class="w">    </span><span class="sd">"""A non-negative integer from environment variable *var*, else *default*."""</span>
 </span><span id="line-147">    <span class="n">raw</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
 </span><span id="line-148">    <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span><span class="p">:</span>
@@ -338,7 +340,8 @@
 </span><span id="line-153">        <span class="n">value</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
 </span><span id="line-154">    <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
 </span><span id="line-155">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">raw</span><span class="si">!r}</span><span class="s2"> must be a non-negative integer (0 for none)"</span><span class="p">)</span>
-</span><span id="line-156">    <span class="k">return</span> <span class="n">value</span>
+</span><span id="line-156">    <span class="k">return</span> <span class="n">value</span></div>
+
 </span><span id="line-157">
 </span><span id="line-158">
 </span><span id="line-159"><span class="k">def</span><span class="w"> </span><span class="nf">_embedded_ipv4s</span><span class="p">(</span><span class="n">ip</span><span class="p">:</span> <span class="n">ipaddress</span><span class="o">.</span><span class="n">IPv6Address</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
@@ -1203,7 +1206,7 @@
 </footer>
     </div>
     
-    <script src="../../_static/documentation_options.js?v=71c180b9"></script>
+    <script src="../../_static/documentation_options.js?v=d5b904a0"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -4,6 +4,14 @@ citeget.acquire\_references
 .. automodule:: citeget.acquire_references
 
    
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      MAX_JOB_BYTES_ENV_VAR
+      DEFAULT_MAX_JOB_BYTES
+      JOB_BUDGET_NOTE
+   
    .. rubric:: Functions
 
    .. autosummary::

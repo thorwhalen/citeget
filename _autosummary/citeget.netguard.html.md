@@ -71,6 +71,7 @@ citeget.netguard.UnsafeURLError: Refused file:///etc/passwd: scheme 'file' is no
 | [`check_navigation`](#citeget.netguard.check_navigation)(url, \*[, policy])            | Vet a URL before `page.goto`: refuses `file:`, `data:`, internal IPs.                                       |
 | [`check_url`](#citeget.netguard.check_url)(url, \*[, policy])                   | Check the parts of *url* that can be judged without DNS; return it.                                         |
 | [`default_policy`](#citeget.netguard.default_policy)()                               | The policy in force when none is passed, read from the environment now.                                     |
+| [`env_limit`](#citeget.netguard.env_limit)(var, default)                        | A non-negative integer from environment variable *var*, else *default*.                                     |
 | [`get`](#citeget.netguard.get)(url, \*[, policy])                         | `requests.get` with the destination guard (see [`request()`](#citeget.netguard.request)). |
 | [`guard_browser_context`](#citeget.netguard.guard_browser_context)(context, \*[, policy])   | Route all of a Playwright `BrowserContext`'s traffic through the guard.                                     |
 | [`guarded_session`](#citeget.netguard.guarded_session)(\*[, policy])                  | A `requests.Session` that enforces *policy* on every connection and hop.                                    |
@@ -351,6 +352,13 @@ The policy in force when none is passed, read from the environment now.
 >>> default_policy().allow_private in (True, False)
 True
 ```
+
+### citeget.netguard.env_limit(var, default)
+
+A non-negative integer from environment variable *var*, else *default*.
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
 ### citeget.netguard.get(url, , policy=None, \*\*kwargs)
 
