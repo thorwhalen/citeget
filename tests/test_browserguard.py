@@ -127,7 +127,7 @@ def test_a_non_html_navigation_is_a_download_even_without_a_disposition(net):
     route = FakeRoute(FakeRequest("http://good.example/b.pdf"))
     handler(route)
     assert route.outcome[3] == b"" and route.outcome[2]["Content-Disposition"] == "attachment"
-    assert handler.downloads.take() is not None
+    assert handler.downloads.take("http://good.example/b.pdf") is not None
 
 
 def test_a_subresource_is_never_spooled_as_a_download(net):
@@ -137,7 +137,7 @@ def test_a_subresource_is_never_spooled_as_a_download(net):
     handler = netguard.browser_route_handler()
     route = FakeRoute(FakeRequest("http://good.example/a.js", resource_type="script"))
     handler(route)
-    assert route.outcome[3] == b"var x;" and handler.downloads.take() is None
+    assert route.outcome[3] == b"var x;" and not handler.downloads._paths
 
 
 def test_folded_header_values_are_dropped_not_passed_to_chromium(net):
@@ -366,3 +366,44 @@ def test_a_real_libgen_style_download_is_streamed_and_adopted(net, chromium, tmp
         core._get_download_url = original
     assert monkey_target.read_bytes() == book and saved == str(monkey_target)
     assert net.transport.connected.count(OTHER_PUBLIC_IP) == 1  # the key is used once
+
+
+def test_adoption_is_by_url_never_the_latest_download(net, tmp_path):
+    """A page that navigated to a tracking pixel must not have it adopted as the book."""
+    net.transport.responses[PUBLIC_IP] = _response(
+        200, b"GIF89a pixel", headers=[("Content-Type", "image/gif")]
+    )
+
+    class Ctx:
+        pass
+
+    ctx = Ctx()
+    handler = netguard.browser_route_handler()
+    netguard._CONTEXT_DOWNLOADS[id(ctx)] = handler.downloads
+    try:
+        handler(FakeRoute(FakeRequest("http://good.example/junk.bin")))
+        assert not netguard.adopt_browser_download(
+            ctx, "http://good.example/get.php?key=1", tmp_path / "book.pdf"
+        )
+        assert not (tmp_path / "book.pdf").exists()
+        assert netguard.adopt_browser_download(
+            ctx, "http://good.example/junk.bin", tmp_path / "pixel"
+        )
+        assert (tmp_path / "pixel").read_bytes() == b"GIF89a pixel"
+    finally:
+        netguard._CONTEXT_DOWNLOADS.pop(id(ctx), None)
+
+
+def test_stale_spools_are_removed_at_launch(tmp_path, monkeypatch):
+    import os
+    import tempfile
+    import time
+
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+    old = os.path.join(netguard.spool_dir(), "dl-old.download")
+    new = os.path.join(netguard.spool_dir(), "dl-new.download")
+    for path in (old, new):
+        open(path, "wb").close()
+    os.utime(old, (time.time() - 2 * netguard.STALE_SPOOL_SECONDS,) * 2)
+    netguard.remove_stale_spools()
+    assert not os.path.exists(old) and os.path.exists(new)

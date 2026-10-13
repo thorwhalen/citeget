@@ -439,11 +439,40 @@ def _is_download(resp) -> bool:
     return "attachment" in disposition or content_type not in _RENDERED_TYPES
 
 
-def _spool(resp) -> str:
-    """Stream *resp*'s body to a temp file; return its path."""
+#: Spooled browser downloads older than this are removed at the next launch:
+#: what a killed job left behind.
+STALE_SPOOL_SECONDS = 6 * 3600
+
+
+def spool_dir() -> str:
+    """The directory browser downloads are spooled to (per uid, created 0700)."""
     import tempfile
 
-    fd, path = tempfile.mkstemp(prefix="citeget-browser-", suffix=".download")
+    uid = os.getuid() if hasattr(os, "getuid") else "user"
+    path = os.path.join(tempfile.gettempdir(), f"citeget-browser-spool-{uid}")
+    os.makedirs(path, mode=0o700, exist_ok=True)
+    return path
+
+
+def remove_stale_spools(*, max_age: float = STALE_SPOOL_SECONDS) -> None:
+    """Delete spooled downloads older than *max_age* seconds."""
+    import time
+
+    cutoff = time.time() - max_age
+    with os.scandir(spool_dir()) as entries:
+        for entry in entries:
+            try:
+                if entry.is_file(follow_symlinks=False) and entry.stat().st_mtime < cutoff:
+                    os.unlink(entry.path)
+            except OSError:
+                pass
+
+
+def _spool(resp) -> str:
+    """Stream *resp*'s body to a file in :func:`spool_dir`; return its path."""
+    import tempfile
+
+    fd, path = tempfile.mkstemp(prefix="dl-", suffix=".download", dir=spool_dir())
     try:
         with os.fdopen(fd, "wb") as f:
             for chunk in resp.iter_content(64 * 1024):
@@ -469,24 +498,37 @@ class BrowserDownloads:
     def __init__(self):
         self._paths: dict = {}
 
-    def add(self, url: str, path: str) -> None:
-        self._paths[url] = path
+    @staticmethod
+    def _key(url: str) -> str:
+        from requests.utils import requote_uri
 
-    def take(self, url: Optional[str] = None) -> Optional[str]:
-        """Pop the file downloaded from *url*, else the most recent one."""
-        if url in self._paths:
-            return self._paths.pop(url)
-        if self._paths:
-            return self._paths.pop(next(reversed(self._paths)))
-        return None
+        return requote_uri(url)
+
+    def add(self, url: str, path: str) -> None:
+        old = self._paths.pop(self._key(url), None)
+        if old:
+            _unlink_quietly(old)
+        self._paths[self._key(url)] = path
+
+    def peek(self, url: str) -> Optional[str]:
+        """The file downloaded from *url* (by URL only: never "the latest one",
+        which could be a tracking pixel a page navigated to), or ``None``."""
+        return self._paths.get(self._key(url))
+
+    def take(self, url: str) -> Optional[str]:
+        """Pop and return the file downloaded from *url*; the caller owns it."""
+        return self._paths.pop(self._key(url), None)
 
     def discard_all(self) -> None:
         while self._paths:
-            path = self._paths.popitem()[1]
-            try:
-                os.unlink(path)
-            except OSError:
-                pass
+            _unlink_quietly(self._paths.popitem()[1])
+
+
+def _unlink_quietly(path: str) -> None:
+    try:
+        os.unlink(path)
+    except OSError:
+        pass
 
 
 def browser_route_handler(
@@ -541,7 +583,9 @@ def browser_route_handler(
             fulfill_headers = _fulfill_headers(resp, request_url=req.url)
             if is_document and resp.ok and _is_download(resp):
                 downloads.add(req.url, _spool(resp))
-                if "attachment" not in fulfill_headers.get("Content-Disposition", ""):
+                disposition = {k.lower(): k for k in fulfill_headers}.get("content-disposition")
+                if disposition is None or "attachment" not in fulfill_headers[disposition].lower():
+                    fulfill_headers.pop(disposition, None)
                     fulfill_headers["Content-Disposition"] = "attachment"
                 return route.fulfill(status=resp.status_code, headers=fulfill_headers, body=b"")
             body = resp.content
@@ -561,14 +605,21 @@ def browser_route_handler(
 _CONTEXT_DOWNLOADS: dict = {}
 
 
-def take_browser_download(context, url: Optional[str] = None) -> Optional[str]:
-    """The temp file a guarded *context* streamed for a download of *url*.
+def adopt_browser_download(context, url: str, dest) -> bool:
+    """Move the file a guarded *context* streamed for *url* to *dest*.
 
-    The caller owns the file afterwards. ``None`` if there is none (or the
-    context is not guarded).
+    Works across filesystems; the stash entry is dropped only once the move
+    has succeeded. False if there is no such file (or *context* is unguarded).
     """
+    import shutil
+
     stash = _CONTEXT_DOWNLOADS.get(id(context))
-    return stash.take(url) if stash is not None else None
+    path = stash.peek(url) if stash is not None else None
+    if not path:
+        return False
+    shutil.move(path, str(dest))
+    stash.take(url)
+    return True
 
 
 def guard_browser_context(context, *, policy: Optional[NetPolicy] = None, **handler_kwargs):
@@ -603,6 +654,7 @@ def launch_guarded_chromium(playwright, *, headless: bool = True, policy=None, *
 
     Every request the context makes is fetched through the guard.
     """
+    remove_stale_spools()
     browser = playwright.chromium.launch(headless=headless, args=list(CHROMIUM_GUARD_ARGS))
     context = browser.new_context(service_workers="block", **context_kwargs)
     return browser, guard_browser_context(context, policy=policy)

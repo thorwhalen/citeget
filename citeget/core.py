@@ -807,12 +807,10 @@ def _adopt_guarded_download(pg, url: str, tmp_path: Path) -> bool:
     ``download.save_as`` wrote is a placeholder. True if a file was adopted.
     """
     context = getattr(pg, "context", None)
-    path = netguard.take_browser_download(context, url) if context is not None else None
-    if not path:
+    if context is None:
         return False
     tmp_path.parent.mkdir(parents=True, exist_ok=True)
-    os.replace(path, tmp_path)
-    return True
+    return netguard.adopt_browser_download(context, url, tmp_path)
 
 
 def _fetch_via_page_request(pg, url: str, tmp_path: Path, *, timeout: int) -> bool:
