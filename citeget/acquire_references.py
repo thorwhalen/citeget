@@ -1364,6 +1364,8 @@ def _acquire_all_references(
     max_job_bytes: int = 0,
 ) -> tuple:
     """The body of :func:`acquire_all_references`, run inside its job slot."""
+    from citeget import netguard
+
     download_dir = Path(download_dir)
     download_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1430,16 +1432,23 @@ def _acquire_all_references(
             continue  # nothing fetched, so no rate-limit delay either
 
         before = _file_sizes(download_dir) if budget else {}
-        result = acquire_reference(
-            ref,
-            download_dir,
-            log_entries=log_entries,
-            strategy=strategy,
-            libgen_topics=libgen_topics,
-            verbose=verbose,
-            convert_to_pdf=convert_to_pdf,
-            fetch_fallback=fetch_fallback,
-        )
+        # What is left of the budget caps each response as it arrives, so an
+        # oversized fetch is refused before its bytes land on a small disk,
+        # not counted and deleted after (#26).
+        with netguard.response_ceiling(
+            budget - spent if budget else None,
+            source=f"the job byte budget, {MAX_JOB_BYTES_ENV_VAR}",
+        ):
+            result = acquire_reference(
+                ref,
+                download_dir,
+                log_entries=log_entries,
+                strategy=strategy,
+                libgen_topics=libgen_topics,
+                verbose=verbose,
+                convert_to_pdf=convert_to_pdf,
+                fetch_fallback=fetch_fallback,
+            )
         if budget:
             # Count whatever this reference added (a failed attempt may still
             # have written a file), not just the file it reports.
