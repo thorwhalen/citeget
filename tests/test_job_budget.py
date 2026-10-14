@@ -170,3 +170,28 @@ def test_the_ceiling_names_the_budget_and_never_loosens_the_policy(net):
         with netguard.response_ceiling(10_000):  # a looser inner block cannot widen it
             assert netguard.capped(netguard.NetPolicy()).max_response_bytes == 400
     assert netguard.get("http://good.example/").content == b"y" * 600
+
+
+def test_a_swallowed_ceiling_refusal_still_spends_the_budget_and_stops_the_job(
+    tmp_path, net, monkeypatch
+):
+    """Found by the review of #27. Downloaders swallow the refusal, so the
+    reference merely "failed": the budget looked unspent and the job went on
+    fetching. Real chain, no fake between the loop and netguard."""
+    from tests.conftest import PUBLIC_IP, _response
+
+    net.transport.responses[PUBLIC_IP] = _response(200, b"%PDF-" + b"x" * 1595)
+    for name in ("_try_libgen", "_try_arxiv_search", "_try_scihub_via_doi"):
+        monkeypatch.setattr(ar, name, lambda *a, **k: None)
+    refs = [
+        ar.Reference(
+            number=i, raw=f"r{i}", title=f"Title {i}", url="http://good.example/paper.pdf"
+        )
+        for i in (1, 2, 3)
+    ]
+    ok, failed, _ = _run(tmp_path, refs, max_job_bytes=3000, fetch_fallback=False)
+
+    assert [r.reference.number for r in ok] == [1]
+    assert [r.reference.number for r in failed] == [2, 3]
+    assert all(ar.JOB_BUDGET_NOTE in r.notes for r in failed), [r.notes for r in failed]
+    assert len(net.transport.connected) == 2, "reference 3 was fetched after the overshoot"
