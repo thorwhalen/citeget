@@ -50,9 +50,11 @@ from __future__ import annotations
 import ipaddress
 import os
 import socket
-from dataclasses import dataclass
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass, field, replace
 from functools import lru_cache
-from typing import Optional
+from typing import Callable, Optional
 from urllib.parse import urljoin, urlsplit
 
 #: Environment variable that switches the guard off (``1``/``true``/``yes``).
@@ -113,6 +115,11 @@ class NetPolicy:
             raises :class:`ResponseTooLargeError`. ``None`` or ``0``: no ceiling.
         max_text_bytes: Largest body that ``.text`` / ``.json()`` will decode.
         max_response_seconds: Longest a body may take to arrive, in total.
+        max_response_bytes_source: What sets *max_response_bytes*, named in the
+            refusal so the reader knows which knob to turn.
+        on_too_large: Called when a body is refused for *max_response_bytes*,
+            before the error is raised: how a :func:`response_ceiling` learns it
+            fired although the caller swallowed the error.
     """
 
     allow_private: bool = False
@@ -121,6 +128,79 @@ class NetPolicy:
     max_response_bytes: Optional[int] = DEFAULT_MAX_RESPONSE_BYTES
     max_text_bytes: Optional[int] = DEFAULT_MAX_TEXT_BYTES
     max_response_seconds: Optional[float] = DEFAULT_MAX_RESPONSE_SECONDS
+    max_response_bytes_source: str = MAX_RESPONSE_BYTES_ENV_VAR
+    on_too_large: Optional[Callable[[], None]] = field(
+        default=None, compare=False, repr=False
+    )
+
+
+@dataclass
+class Ceiling:
+    """A :func:`response_ceiling` in force; ``fired`` once it refused a body."""
+
+    limit: Optional[int] = None
+    source: str = ""
+    fired: bool = False
+
+    def fire(self) -> None:
+        self.fired = True
+
+
+#: The tighter response-size ceiling for the requests made in this context --
+#: see :func:`response_ceiling`.
+_ceiling: ContextVar[Optional[Ceiling]] = ContextVar(
+    "citeget_response_ceiling", default=None
+)
+
+
+@contextmanager
+def response_ceiling(limit: Optional[int], *, source: str = "a caller's ceiling"):
+    """Cap every response body fetched in this block at *limit* bytes.
+
+    For a caller that cannot reach each fetch's ``policy=`` -- a job spending a
+    byte budget across strategies it does not see into. Applied wherever a
+    policy is resolved (:func:`request`, :func:`guarded_session`,
+    :func:`browser_route_handler`), so it only ever tightens: the policy's own
+    ceiling still holds when it is the smaller one. Nested blocks take the
+    smaller limit. ``None`` or ``0`` adds no ceiling.
+
+    Yields the :class:`Ceiling` in force. Callers in between usually swallow
+    the refusal (a strategy that fails tries the next), so ``ceiling.fired`` is
+    how the block's owner learns its ceiling, not some other failure, stopped a
+    fetch.
+
+    >>> with response_ceiling(400, source="the job budget") as ceiling:
+    ...     capped(NetPolicy()).max_response_bytes, ceiling.fired
+    (400, False)
+    >>> capped(NetPolicy()).max_response_bytes == DEFAULT_MAX_RESPONSE_BYTES
+    True
+    """
+    outer = _ceiling.get()
+    if limit and (outer is None or outer.limit is None or limit < outer.limit):
+        ceiling = Ceiling(limit, source)
+        token = _ceiling.set(ceiling)
+    else:
+        ceiling, token = outer or Ceiling(), None
+    try:
+        yield ceiling
+    finally:
+        if token is not None:
+            _ceiling.reset(token)
+
+
+def capped(policy: NetPolicy) -> NetPolicy:
+    """*policy* with the :func:`response_ceiling` in force applied, if tighter."""
+    ceiling = _ceiling.get()
+    if ceiling is None or not ceiling.limit:
+        return policy
+    if policy.max_response_bytes and policy.max_response_bytes <= ceiling.limit:
+        return policy
+    return replace(
+        policy,
+        max_response_bytes=ceiling.limit,
+        max_response_bytes_source=ceiling.source,
+        on_too_large=ceiling.fire,
+    )
 
 
 def default_policy() -> NetPolicy:
@@ -340,7 +420,7 @@ def guarded_session(*, policy: Optional[NetPolicy] = None):
     import requests
     from requests.adapters import HTTPAdapter
 
-    policy = policy or default_policy()
+    policy = capped(policy or default_policy())
 
     class _GuardedAdapter(HTTPAdapter):
         def init_poolmanager(self, *args, **kwargs):
@@ -374,6 +454,12 @@ def guarded_session(*, policy: Optional[NetPolicy] = None):
     session.mount("http://", adapter)
     session.mount("https://", adapter)
     return session
+
+
+def _report_too_large(policy: NetPolicy) -> None:
+    """Tell *policy*'s ``on_too_large`` hook, if any, that its size ceiling fired."""
+    if policy.on_too_large is not None:
+        policy.on_too_large()
 
 
 def _too_large(url, detail: str) -> ResponseTooLargeError:
@@ -421,8 +507,10 @@ class GuardedResponse(_requests.Response if _requests else object):
         for chunk in chunks:
             self._citeget_read += len(chunk)
             if limit and self._citeget_read > limit:
+                _report_too_large(self._citeget_policy)
                 self._refuse_body(
-                    f"response passed the {limit:,}-byte limit ({MAX_RESPONSE_BYTES_ENV_VAR})"
+                    f"response passed the {limit:,}-byte limit "
+                    f"({self._citeget_policy.max_response_bytes_source})"
                 )
             if (
                 self._citeget_deadline is not None
@@ -467,11 +555,12 @@ def _check_declared(resp, policy: NetPolicy) -> None:
         raise _too_large(resp.url, "stacked content encodings are not accepted")
     declared = resp.headers.get("Content-Length", "")
     if limit and declared.isdigit() and int(declared) > limit:
+        _report_too_large(policy)
         resp.close()
         raise _too_large(
             resp.url,
             f"response is {int(declared):,} bytes, over the {limit:,}-byte "
-            f"limit ({MAX_RESPONSE_BYTES_ENV_VAR})",
+            f"limit ({policy.max_response_bytes_source})",
         )
 
 
@@ -519,7 +608,7 @@ def request(method: str, url: str, *, policy: Optional[NetPolicy] = None, **kwar
     time ceiling, or if ``.text`` / ``.json()`` is asked of a body over the text
     ceiling.
     """
-    policy = policy or default_policy()
+    policy = capped(policy or default_policy())
     if kwargs.get("proxies") and not policy.allow_private:
         raise _refuse(url, "requests through a proxy are not allowed")
     check_url(url, policy=policy)
@@ -814,7 +903,9 @@ def browser_route_handler(
     import logging
 
     log = logging.getLogger(__name__)
-    policy = policy or default_policy()
+    # Resolved now, not per route: Playwright dispatches the handler from its
+    # own loop, which need not see this context's response_ceiling.
+    policy = capped(policy or default_policy())
     fetch = fetch or (
         lambda method, url, **kw: request(method, url, policy=policy, **kw)
     )

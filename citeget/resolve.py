@@ -278,9 +278,15 @@ def _any_downloader(url: str, filepath: Path, *, timeout: int = 30) -> bool:
             return False
 
         filepath.parent.mkdir(parents=True, exist_ok=True)
-        with open(filepath, "wb") as f:
-            for chunk in resp.iter_content(chunk_size=8192):
-                f.write(chunk)
+        try:
+            with open(filepath, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        except BaseException:
+            # A body refused part-way (a size ceiling, a deadline) leaves a
+            # truncated file that would pass for a download and fill the disk.
+            filepath.unlink(missing_ok=True)
+            raise
         return filepath.stat().st_size > 500
     except Exception as e:
         logger.debug("Download failed for %s: %s", url, e)
