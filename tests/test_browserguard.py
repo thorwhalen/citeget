@@ -15,6 +15,14 @@ from citeget import core, netguard
 from tests.conftest import OTHER_PUBLIC_IP, PUBLIC_IP, _response
 
 
+@pytest.fixture(autouse=True)
+def _private_spool_dir(tmp_path, monkeypatch):
+    """Spooled downloads go under the test's tmp_path, never the shared temp dir."""
+    import tempfile
+
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp_path))
+
+
 class FakeRequest:
     def __init__(self, url, *, method="GET", resource_type="document", headers=None, body=None):
         self.url = url
