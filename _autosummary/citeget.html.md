@@ -160,7 +160,7 @@ Distinct from an empty result set: this means every candidate mirror
 failed to connect (down, moved, or blocked by local DNS/network), so the
 caller gets an actionable message instead of a raw Playwright stack trace.
 
-### *class* citeget.NetPolicy(allow_private=False, allowed_schemes=('http', 'https'), max_redirects=10, max_response_bytes=104857600, max_text_bytes=10485760, max_response_seconds=600)
+### *class* citeget.NetPolicy(allow_private=False, allowed_schemes=('http', 'https'), max_redirects=10, max_response_bytes=104857600, max_text_bytes=10485760, max_response_seconds=600, max_response_bytes_source='CITEGET_MAX_RESPONSE_BYTES', on_too_large=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -176,6 +176,11 @@ What outbound requests are allowed to reach.
     raises `ResponseTooLargeError`. `None` or `0`: no ceiling.
   * **max_text_bytes** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Largest body that `.text` / `.json()` will decode.
   * **max_response_seconds** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Longest a body may take to arrive, in total.
+  * **max_response_bytes_source** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – What sets *max_response_bytes*, named in the
+    refusal so the reader knows which knob to turn.
+  * **on_too_large** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[], [`None`](https://docs.python.org/3/builtins/constants.html#None)]]) – Called when a body is refused for *max_response_bytes*,
+    before the error is raised: how a `response_ceiling()` learns it
+    fired although the caller swallowed the error.
 
 ### *class* citeget.Reference(number, raw, title='', authors='', year='', venue='', url='', doi='', source_text='')
 

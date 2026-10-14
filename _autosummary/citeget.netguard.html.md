@@ -65,29 +65,32 @@ citeget.netguard.UnsafeURLError: Refused file:///etc/passwd: scheme 'file' is no
 
 ### Functions
 
-| [`adopt_browser_download`](#citeget.netguard.adopt_browser_download)(context, url, dest)     | Move the file a guarded *context* streamed for *url* to *dest*.                                             |
-|-------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| [`browser_route_handler`](#citeget.netguard.browser_route_handler)(\*[, policy, ...])       | A `context.route("**/*", ...)` handler that fetches through the guard.                                      |
-| [`check_navigation`](#citeget.netguard.check_navigation)(url, \*[, policy])            | Vet a URL before `page.goto`: refuses `file:`, `data:`, internal IPs.                                       |
-| [`check_url`](#citeget.netguard.check_url)(url, \*[, policy])                   | Check the parts of *url* that can be judged without DNS; return it.                                         |
-| [`default_policy`](#citeget.netguard.default_policy)()                               | The policy in force when none is passed, read from the environment now.                                     |
-| [`env_limit`](#citeget.netguard.env_limit)(var, default)                        | A non-negative integer from environment variable *var*, else *default*.                                     |
-| [`get`](#citeget.netguard.get)(url, \*[, policy])                         | `requests.get` with the destination guard (see [`request()`](#citeget.netguard.request)). |
-| [`guard_browser_context`](#citeget.netguard.guard_browser_context)(context, \*[, policy])   | Route all of a Playwright `BrowserContext`'s traffic through the guard.                                     |
-| [`guarded_session`](#citeget.netguard.guarded_session)(\*[, policy])                  | A `requests.Session` that enforces *policy* on every connection and hop.                                    |
-| [`is_public_address`](#citeget.netguard.is_public_address)(address)                     | True if *address* (an IP literal, possibly with a `%zone`) is public.                                       |
-| [`launch_guarded_chromium`](#citeget.netguard.launch_guarded_chromium)(playwright, \*[, ...]) | Launch Chromium with no network of its own and return `(browser, context)`.                                 |
-| [`remove_stale_spools`](#citeget.netguard.remove_stale_spools)(\*[, max_age])             | Delete spooled downloads older than *max_age* seconds.                                                      |
-| [`request`](#citeget.netguard.request)(method, url, \*[, policy])             | `requests.request` with the destination guard.                                                              |
-| [`resolve_public`](#citeget.netguard.resolve_public)(host, port, \*[, policy])       | Resolve *host* and return its addresses, refusing if any is not public.                                     |
-| [`spool_dir`](#citeget.netguard.spool_dir)()                                    | The directory browser downloads are spooled to (per uid, created 0700).                                     |
+| [`adopt_browser_download`](#citeget.netguard.adopt_browser_download)(context, url, dest)     | Move the file a guarded *context* streamed for *url* to *dest*.                                                     |
+|-------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| [`browser_route_handler`](#citeget.netguard.browser_route_handler)(\*[, policy, ...])       | A `context.route("**/*", ...)` handler that fetches through the guard.                                              |
+| [`capped`](#citeget.netguard.capped)(policy)                                 | *policy* with the [`response_ceiling()`](#citeget.netguard.response_ceiling) in force applied, if tighter. |
+| [`check_navigation`](#citeget.netguard.check_navigation)(url, \*[, policy])            | Vet a URL before `page.goto`: refuses `file:`, `data:`, internal IPs.                                               |
+| [`check_url`](#citeget.netguard.check_url)(url, \*[, policy])                   | Check the parts of *url* that can be judged without DNS; return it.                                                 |
+| [`default_policy`](#citeget.netguard.default_policy)()                               | The policy in force when none is passed, read from the environment now.                                             |
+| [`env_limit`](#citeget.netguard.env_limit)(var, default)                        | A non-negative integer from environment variable *var*, else *default*.                                             |
+| [`get`](#citeget.netguard.get)(url, \*[, policy])                         | `requests.get` with the destination guard (see [`request()`](#citeget.netguard.request)).         |
+| [`guard_browser_context`](#citeget.netguard.guard_browser_context)(context, \*[, policy])   | Route all of a Playwright `BrowserContext`'s traffic through the guard.                                             |
+| [`guarded_session`](#citeget.netguard.guarded_session)(\*[, policy])                  | A `requests.Session` that enforces *policy* on every connection and hop.                                            |
+| [`is_public_address`](#citeget.netguard.is_public_address)(address)                     | True if *address* (an IP literal, possibly with a `%zone`) is public.                                               |
+| [`launch_guarded_chromium`](#citeget.netguard.launch_guarded_chromium)(playwright, \*[, ...]) | Launch Chromium with no network of its own and return `(browser, context)`.                                         |
+| [`remove_stale_spools`](#citeget.netguard.remove_stale_spools)(\*[, max_age])             | Delete spooled downloads older than *max_age* seconds.                                                              |
+| [`request`](#citeget.netguard.request)(method, url, \*[, policy])             | `requests.request` with the destination guard.                                                                      |
+| [`resolve_public`](#citeget.netguard.resolve_public)(host, port, \*[, policy])       | Resolve *host* and return its addresses, refusing if any is not public.                                             |
+| [`response_ceiling`](#citeget.netguard.response_ceiling)(limit, \*[, source])          | Cap every response body fetched in this block at *limit* bytes.                                                     |
+| [`spool_dir`](#citeget.netguard.spool_dir)()                                    | The directory browser downloads are spooled to (per uid, created 0700).                                             |
 
 ### Classes
 
-| [`BrowserDownloads`](#citeget.netguard.BrowserDownloads)()                               | Files the route handler streamed to disk for download navigations.                                          |
-|---------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| [`GuardedResponse`](#citeget.netguard.GuardedResponse)()                                | A `requests.Response` that honours a [`NetPolicy`](#citeget.netguard.NetPolicy)'s ceilings. |
-| [`NetPolicy`](#citeget.netguard.NetPolicy)([allow_private, allowed_schemes, ...]) | What outbound requests are allowed to reach.                                                                |
+| [`BrowserDownloads`](#citeget.netguard.BrowserDownloads)()                               | Files the route handler streamed to disk for download navigations.                                              |
+|---------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| [`Ceiling`](#citeget.netguard.Ceiling)([limit, source, fired])                  | A [`response_ceiling()`](#citeget.netguard.response_ceiling) in force; `fired` once it refused a body. |
+| [`GuardedResponse`](#citeget.netguard.GuardedResponse)()                                | A `requests.Response` that honours a [`NetPolicy`](#citeget.netguard.NetPolicy)'s ceilings.     |
+| [`NetPolicy`](#citeget.netguard.NetPolicy)([allow_private, allowed_schemes, ...]) | What outbound requests are allowed to reach.                                                                    |
 
 ### Exceptions
 
@@ -138,6 +141,12 @@ Pop and return the file downloaded from *url*; the caller owns it.
 ### citeget.netguard.CHROMIUM_GUARD_ARGS *= ('--proxy-server=http://127.0.0.1:9', '--proxy-bypass-list=<-loopback>', '--force-webrtc-ip-handling-policy=disable_non_proxied_udp', '--dns-prefetch-disable')*
 
 Chromium flags that leave the browser no network path of its own.
+
+### *class* citeget.netguard.Ceiling(limit=None, source='', fired=False)
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+A [`response_ceiling()`](#citeget.netguard.response_ceiling) in force; `fired` once it refused a body.
 
 ### citeget.netguard.DEAD_PROXY *= 'http://127.0.0.1:9'*
 
@@ -241,7 +250,7 @@ no ceiling).
 * **Type:**
   Environment variables for the response ceilings (`0`
 
-### *class* citeget.netguard.NetPolicy(allow_private=False, allowed_schemes=('http', 'https'), max_redirects=10, max_response_bytes=104857600, max_text_bytes=10485760, max_response_seconds=600)
+### *class* citeget.netguard.NetPolicy(allow_private=False, allowed_schemes=('http', 'https'), max_redirects=10, max_response_bytes=104857600, max_text_bytes=10485760, max_response_seconds=600, max_response_bytes_source='CITEGET_MAX_RESPONSE_BYTES', on_too_large=None)
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -257,6 +266,11 @@ What outbound requests are allowed to reach.
     raises [`ResponseTooLargeError`](#citeget.netguard.ResponseTooLargeError). `None` or `0`: no ceiling.
   * **max_text_bytes** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Largest body that `.text` / `.json()` will decode.
   * **max_response_seconds** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`float`](https://docs.python.org/3/builtins/functions.html#float)]) – Longest a body may take to arrive, in total.
+  * **max_response_bytes_source** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – What sets *max_response_bytes*, named in the
+    refusal so the reader knows which knob to turn.
+  * **on_too_large** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[], [`None`](https://docs.python.org/3/builtins/constants.html#None)]]) – Called when a body is refused for *max_response_bytes*,
+    before the error is raised: how a [`response_ceiling()`](#citeget.netguard.response_ceiling) learns it
+    fired although the caller swallowed the error.
 
 ### *exception* citeget.netguard.ResponseTooLargeError
 
@@ -305,6 +319,13 @@ A `context.route("**/*", ...)` handler that fetches through the guard.
     handler as `handler.downloads`.
   * **fetch** – The fetcher, `(method, url, **requests_kwargs) -> Response`;
     defaults to [`request()`](#citeget.netguard.request) with *policy*. A seam for tests.
+
+### citeget.netguard.capped(policy)
+
+*policy* with the [`response_ceiling()`](#citeget.netguard.response_ceiling) in force applied, if tighter.
+
+* **Return type:**
+  [`NetPolicy`](#citeget.netguard.NetPolicy)
 
 ### citeget.netguard.check_navigation(url, , policy=None)
 
@@ -440,6 +461,30 @@ Returns `getaddrinfo` tuples `(family, type, proto, canonname, sockaddr)`.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
+### citeget.netguard.response_ceiling(limit, , source="a caller's ceiling")
+
+Cap every response body fetched in this block at *limit* bytes.
+
+For a caller that cannot reach each fetch’s `policy=` – a job spending a
+byte budget across strategies it does not see into. Applied wherever a
+policy is resolved ([`request()`](#citeget.netguard.request), [`guarded_session()`](#citeget.netguard.guarded_session),
+[`browser_route_handler()`](#citeget.netguard.browser_route_handler)), so it only ever tightens: the policy’s own
+ceiling still holds when it is the smaller one. Nested blocks take the
+smaller limit. `None` or `0` adds no ceiling.
+
+Yields the [`Ceiling`](#citeget.netguard.Ceiling) in force. Callers in between usually swallow
+the refusal (a strategy that fails tries the next), so `ceiling.fired` is
+how the block’s owner learns its ceiling, not some other failure, stopped a
+fetch.
+
+```pycon
+>>> with response_ceiling(400, source="the job budget") as ceiling:
+...     capped(NetPolicy()).max_response_bytes, ceiling.fired
+(400, False)
+>>> capped(NetPolicy()).max_response_bytes == DEFAULT_MAX_RESPONSE_BYTES
+True
+```
 
 ### citeget.netguard.spool_dir()
 

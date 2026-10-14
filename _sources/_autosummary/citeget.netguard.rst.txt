@@ -26,6 +26,7 @@ citeget.netguard
    
       adopt_browser_download
       browser_route_handler
+      capped
       check_navigation
       check_url
       default_policy
@@ -38,6 +39,7 @@ citeget.netguard
       remove_stale_spools
       request
       resolve_public
+      response_ceiling
       spool_dir
    
    .. rubric:: Classes
@@ -45,6 +47,7 @@ citeget.netguard
    .. autosummary::
    
       BrowserDownloads
+      Ceiling
       GuardedResponse
       NetPolicy
    
