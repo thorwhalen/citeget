@@ -112,7 +112,14 @@ folded in (`?currentPage=2` → `-currentpage-2`), else a hash of the URL.
 `skip_existing` skips only a file whose `<!-- Source: URL -->` header names
 the *same* URL, so a `SKIP` really means "already have this page". PDFs and
 other non-Markdown files carry no source record: across runs they are still
-skipped by name alone (within a run, collisions are always resolved).
+skipped by name alone (within a run, collisions are always resolved;
+thorwhalen/citeget#32 tracks the cross-run case). A folder saved by an older
+citeget is matched by those Source headers too, so a page saved under an old
+name is skipped, not saved twice.
+
+The page title used for names drops the site name: `Title – Site` and
+`Site – Title` are told apart using `og:title`, the `<h1>`, `og:site_name`
+and the URL's path; with no such evidence the first segment is kept.
 
 The manifest's `title` is the anchor text if there was one, else the page
 title.
