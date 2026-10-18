@@ -284,7 +284,25 @@ for r in results:
 
 URL parsing recognizes markdown links `[anchor](url)`, reference-style
 `[1] ... https://url` citations, and bare URLs in prose. Filenames are
-inferred from anchor text → URL path → domain hash.
+inferred from anchor text → page title → URL path → domain hash, and two
+different URLs never share a file.
+
+Markdown keeps the page's **main content** only — menus, sidebars, footers and
+the web.archive.org toolbar are dropped (`content="full"` / `--content full`
+keeps the whole page). The extractor is a strategy: the built-in one needs only
+`beautifulsoup4`; `extractor="trafilatura"` uses trafilatura
+(`pip install 'citeget[extract]'`, Apache-2.0); or pass any `html -> html`
+callable. The extractor is public, for reuse outside `fetch`:
+
+```python
+from citeget import extract_main_content, main_content_markdown
+
+article_html = extract_main_content(page_html)
+article_md = main_content_markdown(page_html)
+```
+
+Transient errors (connection resets, 429, 5xx) are retried with backoff
+(`retries=2` by default).
 
 PDF rendering is opt-in (HTML→PDF needs `wkhtmltopdf`):
 

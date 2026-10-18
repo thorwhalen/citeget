@@ -1,0 +1,485 @@
+<html>
+<head>
+<title>Haunted By Data</title>
+<meta charset="utf-8"/>
+<style></style>
+</head>
+<body>
+<div id="main">
+<p><a href="http://idlewords.com/">Idle Words</a> &gt; <a href="http://idlewords.com/talks/">Talks</a> &gt; Haunted By Data
+
+<p>This is the text version of a talk I gave on October 1, 2015, at the <a href="http://strataconf.com/big-data-conference-ny-2015">Strata+Hadoop World</a> conference in New York City.   The <a href="https://www.youtube.com/watch?v=GAXLHM-1Psk">video version is here</a> (20 mins).
+
+<hr/>
+<table>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.001.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.001.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<h1>Haunted By Data</h1>
+</td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.002.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.002.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xx xxxxxxxxx xxxx xxxx x xxxxxxx xx xxxxx xxx xxx xxxx xxxxxxxxx, xxxxx x xxxx'x xxxx xx xxx x xxxxx. 
+    <p>xxx xxxxxxxxxxx xxxxxx xxx xxxx xx xxxxxxxxxxxx xxxxxxx. xxxx xxxxx xxxxxxx xxxxxxx xxxx xxx xxxx xxxx, xx xxxx xx'x xxxxxxxx xx xxxx. x xxxx xxxx xxxxxx xxxx xx xxx xxx xxxx xxxxxxxxx, xxxxx xxxxxxxxxx xxxx xx xxxxx xxxx.
+    
+    <p>xxx xxxx xxxxx xx xxx xxxxxx xxx xxxxx. xxxx xxxx xxxxx xxxxxxxxxx xxxxx xxxx xxx xxxxxxx xxxxx.
+     </p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.003.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.003.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>x xxxxx xxxx xx xxxxxxxxx xxxx xxxxxxx, xxx xxx xxx xx xxxxxxx xxxx xxx xx x xxxxxxxx xxxxxxxx, xxx xx x xxxxx xxxxxxx, x xxxxx xx xxxxxxxxxxx, xxxxx xxxxxx xxxx xx xxx’x xxxx xxx xx xxxxxx.
+
+
+    </p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.004.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.004.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xx xxxxxxxxxx, x'x xxxx xx xxxx x xxxxxxxx xxxxxxx xxxx xx'xx xxxxx xxx xxxxxxx xxxxxx, xxxxxxx xxxxxxxxxx xxxxx xxxxxxxxxx xxxx xx xxxxx xxxxx xxxxx xxxxxxxx xxxx xxx xxxxxxx xxxx. 
+    </p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.005.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.005.thumb.jpg" style="width:300px"/></a></td>
+<td>
+    x xxxxxxxx xxxxxxx xx xxxxxxx xxxxx xx xxxx xx xxxxxxxxx xxxxxx xxxxx xxxxx xxxxxxxx xxx xxx xxxxxx xxxx xxx xxxxxxxxxxxx xx xxxxx xxxxx xx xxxxx xx. xxxxxxx xxxxx xxxxxxx xxxxxxxxx xxx xxxx xxxxxxxxx xx xxxxx.
+
+</td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.006.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.006.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xxxx xxxxxx xxx xx xxxxxxx xxxxxxxxx xxxx 'xxx xx xxx xx x xxxxxxxx' xxx 'xxx x xxxxx xxxxxxxxx xx xxx xx xx' xx xxxx xxxxxx xxx'x xxx xx xx xxx xxx xx.  
+    
+    <p>xxx xx xxxxx xxx xxxx x xxxxxxxx. xx xxxx xxxx xxxx xxxxx xx xxxxxxxx xxxxx xx xxxxxxx xxxxxx xx xxxxxxx.
+    
+    </p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.007.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.007.thumb.jpg" style="width:300px"/></a></td>
+<td>
+   xxx xxxx xx'xx xxxxxxxxxx xxxxx xxxxxx xxx xxxx xxxx xxx xxxxxxxx.  xxxx xxxxxxxxx xxxx xxx xx, xxx xx xxxxxxx xxx xxxx xxxx xx xxxxx xxx xxxx xxxxxxxx xxxx xxxxxxxxxxxxx.  
+   
+   <p>xxx xxxxxxxxxxx xxxxx xxxxxx xxxxxxx xxx xxxxx xx xxxx xx xxxxx xxxxxx xxx xxxxx, xxx xxxxxxxxx xx xxxx xx xxxxx xxxxxxxx xxx xxxxx.  xx xxx xxxxx xxxx xxxx xxxxxx xx xxxxx xxxx xxxxxxx xx xxxx xxxxx xx xxx. xxx xxx xxxx xxxxx xxxxx xxx xxxx xxxxxx xxx xxxxx xx xxxx xxx xxxxxxx. 
+    
+   </p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.008.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.008.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xxxxxxx xxxxx xxxxx xx xxx xxxxxxx. xxxxx xx xxx xxxxx xxxxxxx xxxx, xxxxx xx xxxxxxxxx xxxxxxxxxxx xxx xxxxxxxxxxxx, xxx xxxx xxx-xxxxx xxxxx, xxxxxx xxxx xxxxxxxxx xx xxxxxxxxxxxx xxxxxxx, xxxx xx xxxx xxxx xxxxxxxxx xxx xxxxx.
+
+<p>xxxxxxxxx, xx xxxx xxxx xxxx xx xxxxx xx xxxxxxxxx xxxxxxxxx, xxxx xxxxxxxxx xxx xxxxxxx xxxxxxx.  xxx xxxx xxxxx’x xxxx xxxx xxxx xx xxxxx xxxx, xxxxx xx xxxxx xxx xx xxxx xxxxxx xxxx xx xxxxxxx.
+    </p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.009.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.009.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xxxx xxxxxxx xxxxxxx xxxxx xxxxxx xxxx xxx'xx xxxxxx xx xxxxxx xx xxxx xxxxx xxxx. 
+
+<p> xxxx xxx xxxx xxxxxxx xxx xxxxxxxx-xxxxx, xx xxxx xx xxxxxxx xxxx xxx xxxxxxxx-xxxxx.  xxxx xxxx xxx xxxxxxxx xxxxxx'x xxxxxxxxx xxxxxxx xxxxx xxx xxxx, xxxxxxxxx xx'xx xxxxx xxxx xxxx xx xx xxxxxx.
+  
+  <p>xx xxx xxxx x xxxxxxxxxx xxxxxx xxxxxx, xx xxxxxx xxx xxxxx xx xxxxxx xxxx xxxxxx xxxxx xxxx xxxxx xxxx xxxxxx xx xxxxxxxx, xxxxxxxxx xxxxxxxxx. xxx xxx xxxxxxxx xxx’x xxxx xxxx.  xxx xxxxx xxxxx xx xxxxxx x xxxx xxxx xx xx xxx xxx xxxx xxxxx xxxxxx xx xxxxx xxx xx xxxxxxx xxx xxxxxxxx xxxxx. 
+    </p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.010.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.010.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xx x xxxxx xxxxx xxxxxxxxxx xx xxxxxxx xxx xxxx xxxxxxx, xxxx xxx xxxxx xx'xx xxx xxxx xxxxxx xxxxxxxx, xxx xxxxxx xxxxxxx xx xxx xxxxx xxxxx xxx'xx xxxx xxxx. 
+    
+    <p>xxxxxxx xxxxxxxx xxxx xxxx xxx xxxxx xxxx xxx, xxxxxxx xx xxx xxxx xxxxxxxx xx.  xxx xxx xx xxxxx xxxx xxxx xxxx xxx xxxxxx xxxxxxxxxxxx, xx xx xx xxxx xx xxxxx xx xxx.
+
+    </p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.011.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.011.thumb.jpg" style="width:300px"/></a></td>
+<td>
+    Eric Schmidt of Google suggests that one way to solve the problem is <a href="https://www.eff.org/deeplinks/2009/12/google-ceo-eric-schmidt-dismisses-privacy">to never do anything that you don’t want made public</a>.
+    
+    <p>But sometimes there's no way to know ahead of time what is going to be bad.
+
+</p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.012.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.012.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xx xxx xxxxxxx, xxx xxxxxx xxxxx xxx xxx xxxx. xx xxxx xxxxxxxx xxxxxx xxxxxxxx! xx xxx xxxxxxxxxxx xx xxxxxxxxx xx xxxx xxx xxxx xxxxxxxxxx xxx xxxxxxxxxxxx xxx xxxxx xxxxx xxxxx. 
+
+<p>xxx xxxxx xxxxx, xxx xxxx xx xxxxxxxxx xxxx xxxxx xxx xxx xx x xxxxxxxxx xxx xxx xxxx xxxxxx. xxxx xxxxxx xxxx xx xxxx xxx xx. xxxxxxx xx xx xxx xxx xxxxxxxxx xxxx xxxx.
+
+    </p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.013.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.013.thumb.jpg" style="width:300px"/></a></td>
+<td>
+  xxxxxx xx xxx xxxx, xxxxxxxx xxx xxxxxxxxxxxx xxxx xx x xxx xxxxxxx xx xxxxxx xxx xxxxx x xxxxxxxxxxx xxxxxxx xx xxxx, xx xxxx x xxxxxxx xxxxx.  
+  
+  <p>xx xxxx xxxxxxxxxxx xx xxxx xx x xxxxxxx xxxxxxx, xxx x xxx xxxxx xxxxx—xx xxxxxxxx'x xxxxxxx—xxxxxxxxxx xx xxxxxxxx xx xxxxx xxxxxxxx.  
+  
+  <p>Now that blogger has to live with a dark pit of fear in his stomach.
+
+    </p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.014.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.014.thumb.jpg" style="width:300px"/></a></td>
+<td>
+   xxxxxxxx xxxx xxx xxxx xxxxxx xx xxx xxxxx, xxx xxxxxxxxxx xxx xxxxxx xxx xxxxxxxx xx xx xxxxxx xx. 
+   
+   <p>Even right here in New York City, the NYPD is <a href="http://www.theguardian.com/us-news/2015/apr/23/online-surveillance-black-teenagers-new-stop-and-frisk">conducting intensive online surveillance of black kids</a> based on what block they live on.  
+   
+   <p>They've <a href="http://www.theguardian.com/world/2013/oct/24/aclu-new-york-nypd-mosques-muslims">put up scary surveillance towers</a> at mosques.
+    </p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.015.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.015.thumb.jpg" style="width:300px"/></a></td>
+<td>
+    xxxxxx xxx xxx xxx xxxxxxxx xxxxxxx xxxxxx, xxx xx xxxxx xxx xxxx xx xxxxxxxx x xxxx xxxxxxx, xxx xxxx “xx xxxx xxxxxx xxxxx xx xxxxxxxx.”  
+    
+    <p>xx xxxx xxx xxxxxx xx xxxxxxxxxx xxxxxxxx xxxx, xxx xxxxxxx xx xxxxxxx, xxx'xx xxxxxx x xxxxxxx xxxxxxxx.
+
+    </p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.016.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.016.thumb.jpg" style="width:300px"/></a></td>
+<td>x xxx'x xxxx xx xxxx xx xxx xxxxxxxxxx xxxxxxxxxx. xx xxx xxxx xxx, xxx xxxxxxxxxxx xxx xxxx. 
+    
+    <p>xxx xxxxx xxxx x xxxxxx xxx xxxx xxxxx xxx xxxxx, xxx xx xxxx xxxxx xxx xxxx xx xxxx x xxxxxxxx xx xxxxxxx xxxxxx.
+    
+    <p>xx'x xxx xxxx xxxxxxxxx xx xxxxxx xxxxxx xxxxxxxxx xxxxx xxxxxxx xxxxxxx x xxxxxxxxxxxx.
+    
+    <p> All you have to do is ask yourself four letters: WWND.</p>
+</p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.017.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.017.thumb.jpg" style="width:300px"/></a></td>
+<td> “What would Nixon do?”
+    
+    <p>xxxx xx x xxx xx xxxxxxxxxx xx xxxx’x xxxx xxxxxxx xxxxxxxxxxx xxx xxxxxxxx—xx xxxxxxxxxx xxxxxxx! x xxx xxx xxxxx xxxxxxxxxxx xx <a href="http://www.historycommons.org/context.jsp?item=a060973colsonfirebomb">bomb the Brookings Institute</a>, and hired different psychopaths to <a href="https://en.wikipedia.org/wiki/Daniel_Ellsberg#Fielding_break-in">steal the psychiatric records</a> of one of his enemies. 
+    
+    <p>xxxxx'x xxxxxx xxx xx xxxxxxx xx xxx xxxxx xxxxx xx xxxxx xx xxxxxxxx xxxxxxxxxxxx.  xxx xxxx'xx xxxx xxxxxx xxx xxxx xxxxxxx xx xxx xxxx xx xxxx xx'xx xxx xxxxxxx. 
+
+    </p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.018.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.018.thumb.jpg" style="width:300px"/></a></td>
+<td><p>I want you to go through a visualization exercise with me. Really  imagine it. 
+    
+    <p>Nixon's in your datacenter.  He's got his laptop open. 
+    
+    <p>He's logged in! He's got root! What does he find?
+    
+    <p>xx xxx xxxx'x xxxxx xxxx x xxxx xxxxx xx xxx xxxxxxx, xxxxxxxxxxxxxxx. xxx xxx x xxxx xxxxxxx xx xxxx.
+    
+    <p>xxx xx xxxxxx xxxx xx xxxx xxxx xxxxxx xxxxxx xxx, xxxx xxxxxxxx xxxx xxx'xx xxxxx.
+
+     </p></p></p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.019.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.019.thumb.jpg" style="width:300px"/></a></td>
+<td>
+   xxxxxxxxxxx xx xxxxx.  xxxx xxxx xx xxxxx xxxxx xxxxxxxx xxx xxxxxxxx xxxx xx xxxxxx xxxxxx xxxx xxx xxx, xxxxx'x xx xxx xx xxxx xxxxxxxxx xxxxx xx xxxx xxxxxxxxxxxx. 
+   
+   <p>xxx xxxxxx xxxx xxx xxx* xxxx xx xxxx xxxxxxx xxxx xxxxxxxxxx xx xxxxx xx xxxxx xxx xxxxx xxxxxxxxx. xx xxxxx xxxx xxx xx xxx xx xx.  xxxx xxxx xxxx xxx xxxx xxxxx xxxxxx, xxxx xxxx xxxx xxx xxxx xx. xxx xxx xxxx xxxx xx xx xxx xxxx xxxx xxxxxxxxxx, xxx xxxx xx xx xxxxxxxxxxxxx xxxxx xx, xxxxx xxxxxxxxxxx xxxxx xx xx xxx xxxx.   xxxx xxxxx xxxxx xxxx xx xx xx xxxx xxxxx xx xx xxxxx'x xxxxx xxx xxxx xxxxx.
+   
+   <p>We're enabling.
+
+
+<p><i>*xxxx xxxxxx xx x xxxxxxx xx xxxxxxx xxxxx, xxxxx xxxxxxxxxxx xxxxxxx xx xxx xxx, xxx xxxxx xxxxxxx xxxx xxxxxxx.  xxx xxxx xxxxxxxx xxx xxxx "xxx xxxxx xxxx xxx xxx xxxx."</i>
+</p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.020.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.020.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>So that's the harm that surveillance culture does to others. 
+    
+    <p>But collecting all this data hurts us, too.
+    
+    </p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.021.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.021.thumb.jpg" style="width:300px"/></a></td>
+<td>
+    xxx xxx'x xxxx xxx xx xx xxxxxxxxx xxxxxxxxxxxx xxxxxxxxxxxxxx xxx xxxx xxxxxx xx xxxxxx xx. 
+    
+    <p>xxxxx xxxx xxxxxxxxx xxxx xx xx xxxxxxxxxxxxx xxxx xx xxxxx xxx, xxx xx xxxxx'x xxxx xxxx xxxxxx xxxxx xx xxx "xxxx xxxxxx xxxxxxxxxxxx" xxxx xxx xxxx xxxxxxxxx xxxxxx xx x "xxxxxx-xxxxxxxx xxxx". 
+    
+    <p>xxx xxxx xxxxxxx xx xxxx xxx xxxx xxxxxxxxx, xxx xxxxxxxxxx xxxxxxxxxx xxx xxxxxx.  xxx xxx xxxxxxx xxxx xxxx xxxxxxx xxx xxxxxxx xx xxxxxx xxx xxxxxxx.
+
+   
+<p>xxx xxxxxxx xx xxxx xxxxxx xxxx xxxx xxxx xxx xxxxxxx. xxxxxx xxxx xxxxxxxxxxxx, xxxxx xxxxxxxxxx xx x xxxxxx, xxx xx xxxx xxxxx xxx xxx xxxxxxx. 
+
+    </p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.022.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.022.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xxxxx'x x xxxxxx xxx xx x xxx xxxxx xx xxxx.  xx xxx xxxx xxxx, xxxx xxxx xxx xx xxxxxxx xxx xxx xxxx xxx xxx, xxxxxxx xxxx xxxx xxxxx xxxxxxxxxx xx xxxx xxx xxxx xxxxx xx xx.  
+
+<p>xx xxx xxxxxxxxxx xxxx, xxxxx x xxxx, xxxx xxxx xx xxx xx xxxxx xxx xxxx xxxxx xxx xxxxxx, xxxxxxx xxxx xxxx xxxxxxx xxxx. xx xxx xxxxx xx xx xxxxxxx xxxxxx xxx xxx xxxxxxx xxxxx.
+
+<p>xxx xxxx xxxxxxxxxx xxx xxxxx xxxxx xx xxx xxxxxxxxxx, xxx xxx xxxxxxxxxxx xxx xxxxx xxxxx xx xxx xxxx.
+
+<p>xx xx xxxxx xx xxxx xxxxxxx xx xxxxx xxx xxxxxxxxxxxxx, xx xxxxxx. xxxxx’x xxx xxxx xxxxxx xxxxxxxxx.  xxxx xxxxxxx xx xxx xxxxxxxxx xxxxxx, xx xxxxxx xxx xxxxxxxx.
+   
+    </p></p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.023.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.023.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xxxxx xxxxxx xxxxxxx xxxxxx xx xxxxxxxx xx xxx xx xxxx xxxx x xxxxxx xxxxxxxxxx xx xxxxxx xxxxxxxx.  
+   
+   <p>xxxx xxx x xxxxx xxx xxxxxx xxx xxx xxxxx xx xxxx xxxx xxxxxxx xx x xxxxxxxxx xxxx xx xxxxx xxxxxxxx xx xxxx xxx xxx xxxxxx. xxx xxx xxxxxx xxx xxxxxxxx.  xx xxxx xx xxxxxx xxxxxxx xx xxx xxxxxx xx xxxx xxxxxxx.</p>
+<p>
+</p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.024.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.024.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>x xxxxx xxx xxxxxx xx xxxxx'x xxxxxxx xxxx xxx xxxxxx xx xxxxxxx xxxxxxxx xxx xxxx xxxxxxx xx xxx xxxxxxx xx xxxx xxx xxxxx xx xxxx xxxxxxxxx. xx’x xxxx x xxxxxx xxxx xxxxx.  
+  
+  <p>But the lesson is there for anyone willing to look. 
+
+</p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.025.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.025.thumb.jpg" style="width:300px"/></a></td>
+<td>
+xxx xx xxxx xxx xxx xxxx xxxxx xxxxx—xxxx xxx xxxx xxx xxxxxxxx xxxx xxxxxx xxxxx.
+
+</td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.026.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.026.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>The pharmaceutical industry has something called <a href="http://pipeline.corante.com/archives/2012/03/08/erooms_law.php">Eroom's Law</a> (xxxxx xx ‘xxxxx’x xxx’ xxxxxxx xxxxxxxxx).  xx'x xxx xxxxxxxxxxx xxxx xxx xxxxxx xx xxxxx xxxxxxxxxx xxx xxxxxxx xxxxxxx xx xxxxxxxx xxx xxxxxxx xx xxxx xxxxx xxxx xxxxx xxxxx xxxx.  
+
+<p>The graph in this slide has a log axis, so it's really an exponential decline.
+
+
+   </p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.027.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.027.thumb.jpg" style="width:300px"/></a></td>
+<td>
+xxxx xx xxxxxxxxxxx, xxxxxxx xxx xxxxxx xxxxxxx xx xxxxxxxxxxxx xxx xxxxxxxxx xxxxx xxxx.   xxxxx xxxx xx xxx xxxx xxxxxxxxx xxxxxxxx xxx xxxxxx xxxx xxxxxxxxx, xxxx xx xxxxxx xx xxxxxxxxx, xxx xxx xxxxxxx xxx xxxxxxx xx xxxxxx xxxxx xxxx xxxx-xxxxxxxxx. 
+
+
+ </td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.028.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.028.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p> x xxxxx-xxxxxxx xxxxxxx xxxxxxxxx xxxxxx xxxxxx xxxx xxxx xx xxxxxxxx x xxxxxx xxxxxxxx xxxxxxxxxx xxxx x xxxxxxxx xxxx xxxxxx.
+<p>xxx xxxxx xxxxx xx xxxx xxxxxxx xxx xxxx xx xxxxxxxxx.  xxxxx xxx xxx xxxx xxxxx xxxx xxxxx xxxxx, xx xxx xxxxxxxxxx xxxxxxxxxxx xx xxxx xxxxxxxx xxxx xx xxxx xx xx. 
+
+<p>xxx xxxxx xxxxxxx xxx'x xxxx xx xx xxxxxxxx.  xx xxx xxxxx xxxx, xxxx xxxxx xxxx xxxxxxx xxx xxxxxx xx xxx xxxxxxxxxxxxx, xxxxxx xxx xxxx xx xxxxxxxxxxx. xxx xxx xxx xxxxxx xxx xxxxxx xxxxx xxxxx?
+
+
+   </p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.029.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.029.thumb.jpg" style="width:300px"/></a></td>
+
+<td>
+<p>xxxx xxx xxxx x xxxxxx xxxx xx xxxxxxx xxx xxx xxxxxxxxxxxxxxx xxxxxxxx.  xxxx xxxxxx xx xx xxx xxxx xx xxx xxxx xxxx xxxxx xx.
+
+<p>xxx xxxxxxx xxxx xx xxxx xxx xxxx-xxxxxx xxxxxxxx xx xxxxxxxxxx x xxxx xxx xxx xxxx xxxxxxx. xx xxx xxxxx xx xxxxxxxxx, xx xxxxx xx xxxxx xxxxxxx xxxxx xx xxxxxxxxxx, xxxxxxx xxxx xxxx xxx xxxxxxx xxxxxxxxxx xx xxxxxx xxxxx.
+
+<p>xxx xxxxxx xx xxxx xx xxxx-xxxxxxxxx, xxxxxxxxxxxx xxxxxxx, xxxx xxxxxxxxxxxxxx xxxxxxxxx xxx xxx'x xxxxxxx.  xx xxxxx xxxx xxxx xxxxxx, xxxxxxxx xxxxxxxxx xxxxxx xxxxxxxx xxxxxx xxxx xxx xxxxxx xx xxxx xxxxxx. 
+
+<p>xx xxxxxxxxxx xx xxxx xxxx xx xxx xxxxx xxxx xxxxxxxx xx xxx xxxx xxxxx xxxx xxx xxxx xxxxxxx xxxxxxxxx, xxxxxxxxx xxx xx xxx xxxx xxxx xx xxxxxxxxxxxx.  
+
+
+
+
+   </p></p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.030.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.030.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xxx xxxxxxxx xxxx-xxxxxxxxx, xxxxxxxx xxxxxx xx xxx xxxxxx xxxx xxxxxxxx xxxxxx.  xx xxxxx xxxxx, xxx xxxx xx xxxxx xxxx xx xxx xxx xxxxxx xx xxxxx.   xxxx xxx’xx xxxxxxx xxxx xxxxx xxxxxxxx, xxxxxx xx xxx xxx xxxxxx, xxxxxxx xxxxxx xxxx xxxxx xx xxxx xxx xx.
+
+<p>xx xxxxxx xxxxx, xxxxx xxx xxx xxx xxxxxxxx xxxxx x xxxx xxxxxxx. xx xxx xxxxx xxxx xx xxx xxxx-xxxx xxxx, xxxx xxxx xxxxxxxxx xx xxx xxxx xxxxx xxxx xxxxx xxxxxxx, xx xxxx xxxx xxxxxxxx xx xxxxxxxx xx xxxxxxxxx xxxx xxxxx.
+   </p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.031.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.031.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xxxxxx xxxxx xxxxxxx, xxx xxxxxxxxx xxxx xxx xxxxxxxx xxxxxxx xx xxxxxxxx xxxx xx xxxxxx, xx xxxx xxxx xxxx x xxxxxx xxxxx xxxx.
+
+   </p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.032.jpg"><img src="https://static.pinboard.in/hbd/thumbs/eld.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>A more recent and less fictitious example is <a href="http://mathbabe.org/2015/08/06/mathematruckers-take-on-the-current-state-of-long-haul-truck-driving">electronic logging devices on trucks</a>.  xxxxx xxx xxxxxxxx xx xxxxx xxx xxxxx xxxxxx xxxxx, xxx xxxx xx xxx xx xx xxx'xx xxxxxx xxx xxxxx xxxx x xxxxx? 
+    
+    <p>xxx xxxxxx xxxx xxxx xxxx x xxxxxx, xx xx xxx xxxxxxxxxx xx xx xxx, xxx xxxx xxxx xxxx xx xxxx xxxx xxxxx xxx xx xxx xxxxxxxxx xxxxx xx xxx xxxxxx xxxx, xxx xxx xx xx xxx xx xxx xxxx.  
+    
+    <p>xx xx xxxx xxxxx xxxxx xxxxxxxx xxxxxxx xx xxxxx xxxxxx, xxxxx-xxxxxxx xxxx xxx xxxxxxx xxxx xx xxxxx.
+    
+    <p>xx xxxxxx xxxxx'x xx xxxxxxx xxxxxxxxx xxxxxxxxxxxxxx.  xxx xxx xxxxx xxxxxxxxx xxxx x xxxxxx.
+    
+    <p>xxxxxx xxxx xxx'xx xxxxx, xxxxxx.  xxx xxx'xx xx xx xxxxxxxxxxx xxxx xxxx xxxx xxxxxxx xxxxx xxxxx xxxx xxx xxxxxxx xx xx xxxx xxxxxxxxxxx. xx'x xxxxxx xx xxxxx xx xxxxxxx, xxxxxx xxx xxxxx. 
+
+ <p>xxx xxxxxxx xxxxxxxxx xxx xxxxxx’x xxxxxxxx xxxxx xxx xxx xxxxxx xx xxxxxxx, xxx xxxxxxx xxx'xx xxx xxxxxxx xxxxx xxxxxxx xxx xxx xxxx'x xxxxxx xxxxx xx.
+ 
+<p>xxxxx xxxxx xx xxxx xxxxx xxx x xxxxxxx xx xxxx xxxxxxx. xx'xx xxxx xxxx xxxxx xxx xxxxx xx xxxxxxxxx xx xxx xxxxxx xxxxxxxxxxx xxxxxxxx, xxxxx xxxxxxxxxxxxx xx xxxx xxx xxxxxxxx xxxxxxxxxxx xx xxx xxx. xxxxxxxxxxx xxxx xxxxx x xxxx xxxxxxxxxxxx xxxxxxxxx xx xxx xxxxx xx xxxxxxx xxxxxxxxx, xxxx xx xxxx xxxxxxxxxx xx x xxxx xx xxxxxxx, xxxxx xxxx xxx'x xxxx xxx xx xxxx xxx xxx xx xxxx.
+
+
+
+   </p></p></p></p></p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.034.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.034.thumb.jpg" style="width:300px"/></a></td>
+<td>   
+x xxxxx xx xxxx xx xxx xxxxxxx xxxxxxx, xxxxx xxx xxxxxxx xxx xxx xxxxxxxxx xxx xxxxx xxxx xxxxxxxxxx xxxxxxx xxxxxxxx xxxxxxxx xxxxx xxxxxx'x xxxxxxxx.  xx xxxxxx xxx xxxxx xxxxxx xxx xxxxxxx xxxxx xx xxxx xx xxx xxxxxx xxx xxxxxxxxxx.
+   </td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.035.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.035.thumb.jpg" style="width:300px"/></a></td>
+<td>   
+    Here's the bottom line: your industry is too scary.
+   </td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.036.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.036.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xx xxxxx'x xxxxxx xxxxxx xx x xxx xxxxxxx xxxxx xx xxx xxxxxx xxxxxx xxxxx xxxx.  
+
+<p>xxxx xxx xxxx xx xxxx xxxx xxxxxxx xxxxxxx xxxx xxx'x xxxx xxxx, xxx xxx xxxxxxxxxxx xx xxxx xxxxxx xxxxxxx xxxx xxx'x xxx xxxxxx xx xxx xxxxxxxxxx, xxxx xx xxxx xxxxxxx, xxxxxxx xxxxxx xxx xxxxxxx.  
+
+<p>xxxx xxxx xxxx xx xx xxxxxxxx xx xxx xxxxxxxxxx, xxx xxxx xxxx xxx xxx xx xxxxx xxxxx xxxxxxx xxxxx x xxxxxxxxxxxx xxxxxx, xxx xx xxx xxx xxxx.
+
+
+   </p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.037.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.037.thumb.jpg" style="width:300px"/></a></td>
+<td><p>xxxx xx xxx xxx, xxxxxxxxxxxxx xxxx xx xx xxxx! xxx xx xxx xxxxx xxxxxx xx xxxxxxx xxxxx xx xxx xxxx xx xxxxxx xxxxxx!  
+
+   </p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.038.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.038.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>At one point we had radioactive makeup.
+   </p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.039.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.039.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>Radioactive toothpaste.</p>
+</td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.040.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.040.thumb.jpg" style="width:300px"/></a></td>
+<td><p>Delicious radium chocolate.</p>
+</td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.042.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.042.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>Who can forget the smooth, rich taste of radium cigarettes?
+
+   </p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.043.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.043.thumb.jpg" style="width:300px"/></a></td>
+<td><p>Radium condoms that glowed in the dark.
+  
+
+  </p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.044.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.044.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>And of course, radium underpants.
+ 
+ <p>xx'xx xxxx xxxx xx xxx 'xxxxxx xxxxxxxxxx' xxxxx xx xxx xxxxxxxxxxxx xxxxxxx.  x xxx xx xxx xxxx xx xxxxx, xxxx xx xxxx xx'xx xxxxx xx xxxxxx, xxx xxxx xx xx xx xxxxxxxxx xxxxxxx. 
+ 
+ <p>xxxxx xxx xxxxx xx xxx xx xxx xxxxxxxx xxx xxx xxxxxxxxxx xxxxxxx xx xxxxxx xxxxxxxxxx. 
+</p></p></p></td></tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.045.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.045.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xxx'xx xxxxxxxx, xxxx xxxxxx, xxxx xxxxxx xxxxxxx xx xxxxxxxxx xxx xxxxxxx xxxxxxxxx xxxx xxxxxxxxx xx xxxx xx xxxxxx  xxxxxxxxxxxx xxxx xx x xxx. xxxx xxxxxx x xx xxxxx xx?
+
+<p>x xxxx xx xxxx xxx xxxxxxx xxxx xxxxxxxxxx xx x xxxxx-xxx. xx xxxxx xxx xxxxxx xxxxx xxxx xxx xxxxxxx, xxx xx xxxx xxxxx xxxx xxxxxxx xx xxxxx xxxxxxx. xxxx xxxx xxxx xx'x xxxxx xx!
+
+<p>x'x xxx xxxxxxxx xxxx xxx xxxxxxxx xx xxxx xxxxxxxxxx xxx xxxxxxx xxx x xxxx xx xxxxx. x'x xxxx xxxxxxx xxxxxxxx xx.
+
+<p>Here's what I want you do specifically:
+</p>
+</p></p></p></td></tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.046.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.046.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>Don't collect it!
+
+<p>xx xxx xxx xxx xxxx xxxx xx, xxxx xxx'x xxxxxxx xx! xxxx xxxx  xxx xxx'x xxxxx xxxxx xxxxxxx xxxxxx xx xxx xxx'x xxxx xxx xxxxx,  xxxx xxxxxxxx xxxx xxxx xxxxxxxxx xx xxx xxxx xxxxxxxxxx xx. 
+
+<p>xxxxxx xxxx xxx xxxxxxx'x xxxxxxxxx xx 'xxxx xxxxxxxxxx xx xxxx xx xxxxx xx xxxxx' xx x xxxxxxxxxx xxxxxxxx xx xxxxxxxxxx xxxx xxxx xxx xxxx. 
+
+<p>xxxx xxxxxxxxx xxxx xxxx xxxx xxx.  xxxx xxx xx xxxx xxxx xxxxx xxx xxxx xxxxx xxxxxxx!
+
+
+
+  </p></p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.047.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.047.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>If you have to collect it, don't store it!
+
+<p>xxxxxxx xx xxxxxx xxx xxxx xxxxxx, xxxxx xx xxxxx xx xxxxxxxx xxx xxxxx.  "xxxxxxxx xxx xxxxx" xxxx xxxxxx xxxxxx. xx xxxxxx xxxx xxx-xxx!
+
+<p>xxx xxx xxx x xxx xx xxxxxxx xxx xx xxxxxxxxx xxxx.  xxxxx'x xx xxxxx xxxxxxx xxxx xxxxxx xxxx xx xxxxxxx xx xxxxx xxxxxx xxxx xxx xxxx xxxxxx'x xxxxxxxxx xxxxx, xx xxxx xx xxxx xxx xxxxxxx xxx xxx'x xxxxx xx. xxx xxxxx xx xxxxxxxxxxx xxxxxxxxxxxx xxxx xxxx xxxx.
+
+
+  </p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.048.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.048.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>If you have to store it, don't keep it!
+    
+    <p>Certainly don't keep it forever. Don't sell it to <a href="http://www.itworld.com/article/2710610/it-management/acxiom-exposed--a-peek-inside-one-of-the-world-s-largest-data-brokers.html">Acxiom</a>! Don't put it in Amazon glacier and forget it.
+    
+    <p>x xxxxxxx xxxxx xxxxxx xx x xxx xxxx xxxxxx xxxxxxxxxx xxxx xxxxxxxxxx xx xx xxxx, xxx xxxxxxx x xxxx xx xxxx xxxxxxxxx xxx xxxx xxxxxxxx, xxx xxxxxxx x xxxxx xx xxxx xxxx xx xxx xxxxxx xxxx xxxxx xxxxxxx xxxx xxxx xxxxxxxxx xx xxxxxxx.
+  </p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.049.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.049.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xxxxxxx, xxx'x xx xxxxxxxxx.  xxx xxxxxxx xxxxx xx xxxxx xxxxxxxxxxxx xxx xxxxxxxxx xxxxxxx xx xxx xxxxxxx.  
+
+<p>xx xx xxxx xx xx, xx'xx xxxx xxx xxx xxxxxxx xx xxxxx xxxx xxxxxx, xxxx xxxxxx-xxxxxxxxxx xxxxxxx xxxx xxxxxxxxxx xxxxxxx xxxxxxx xxxxxxx xxx xxxxxxxxxx.  
+
+<p>xx xxxx xxxxx xxxxxx xxx xxx xxxxx, xxxxxxxxxxx, xxx xxx xxx xxxxxxxxxx x xxxxx xxxxx xxxxxxxxx xxxx xxxxxxxx xxxx xxxxxxxx xxxx xxx xxxxxx.  xxx'xx xx xxxx xxxx xxxxx xxxx xxxx xxx xxxx xx xxx xxxxxxx xxxxxx, xxx xxxx xx xxxx xxx x xxxx xx xxxxxxxxxx xxxxxxx xxxx xxxx xx xxxxxxx x xxxxxx.
+
+<p>You don't want that. Even I don't want that.
+
+<p>xx xxx xxxx xxxx xxxxxxx xxxxxx xxx xx xxxx xxxxxxx xxxx-xxxxxxx, xxxxxxxxxxxxxx, xxx xxxx xxxx xxxxxxx xxx xxxxxx xxxx xx'xx xxxx xxxxxxx xx xxxx. 
+
+<p>xx'x xxxx xxx xx xxx xx xxxx x xxxx xxxxxx xxx xxxx xxx xxxxx xxxxxx xxxxxxxxxx.
+
+  </p></p></p></p></p></p></td>
+</tr>
+<tr>
+<td><a href="https://static.pinboard.in/hbd/hbd.050.jpg"><img src="https://static.pinboard.in/hbd/thumbs/hbd.050.thumb.jpg" style="width:300px"/></a></td>
+<td>
+<p>xxxxx xxx xxxx xxxx xxx xxxx xxxx, xxx xxxxxx xxxxx xxx xxxx xx xxxx xxx xxxx xxxxxxxxxx.
+
+<br/><br/><br/>
+<p>STOCHASTIC, EXPONENTIALLY DECAYING APPLAUSE</p>
+</p></td>
+</tr>
+</table>
+<p><a href="http://idlewords.com/">Idle Words</a> &gt; <a href="http://idlewords.com/talks/">Talks</a>
+</p></p></p></div>
+
+</body>
+</html>

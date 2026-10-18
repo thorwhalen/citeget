@@ -61,6 +61,13 @@ docs = [
 fetch = [
     "pdfkit",
 ]
+# Optional, so the core install stays permissive (citeget#11). trafilatura is
+# Apache-2.0; its tree is BSD/MIT/Apache-2.0 plus two weak-copyleft, file-level
+# licences: certifi (MPL-2.0) and tld (MPL-1.1 OR GPL-2.0 OR LGPL-2.1+, usable
+# under MPL-1.1). readability-lxml was passed over: it requires chardet (LGPL).
+extract = [
+    "trafilatura>=2.0",
+]
 
 [tool.ruff]
 line-length = 88

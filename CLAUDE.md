@@ -30,6 +30,7 @@ citeget/
 ├── acquire_references.py    # Multi-strategy academic-reference acquisition
 ├── resolve.py               # Composable resolver/downloader/strategy registries
 ├── fetch.py                 # General URL → file (md/pdf/original) routing
+├── main_content.py          # Article extraction (drop chrome), Wayback cleanup
 ├── extract.py               # Reference-text parsers
 ├── data/                    # Reference docs
 └── article_pub/             # Article publication toolkit
@@ -76,6 +77,13 @@ Install playwright browsers: `python -m playwright install chromium`
   attempt (`page.goto` raising "Download is starting" is success, not failure)
 - Validation policy is injected, not hardcoded: `DEFAULT_POLICY` (integrity)
   vs `BOOK_POLICY` (adds page-count/markup depth checks — wrong for articles)
+- `fetch` keeps the **main content** by default (`content="full"` for the
+  whole page); the extractor is a strategy (`"builtin"`, `"trafilatura"`, or
+  any `html -> html` callable). Fixtures for it are real pages with the prose
+  replaced by same-length filler: regenerate with
+  `tests/fixtures/pages/make_fixtures.py`, never commit whole articles.
+- `fetch` output files are owned by a URL: the `<!-- Source: -->` header is
+  what `skip_existing` checks, so keep it the first line of every `.md`.
 - **Libgen returns spurious empty result sets** (~1 run in 4 for a query with
   real matches). Defended in three layers — retry per mirror, require two
   mirrors to agree, then `get_book` re-runs the whole search. Never treat one

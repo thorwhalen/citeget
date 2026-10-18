@@ -218,7 +218,10 @@ def fetch(
     *,
     output_dir: str = "~/Downloads",
     prefer: str = "md",
+    content: str = "main",
+    extractor: str = "builtin",
     timeout: int = 30,
+    retries: int = 2,
     skip_existing: bool = True,
     manifest: str = "",
 ):
@@ -234,8 +237,14 @@ def fetch(
         prefer: "md" (default), "pdf", "original", or "auto".
             PDF requires the `[fetch]` extra (`pip install citeget[fetch]`)
             and a `wkhtmltopdf` system binary for HTML→PDF conversion.
+        content: "main" (default) keeps only the article, dropping menus,
+            sidebars and footers; "full" converts the whole page.
+        extractor: Main-content extractor: "builtin" (default, no extra
+            dependency) or "trafilatura" (`pip install citeget[extract]`).
         timeout: HTTP timeout per request, in seconds.
-        skip_existing: If true (default), skip URLs whose output exists.
+        retries: Extra attempts after a transient error (reset, 429, 5xx).
+        skip_existing: If true (default), skip URLs whose output exists and
+            was saved from the same URL.
         manifest: Optional path to write a JSON manifest of results.
     """
     import json
@@ -262,7 +271,10 @@ def fetch(
         source,
         output_dir=output_dir,
         prefer=prefer,
+        content=content,
+        extractor=extractor,
         timeout=timeout,
+        retries=retries,
         skip_existing=skip_existing,
         on_result=_on_result,
     )

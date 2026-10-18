@@ -4,6 +4,9 @@ Both goldens under ``tests/cli_goldens/`` were recorded from the *argh*
 implementation of :mod:`citeget.cli` before the migration to :mod:`cw`, with
 ``cw.testing.characterize``. Every assertion below compares today's CLI against
 the grammar argh produced, not against something written by hand afterwards.
+They were re-recorded once, from cw, when ``fetch`` gained ``--content``,
+``--extractor`` and ``--retries`` (citeget#29, #31); the only differences were
+those three options, and the argh-recorded originals are in git history.
 
 ``citeget`` has **two** entry points with two different usage lines, so there
 are two goldens:

@@ -77,23 +77,45 @@ URLs are extracted in three forms (deduped, first match wins):
 
 ### Per-URL pipeline
 
-1. Fetch via httpx (follows redirects).
+1. Fetch via httpx (follows redirects). Connection resets, timeouts, 429 and
+   5xx are retried with exponential backoff (`--retries`, default 2), so a
+   single "Server disconnected" from web.archive.org is not a failure.
 2. If the response is a PDF and `prefer in {"pdf", "original", "auto"}` →
    save as `.pdf`.
 3. If HTML and `prefer="pdf"` → look for embedded direct-PDF link
    (arxiv `/pdf/`, GitHub `.pdf`, `/doi/pdf/`, etc.); if found, fetch that.
    Otherwise try HTML→PDF via `pdfkit`/`wkhtmltopdf`.
 4. Otherwise convert HTML→Markdown via `markdownify` (clean, link-preserving).
+   By default only the **main content** is kept (`--content main`): menus,
+   sidebars, author boxes, post navigation, footers and the web.archive.org
+   toolbar are dropped, layout tables are unwrapped, and Wayback links are
+   rewritten to the original site. `--content full` converts the whole page
+   (the old behaviour). `--extractor trafilatura` swaps in trafilatura
+   (`pip install 'citeget[extract]'`); the built-in one needs no extra and
+   did better on the essay sites it was tuned on.
 5. If a PDF route fails, fall back to Markdown automatically.
 
 ### Filename inference
 
 Files are named in this priority order:
 1. Anchor / citation title → slug
-2. URL's last path segment
-3. `{domain}-{hash}`
+2. The page's own title (`<title>` minus the site name, then `og:title`, then
+   the first `<h1>`)
+3. URL's last path segment
+4. `{domain}-{hash}`
 
 Reference numbers become a prefix: `ref_03_some-title.md`.
+
+**Distinct URLs never share a file.** When two URLs map to the same name
+(pages of one paginated article share a title), the later one gets the query
+folded in (`?currentPage=2` → `-currentpage-2`), else a hash of the URL.
+`skip_existing` skips only a file whose `<!-- Source: URL -->` header names
+the *same* URL, so a `SKIP` really means "already have this page". PDFs and
+other non-Markdown files carry no source record: across runs they are still
+skipped by name alone (within a run, collisions are always resolved).
+
+The manifest's `title` is the anchor text if there was one, else the page
+title.
 
 ## Format choice (`--prefer` / `prefer=`)
 
@@ -154,7 +176,10 @@ results = fetch(
 ## Failure handling
 
 - Network/HTTP errors are logged and the URL is marked `failed` in the
-  result; other URLs still proceed.
+  result; other URLs still proceed. Transient errors were already retried
+  (`--retries`); re-running the command retries only what is still missing.
+- If a page comes out truncated or with chrome left in, try
+  `--extractor trafilatura`, or `--content full` to see the whole page.
 - For JS-heavy pages where markdownify gives poor output, suggest re-running
   with `--prefer pdf` (renders the page) or use the `WebFetch` tool as a
   second opinion.

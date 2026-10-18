@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<link href="http://gmpg.org/xfn/11" rel="profile"/>
+<link href="https://www.joelonsoftware.com/xmlrpc.php" rel="pingback"/>
+<title>Reading Code is Like Reading the Talmud – Joel on Software</title>
+<meta content="max-image-preview:large" name="robots"/>
+<!-- Jetpack Site Verification Tags -->
+<link href="//s0.wp.com" rel="dns-prefetch"/>
+<link href="//fonts.googleapis.com" rel="dns-prefetch"/>
+<link href="//v0.wordpress.com" rel="dns-prefetch"/>
+<link href="//i0.wp.com" rel="preconnect"/>
+<link href="//c0.wp.com" rel="preconnect"/>
+<link href="https://www.joelonsoftware.com/feed/" rel="alternate" title="Joel on Software » Feed" type="application/rss+xml"/>
+<link href="https://www.joelonsoftware.com/comments/feed/" rel="alternate" title="Joel on Software » Comments Feed" type="application/rss+xml"/>
+<link href="https://www.joelonsoftware.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.joelonsoftware.com%2F2000%2F05%2F26%2Freading-code-is-like-reading-the-talmud%2F" rel="alternate" title="oEmbed (JSON)" type="application/json+oembed"/>
+<link href="https://www.joelonsoftware.com/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fwww.joelonsoftware.com%2F2000%2F05%2F26%2Freading-code-is-like-reading-the-talmud%2F&amp;format=xml" rel="alternate" title="oEmbed (XML)" type="text/xml+oembed"/>
+<style id="wp-img-auto-sizes-contain-inline-css"></style>
+<style id="wp-emoji-styles-inline-css"></style>
+<style id="wp-block-library-inline-css"></style>
+<style id="classic-theme-styles-inline-css"></style>
+<link href="https://www.joelonsoftware.com/wp-content/plugins/cloudflare-stream/dist/blocks.style.build.css?ver=1671234854" id="cloudflare-stream-block-style-css-css" media="all" rel="stylesheet"/>
+<style id="global-styles-inline-css"></style>
+<style id="jetpack-stats-inline-css"></style>
+<link href="https://www.joelonsoftware.com/wp-content/themes/editor-redux/style.css?ver=7.1.3" id="editor-style-css" media="all" rel="stylesheet"/>
+<link href="https://www.joelonsoftware.com/wp-content/themes/editor-redux/inc/fontawesome/font-awesome.css?ver=4.1.0" id="editor-font-awesome-css-css" media="screen" rel="stylesheet"/>
+<link href="//fonts.googleapis.com/css?family=Source%20Sans%20Pro%3A400%2C600%2C700%2C400italic%2C600italic%2C700italic%7CRoboto%20Condensed%3A300%2C400%2C700%2C300italic%2C400italic%2C700italic&amp;subset=latin%2Clatin-ext" id="editor-fonts-css" media="all" rel="stylesheet"/>
+<script id="jquery-core-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/jquery/jquery.min.js"></script>
+<script id="jquery-migrate-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/jquery/jquery-migrate.min.js"></script>
+<link href="https://www.joelonsoftware.com/wp-json/" rel="https://api.w.org/"/><link href="https://www.joelonsoftware.com/wp-json/wp/v2/posts/973" rel="alternate" title="JSON" type="application/json"/><link href="https://www.joelonsoftware.com/xmlrpc.php?rsd" rel="EditURI" title="RSD" type="application/rsd+xml"/>
+<link href="https://www.joelonsoftware.com/2000/05/26/reading-code-is-like-reading-the-talmud/" rel="canonical"/>
+<link href="https://wp.me/p83KNI-fH" rel="shortlink"/>
+<script></script>
+<meta content="Seth Gordon emailed me some great tips for reading other people's source code: I started working as a technical writer in Boston after about eight months studying at an Israeli yeshiva. A year or so ago, I and a co-worker were trying to decipher a yacc-and-Perl monstrosity that generated some of our documentation. We sat…" name="description"/>
+<!-- Jetpack Open Graph Tags -->
+<meta content="article" property="og:type"/>
+<meta content="Reading Code is Like Reading the Talmud" property="og:title"/>
+<meta content="https://www.joelonsoftware.com/2000/05/26/reading-code-is-like-reading-the-talmud/" property="og:url"/>
+<meta content="Seth Gordon emailed me some great tips for reading other people’s source code: I started working as a technical writer in Boston after about eight months studying at an Israeli yeshiva. A yea…" property="og:description"/>
+<meta content="2000-05-26T00:16:14+00:00" property="article:published_time"/>
+<meta content="2000-05-26T00:16:14+00:00" property="article:modified_time"/>
+<meta content="Joel on Software" property="og:site_name"/>
+<meta content="https://www.joelonsoftware.com/wp-content/uploads/2000/05/Page_of_Talmud.jpg" property="og:image"/>
+<meta content="https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/05/Page_of_Talmud.jpg?ssl=1" property="og:image:secure_url"/>
+<meta content="320" property="og:image:width"/>
+<meta content="502" property="og:image:height"/>
+<meta content="picture-talmud: " property="og:image:alt"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="Reading Code is Like Reading the Talmud" name="twitter:text:title"/>
+<meta content="https://www.joelonsoftware.com/wp-content/uploads/2000/05/Page_of_Talmud.jpg?w=640" name="twitter:image"/>
+<meta content="picture-talmud: " name="twitter:image:alt"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<!-- End Jetpack Open Graph Tags -->
+<link href="https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2016/12/11969842.jpg?fit=32%2C32&amp;ssl=1" rel="icon" sizes="32x32"/>
+<link href="https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2016/12/11969842.jpg?fit=192%2C192&amp;ssl=1" rel="icon" sizes="192x192"/>
+<link href="https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2016/12/11969842.jpg?fit=180%2C180&amp;ssl=1" rel="apple-touch-icon"/>
+<meta content="https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2016/12/11969842.jpg?fit=270%2C270&amp;ssl=1" name="msapplication-TileImage"/>
+<style id="wp-custom-css"></style>
+</head>
+<body class="wp-singular post-template-default single single-post postid-973 single-format-standard wp-theme-editor-redux">
+<div class="hfeed site container" id="page">
+<a class="skip-link screen-reader-text" href="#content">Skip to content</a>
+<!-- Get sidebar color option (Appearance -> Customize -> Theme Options) -->
+<header class="site-header light" id="masthead" role="banner">
+<!-- Tab navigation -->
+<ul class="toggle-bar" role="tablist">
+<!-- Main navigation -->
+<li class="current" id="panel-1" role="presentation">
+<a aria-controls="tab-1" aria-selected="true" class="current nav-toggle" data-tab="tab-1" href="#tab-1" role="tab"><i class="fa fa-bars"></i><span class="screen-reader-text">View menu</span></a>
+</li>
+<!-- Featured Posts navigation -->
+<!-- Sidebar widgets navigation -->
+<li id="panel-3" role="presentation">
+<a aria-controls="tab-3" aria-selected="false" class="folder-toggle" data-tab="tab-3" href="#tab-3" role="tab"><i class="fa fa-folder"></i><i class="fa fa-folder-open"></i><span class="screen-reader-text">View sidebar</span></a>
+</li>
+</ul>
+<div class="toggle-tabs" id="tabs">
+<div class="site-header-inside">
+<!-- Logo, description and main navigation -->
+<div class="tab-content current fadeIn" id="tab-1">
+<div class="site-branding">
+<!-- Get the site branding -->
+<h1 class="site-title"><a href="https://www.joelonsoftware.com/" rel="home">Joel on Software</a></h1>
+<h2 class="site-description"></h2>
+</div>
+<nav class="main-navigation" id="site-navigation" role="navigation">
+</nav><!-- #site-navigation -->
+<div class="widget-area" id="front-widgets" role="complementary">
+<aside class="widget widget_text" id="text-3"><h2 class="widget-title">Your host</h2> <div class="textwidget"><a href="https://www.joelonsoftware.com/about-me/"><img data-recalc-dims="1" notsrc="https://www.joelonsoftware.com/wp-content/uploads/2016/12/11969842-1.jpg" src="https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2016/12/Pong.png?w=730&amp;ssl=1"/></a><p>I’m Joel Spolsky, a software developer in New York City. <a href="https://www.joelonsoftware.com/about-me/">More about me</a>.</p>
+</div>
+</aside>
+</div><!-- #front-widgets -->
+</div><!-- #tab-1 -->
+<!-- Featured Posts template (template-featured-posts.php) -->
+<!-- Sidebar widgets -->
+<div aria-hidden="true" aria-labelledby="panel-3" class="tab-content animated fadeIn" id="tab-3" role="tabpanel">
+<div class="widget-area" id="secondary" role="complementary">
+<aside class="widget widget_search" id="search-3">
+<form action="https://www.joelonsoftware.com/search-results/" class="search-form" id="cse-search-box" method="get" role="search">
+<div>
+<input name="cx" type="hidden" value="004631902266951669168:g9jvyociwrg"/>
+<input name="ie" type="hidden" value="UTF-8"/>
+</div>
+<input class="search-field" name="q" placeholder="Search …" title="Search for:" type="search" value=""/>
+
+<input class="search-submit" name="sa" type="submit"/><span class="screen-reader-text">Search</span>
+</form>
+</aside><aside class="widget widget_text" id="text-2"> <div class="textwidget"><img data-recalc-dims="1" src="https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2016/12/newdesign-books.png?w=730&amp;ssl=1" style="float: left; margin-right: 15px;"/>xxxx xxx xxxxxxxx xx xxxx-xxxx xxxxxx! xxxx xx xxxxx xxxxxxxx xxxx xxxx xxxxxxxxx xxxx <a href="https://www.joelonsoftware.com/buy-the-books/">four books</a>, xxxxxxxxx xx xxxx xxxxxxxx xxxxxxxxx. xx’x xx xxxxxxxxx xxx xx xxxx xxx xxxx xx xxx xxxx, xx xxxxx xx xx xxxx xxxx.</div>
+</aside><aside class="widget widget_text" id="text-4"><h2 class="widget-title">Careers</h2> <div class="textwidget"><p><img data-recalc-dims="1" src="https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2016/12/jobs.jpg?w=730&amp;ssl=1"/></p>
+<p>Ready to level up? <a href="http://stackoverflow.com/jobs">Stack Overflow Jobs</a> xx xxx xxx xxxx xxxx xxxx xxx xxxxx xx xxxxxxxxxx xxxxx. xxxxxxx xxx xxxx xx xxxx xxxxxxx xx xxxx xxxxxx xx <a href="http://stackoverflow.com/jobs/why-jobs">let employers discover you</a>, we’re on a mission to help every developer find a job they love.</p>
+<p>Looking to hire smart programmers who get things done? <a href="https://www.stackoverflowbusiness.com/talent">Stack Overflow Talent</a> xx x xxxxx-xxxxxxxxxx xxxxxxxx xxxxxxxx xxxx xxxxx xxx xxxxxxxxxx, xxxxx, xxx xxxxxxx xxxxxxxxxx xx xxx xxxxxxxx xxxx xxxxx xxxx. xxxx xxx xxxxx xxxxxxxxxx xxx xxxx xxxx. <a href="https://www.stackoverflowbusiness.com/talent/request-a-demo?utm_source=joelonsoftware&amp;utm_medium=referral&amp;utm_term=learn-more">Learn more.</a></p>
+</div>
+</aside><aside class="widget widget_text" id="text-6"> <div class="textwidget"><p><a href="http://stackoverflow.com"><img data-recalc-dims="1" src="https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2016/12/so-logo.png?w=730&amp;ssl=1"/></a></p>
+<p>For my day job, I'm the co-founder and CEO of <a href="http://stackoverflow.com">Stack Overflow</a>, xxx xxxxxxx xxxxxx xxxxxxxxx xxx xxxxxxxxxxx xx xxxxx, xxxxx xxxxx xxxxxxxxx, xxx xxxxx xx. xxxx xxxxx, xxxx xxxx xx xxxxxxx xxxxxxxxxxxx xxx xxxxxxxx xxxxxxxxxxx xxxxx xxxxx xxxxxxxx xx xxx xxx xxxxxx xxxxxxxxx xxx xxxx xxxxxx xxxx. xxxxx xxxxxxxx xx xxxx xxx xxxxxxxx xxxx xx xxx <a href="http://stackexchange.com">Stack Exchange network</a>, xxx+ xxxxxxxx xxx xxxxxx xxxxx xxxxxxxxx xx xxx xxxxx xx xxxxxx xxxx xxxxxxx xx xxxxxx. xxxxxxxxx xx xxxxxxxxx, xxxxx xxxxxxxx xx xxx xxxx xxxxxxx xxx xxxxxxxx xx xxx xxxxxx xxxxxx xxx xx xxx xxx xxx xx xxx xxxxx.<br/>
+<a href="https://stackoverflow.com/users/story/4"><br/>
+<img alt="profile for Joel Spolsky on Stack Exchange, a network of free, community-driven Q&amp;A sites" data-recalc-dims="1" height="58" src="https://i0.wp.com/stackexchange.com/users/flair/4.png?resize=208%2C58&amp;ssl=1" title="profile for Joel Spolsky on Stack Exchange, a network of free, community-driven Q&amp;A sites" width="208"/><br/>
+</a></p>
+</div>
+</aside><aside class="widget widget_text" id="text-7"> <div class="textwidget"><p><a href="http://fogcreek.com/"><img data-recalc-dims="1" src="https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2016/12/fc-logo.png?w=730&amp;ssl=1"/></a><br/>
+I also founded <a href="http://fogcreek.com/">Fog Creek Software</a>, xxx xx xxx xxxx xxxxxxxxxxx xxxxx xxxx xxxxxxxxx xx xxx xxxxx. xx xx xxxxxxxxxxx, xxxxxxxxx-xxxxx xxxxxxx, xx’xx xxxx xxxxxx xxxxxxxxx xxxxx xxxxx xxx xxxx xx xxx xxxxxxx. xx xxxxx xxxx xx'xx xxxxxxx xxxxx xxx xx xxxx xxxxx xxxxxxxx, xxxx xx xxxxxxx xxxxx xxx xxxxx xxx xx xxxxxxxx xxxxxxxx, xxxx <a href="http://www.fogcreek.com/fogbugz">FogBugz</a>, <a href="http://trello.com">Trello</a> and <a href="https://gomix.com/">Gomix</a>, xxxx xxxx xxxxxx xxxx xxxxx xxxxxxxxxx. xx x xxxxxx, xxx xxxxx'x xxxxxx xx xxx xxxxx xx xxxxxxxxxx xxxxxx xxxxxxxxx x xxxxxxxx xxxxx xxx xxxx.</p>
+</div>
+</aside><aside class="widget widget_twitter_timeline" id="twitter_timeline-4"><h2 class="widget-title">Twitter! Twitter!</h2><a class="twitter-timeline" data-border-color="#e8e8e8" data-chrome="noheader nofooter noborders" data-height="400" data-lang="EN" data-partner="jetpack" data-theme="light" data-tweet-limit="1" href="https://twitter.com/spolsky">My Tweets</a></aside>
+</div><!-- #secondary -->
+</div><!-- #tab-3 -->
+</div><!-- .site-header-inside -->
+</div><!-- #tabs -->
+</header><!-- #masthead -->
+<div class="site-content fadeInFast" id="content">
+<div class="content-area" id="primary">
+<main class="site-main" id="main" role="main">
+<article class="post post-973 type-post status-publish format-standard hentry category-articles" id="post-973">
+<!-- Grab the featured image -->
+<header class="entry-header">
+<div class="entry-date">
+<span class="posted-on"><a href="https://www.joelonsoftware.com/2000/05/26/reading-code-is-like-reading-the-talmud/" rel="bookmark"><time class="entry-date published" datetime="2000-05-26T00:16:14+00:00">May 26, 2000</time></a></span><span class="byline"> by </span> <span class="author vcard"><a class="url fn n" href="https://www.joelonsoftware.com/author/joelonsoftware/">Joel Spolsky</a></span> </div><!-- .entry-meta -->
+<h1 class="entry-title">Reading Code is Like Reading the Talmud</h1> </header><!-- .entry-header -->
+<div class="entry-meta">
+<ul class="meta-list">
+<li class="meta-cat"><a href="https://www.joelonsoftware.com/category/articles/" rel="category tag">Articles</a></li>
+</ul>
+</div>
+<div class="entry-content">
+<p><p>Seth Gordon emailed me some great tips for reading other people’s source code:</p> <blockquote>x xxxxxxx xxxxxxx xx x xxxxxxxxx xxxxxx xx xxxxxx xxxxx xxxxx xxxxx xxxxxx xxxxxxxx xx xx xxxxxxx xxxxxxx. </blockquote> <blockquote>x xxxx xx xx xxx, x xxx x xx-xxxxxx xxxx xxxxxx xx xxxxxxxx x xxxx-xxx-xxxx xxxxxxxxxxx xxxx xxxxxxxxx xxxx xx xxx xxxxxxxxxxxxx. xx xxx xxxx xxxx xxxxxxxxx xx xxx xxxx xxx xxxx xxxxxxx xx, xxxxxxxxx xxxx xx xxxx. “xxx, xxxxxxx xx xxx xxx xxxx xxxxx, xxxx xx xxxxxxxxxx *xxxx* xxxx xx xxxx, xx xxxx xxx *xxxx* xxxxxxxx … xxxx xxxx *xxxx* xxxx xx? … xx *xxxx* xxxxx, xxxx xxxx xxxx xxxxx xxxx xxxxxxxxx xxxx xxxx?…” </blockquote> <blockquote>xxxxxxx xx-xxxxxx xxxxx xx xxx xx xxx xxxxx, xxx x xxxx xxx, “xx’x xxxx xxxx xxxxxxx xxxxxx.” </blockquote> <blockquote>xxx xxxxxxxxx xxxxxx-xxxxxxx xxxxxxx xxx, x xxxxx, xxxx xxxxxx xxx xxxx-xxxxxxx: </blockquote> <blockquote> <ol> <li>Work in pairs, thinking out loud to one another.  <li>xxxxx. xx xxxx xxxxxxx xxxx “xxxx xxxxx x”, xxx xxx xxxxxx xxx’x xxxxxxxxxx xxx xx xxx xxxx xxxxxxx xxxxxxx, xxxxxx xx xxxxxxxxxxx.  <li>xxxxxxxxx, xxxx xxxxxxx xxxx x xxxxx xx xxxx, xx’x xxxxxx xx xxxxxx xxx xxx xxxxxx *xxxxx* xxx xxxxxxxxxx xxxx’x xx xxxx xxxx. xxxxxxxxx, xx x xxxxxxxx xx xxxx xxx xxx xxxxxxx, xxx xxxxxxxx xxxx xx xxx xxxxxx xx xxx xxx xxxx xxxx xx xx xxxxx. (xxx xxx xxxxx xxxx xx xxxx xxxx xx xx xxxxxxxxxx.)  <li>xxxx xxx xxxx xxxx “xxxxxx” xxx “xxxxxxx”. xx xxxxxx xxxxxxx xxxxxxxxxx xxx xxxx xxxx xxxxxxx (xx xxxxxxxx xxxx xxxxxx xxxxxxxx xx) xxxxxx-xx-xxxxxx; xx xxxxxxx xxxxxxx xxxxxxxxxx x xxxxxx xxxxx xxxx xx xxxxxxxxx xxxxxxxxx. xx xxx xxxx xxxx xxxxxx, xxx xxx xxxx xxx xxxxxx xxx xxx xxxxx; xx xxx xxxx xxxx xxxxxxx, xxx xxx xxxx xxxxxxxx xx xxxxxx xxxxx xxxxxxx xxx xxx xxxxxxxxx xxxx xxxx xxxxxxx. </li></li></li></li></ol></blockquote>Thanks, Seth! Great ideas!  <p><img alt="picture-talmud: " border="0" data-recalc-dims="1" height="502" src="https://i0.wp.com/www.joelonsoftware.com/wp-content/uploads/2000/05/Page_of_Talmud.jpg?resize=320%2C502&amp;ssl=1" width="320"/> </p> </p>
+</div><!-- .entry-content -->
+</article><!-- #post-## -->
+<div class="widget-area" id="post-footer-widgets" role="complementary">
+<aside class="widget widget_text" id="text-8"><h2 class="widget-title">Subscribe!</h2> <div class="textwidget"><p>You’re reading <a href="https://www.joelonsoftware.com/">Joel on Software</a>, xxxxxxx xxxx xxxxx xxx xxxxx xx xxxxxxxxxx xxxxxx xxx xxxxxxxx xxxxx xxxxxxxx xxxxxxxxxxx, xxxxxxxx xxxxxxxx xxxxx, xxxxxxxxx xxxx xxxxxxxxxx, xxxxxxx xxxxxxxxxx xxxxxxxx xxxxxxxxx, xxx xxxxxx xxxxxxx.</p>
+<p>xx xxx xxxx xx xxxx xxxx x xxxxxxx xxxxxxxxx xxx, x xxxxxxxxx xxxxxxx xx xxx xxxxxx xxxx <a href="https://newsblur.com/">NewsBlur</a> and subscribing to my <a href="https://www.joelonsoftware.com/feed/">RSS feed</a>.</p>
+</div>
+</aside>
+</div><!-- #post-footer-widgets -->
+<div class="author-info">
+<div class="author-avatar">
+<img alt="" class="avatar avatar-64 photo" decoding="async" height="64" src="https://secure.gravatar.com/avatar/4f742758d6ff8a422a0d154b351751a90a10542fda27afe910c1e16cb3779bf4?s=64&amp;d=mm&amp;r=pg" srcset="https://secure.gravatar.com/avatar/4f742758d6ff8a422a0d154b351751a90a10542fda27afe910c1e16cb3779bf4?s=128&amp;d=mm&amp;r=pg 2x" width="64"/> </div><!-- .author-avatar -->
+<div class="author-description">
+<h2 class="author-title"><span class="author-heading">About the author.</span></h2>
+<p class="author-bio">
+			xx xxxx x xx-xxxxxxx xxx xxxxx xxxxxxxx, xxxxx xx xxxxxxx xxxx xx xxxx xxxxxx xxxx xxx xxxxxxx xxx xxxxxxx, xxxxxx, xxx xxxxxx. x xxxx xxxxxx xxxx xxxx xxxxxx xx xxxxxx xxxxx xxxxxxxx xxx xxxxxx xx xxx xx xxxxx xxxxxxxx xxxx xxxx-xxxx.
+
+xxxxx x xxxxx xx xxx xxxxxxxx xx xxx xxxxx xxx <a href="https://stackoverflow.com/">Stack Overflow</a>, <a href="https://glitch.com/">Glitch</a>, and <a href="https://hash.ai/">HASH</a>.		</p><!-- .author-bio -->
+</div><!-- .author-description -->
+</div><!-- .author-info -->
+<nav class="navigation post-navigation" role="navigation">
+<h1 class="screen-reader-text">Post navigation</h1>
+<div class="nav-links">
+<div class="nav-previous"><a href="https://www.joelonsoftware.com/2000/05/26/20000526/" rel="prev"><span class="meta-nav">← Previous Post</span> 2000/05/26</a></div><div class="nav-next"><a href="https://www.joelonsoftware.com/2000/06/03/20000603/" rel="next"><span class="meta-nav">Next Post →</span> 2000/06/03</a></div> </div><!-- .nav-links -->
+</nav><!-- .navigation -->
+</main><!-- #main -->
+</div><!-- #primary -->
+</div><!-- #content -->
+<footer class="site-footer" id="colophon" role="contentinfo">
+<div class="site-info">
+<a class="powered-by" href="https://wordpress.org/">
+				Proudly powered by WordPress			</a>
+</div><!-- .site-info -->
+</footer><!-- #colophon -->
+</div><!-- #page -->
+<script type="speculationrules"></script>
+<meta content="" data-custom-props='{"wpcomsp":"1","woo_active":"0"}' data-provider="wp.cloud" data-service="pressable.com" data-site-tz="Etc/GMT-0" data-site-v="d3093b300f5a706eb1e3d23bf351a1e8" id="bilmur" property="bilmur:data"/>
+<div style="display:none">
+<div class="grofile-hash-map-e215aff4c20f1e1759f0b74a2703f04d">
+</div>
+</div>
+<script id="wp-importmap" type="importmap"></script>
+<script data-wp-strategy="defer" defer="" id="bilmur-js" src="https://s0.wp.com/wp-content/js/bilmur.min.js?m=202642&amp;ver=1"></script>
+<script id="fitvids-js" src="https://www.joelonsoftware.com/wp-content/themes/editor-redux/js/jquery.fitvids.js?ver=20140820"></script>
+<script id="editor-js-js" src="https://www.joelonsoftware.com/wp-content/themes/editor-redux/js/editor.js?ver=20161202"></script>
+<script id="jetpack-stats-js-before"></script>
+<script data-wp-strategy="defer" defer="" fetchpriority="low" id="jetpack-stats-js" src="https://stats.wp.com/e-202642.js"></script>
+<script id="jetpack-twitter-timeline-js" src="https://www.joelonsoftware.com/wp-content/plugins/jetpack/_inc/build/twitter-timeline.min.js?ver=4.0.0"></script>
+<script id="react-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/vendor/react.min.js"></script>
+<script id="react-dom-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/vendor/react-dom.min.js"></script>
+<script id="wp-hooks-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/hooks.min.js"></script>
+<script id="wp-i18n-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/i18n.min.js"></script>
+<script id="wp-i18n-js-after"></script>
+<script id="wp-private-apis-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/private-apis.min.js"></script>
+<script id="wp-url-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/url.min.js"></script>
+<script id="wp-api-fetch-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/api-fetch.min.js"></script>
+<script id="wp-api-fetch-js-after"></script>
+<script id="react-jsx-runtime-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/vendor/react-jsx-runtime.min.js"></script>
+<script id="wp-dom-ready-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/dom-ready.min.js"></script>
+<script id="wp-a11y-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/a11y.min.js"></script>
+<script id="wp-blob-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/blob.min.js"></script>
+<script id="wp-block-serialization-default-parser-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/block-serialization-default-parser.min.js"></script>
+<script id="wp-autop-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/autop.min.js"></script>
+<script id="wp-deprecated-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/deprecated.min.js"></script>
+<script id="wp-dom-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/dom.min.js"></script>
+<script id="wp-escape-html-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/escape-html.min.js"></script>
+<script id="wp-element-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/element.min.js"></script>
+<script id="wp-is-shallow-equal-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/is-shallow-equal.min.js"></script>
+<script id="wp-keycodes-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/keycodes.min.js"></script>
+<script id="wp-priority-queue-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/priority-queue.min.js"></script>
+<script id="wp-undo-manager-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/undo-manager.min.js"></script>
+<script id="wp-compose-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/compose.min.js"></script>
+<script id="wp-redux-routine-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/redux-routine.min.js"></script>
+<script id="wp-data-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/data.min.js"></script>
+<script id="wp-data-js-after"></script>
+<script id="wp-html-entities-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/html-entities.min.js"></script>
+<script id="wp-rich-text-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/rich-text.min.js"></script>
+<script id="wp-shortcode-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/shortcode.min.js"></script>
+<script id="wp-warning-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/warning.min.js"></script>
+<script id="wp-blocks-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/blocks.min.js"></script>
+<script id="moment-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/vendor/moment.min.js"></script>
+<script id="moment-js-after"></script>
+<script id="wp-date-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/date.min.js"></script>
+<script id="wp-date-js-after"></script>
+<script id="wp-primitives-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/primitives.min.js"></script>
+<script id="wp-theme-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/theme.min.js"></script>
+<script id="wp-components-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/components.min.js"></script>
+<script id="wp-keyboard-shortcuts-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/keyboard-shortcuts.min.js"></script>
+<script id="wp-preferences-persistence-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/preferences-persistence.min.js"></script>
+<script id="wp-preferences-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/preferences.min.js"></script>
+<script id="wp-preferences-js-after"></script>
+<script id="wp-commands-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/commands.min.js"></script>
+<script id="wp-notices-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/notices.min.js"></script>
+<script id="wp-style-engine-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/style-engine.min.js"></script>
+<script id="wp-token-list-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/token-list.min.js"></script>
+<script id="wp-upload-media-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/upload-media.min.js"></script>
+<script id="wp-block-editor-js" src="https://c0.wp.com/c/7.1.3/wp-includes/js/dist/block-editor.min.js"></script>
+<script id="blockprotocol-render-script-js" src="https://www.joelonsoftware.com/wp-content/plugins/blockprotocol/build/render.js?ver=d02daa73f930ea4bd873"></script>
+<script id="wp-emoji-settings" type="application/json"></script>
+<script type="module"></script>
+<script type="text/javascript"></script>
+</body>
+</html>
+<!--
+	generated in 0.288 seconds
+	49497 bytes batcached for 300 seconds
+-->

@@ -140,8 +140,14 @@ from citeget.fetch import (
     infer_filename,
     html_to_markdown,
     html_to_pdf,
+    main_content_markdown,
     FetchResult,
     UrlEntry,
+)
+from citeget.main_content import (
+    extract_main_content,
+    clean_wayback_html,
+    page_title,
 )
 
 __all__ = [
@@ -220,6 +226,10 @@ __all__ = [
     "infer_filename",
     "html_to_markdown",
     "html_to_pdf",
+    "main_content_markdown",
+    "extract_main_content",
+    "clean_wayback_html",
+    "page_title",
     "FetchResult",
     "UrlEntry",
 ]
