@@ -19,6 +19,7 @@ def _http_get(url, **kwargs):
     """The module's ``_http_get`` as patched by ``fake_web`` (looked up per call)."""
     return importlib.import_module("citeget.fetch")._http_get(url, **kwargs)
 
+
 LOBSTER = (
     "http://web.archive.org/web/{ts}/http://www.gourmet.com:80/magazine/2000s/"
     "2004/08/consider_the_lobster?currentPage={page}"
@@ -220,3 +221,31 @@ def test_manifest_records_the_page_title(fake_web, tmp_path, capsys):
     (entry,) = json.loads(manifest.read_text())
     assert entry["title"] == "Hackers and Painters"
     assert entry["output_file"].endswith("hackers-and-painters.md")
+
+
+# --- regressions found in review ---------------------------------------------
+
+
+@pytest.mark.parametrize("value", ["-5", "nan", "inf", "1e9", "soon"])
+def test_unusable_retry_after_does_not_crash(fake_web, value):
+    busy = httpx.Response(503, headers={"retry-after": value})
+    calls = fake_web({URL: [busy, "<p>ok</p>"]})
+
+    resp = _http_get(URL)
+
+    assert resp is not None and resp.status_code == 200
+    assert calls[URL] == 2
+    assert len(fake_web.sleeps) == 1 and 0 <= fake_web.sleeps[0] <= 60
+
+
+def test_rerun_over_files_named_by_the_old_scheme_skips(fake_web, tmp_path):
+    """A folder from before title-based names: ``hp.md`` is found, not duplicated."""
+    old = tmp_path / "hp.md"
+    old.write_text(f"<!-- Source: {HP} -->\n\nsaved by an older citeget\n")
+    fake_web({HP: "<title>Hackers and Painters</title><p>May 2003. Text.</p>"})
+
+    result = fetch(HP, output_dir=tmp_path)[0]
+
+    assert result.status == "skipped"
+    assert result.output_file == old
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["hp.md"]

@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import math
 import re
 import time
 import unicodedata
@@ -249,10 +250,16 @@ MAX_RETRY_WAIT = 60.0
 
 
 def _retry_after(resp) -> Optional[float]:
+    """The server's ``Retry-After`` in seconds, if it is a usable number.
+
+    Negative, infinite and NaN values (all seen in the wild) are ignored rather
+    than handed to ``time.sleep``, which raises on them.
+    """
     try:
-        return float(resp.headers.get("retry-after", ""))
+        seconds = float(resp.headers.get("retry-after", ""))
     except ValueError:
         return None
+    return seconds if math.isfinite(seconds) and seconds >= 0 else None
 
 
 def _http_get(
@@ -302,7 +309,7 @@ def _http_get(
             except Exception as e:
                 logger.warning("Failed to fetch %s: %s", url, e)
                 return None
-            sleep(min(wait, MAX_RETRY_WAIT))
+            sleep(max(0.0, min(wait, MAX_RETRY_WAIT)))
     return None  # pragma: no cover - the loop always returns
 
 
@@ -574,16 +581,19 @@ def page_to_markdown(
     content: ContentMode = DFLT_CONTENT,
     source_url: str = "",
     extractor: Union[str, Extractor, None] = None,
+    **markdownify_options,
 ) -> str:
     """Markdown of the main content (``"main"``) or of the whole page (``"full"``).
 
     ``"full"`` is exactly :func:`html_to_markdown`, the behaviour before
-    main-content extraction existed.
+    main-content extraction existed. *markdownify_options* go to the converter.
     """
     if content == "full":
-        return html_to_markdown(html, source_url=source_url)
+        return html_to_markdown(html, source_url=source_url, **markdownify_options)
     if content == "main":
-        return main_content_markdown(html, source_url=source_url, extractor=extractor)
+        return main_content_markdown(
+            html, source_url=source_url, extractor=extractor, **markdownify_options
+        )
     raise ValueError(f"content must be 'main' or 'full', not {content!r}")
 
 
@@ -666,6 +676,20 @@ def recorded_source(path: Path) -> Optional[str]:
     return m.group(1) if m else None
 
 
+def existing_claims(output_dir: Path) -> Claims:
+    """The ``.md`` files already in *output_dir*, mapped to the URL each records.
+
+    Seeds a run's claims, so a page fetched before is found under whatever name
+    it was saved as -- including names from an older naming scheme (a path
+    stem where the page title is now used).
+    """
+    output_dir = Path(output_dir).expanduser()
+    if not output_dir.is_dir():
+        return {}
+    found = ((path, recorded_source(path)) for path in output_dir.glob("*.md"))
+    return {path: url for path, url in found if url}
+
+
 def _output_path(
     entry: UrlEntry,
     output_dir: Path,
@@ -676,13 +700,17 @@ def _output_path(
 ) -> Path:
     """The path to write *entry* to: its own, never another URL's.
 
-    Walks :func:`candidate_filenames` and takes the first name that is free,
-    or that already belongs to this URL -- claimed by it earlier in this run,
-    or an existing file whose recorded source is this URL. An existing file
-    that records no source (a PDF, say) is taken to be this URL's unless
-    another URL claimed it in this run, which is the pre-collision-check
-    behaviour of ``skip_existing``.
+    A file of this format already claimed by this URL (in this run, or found
+    by :func:`existing_claims`) is reused. Otherwise walks
+    :func:`candidate_filenames` and takes the first name that is free, or
+    that already belongs to this URL. An existing file that records no source
+    (a PDF, say) is taken to be this URL's unless another URL claimed it in
+    this run, which is the pre-collision-check behaviour of ``skip_existing``.
     """
+    suffix = f".{ext}"
+    for path, url in claims.items():
+        if url == entry.url and path.suffix == suffix:
+            return path
     for name in candidate_filenames(entry, ext, page_title=page_title):
         path = output_dir / name
         owner = claims.get(path)
@@ -726,8 +754,10 @@ def fetch_one(
         retries: Extra attempts after a transient HTTP failure.
         skip_existing: If True (default), skip when the output file already
             exists *and was written for this same URL*.
-        claims: Output paths already written in this run, mapped to their
-            URL. :func:`fetch` passes one so that no two URLs share a file.
+        claims: Output paths already owned, mapped to their URL.
+            :func:`fetch` passes one for the whole run so that no two URLs
+            share a file. Defaults to :func:`existing_claims` of
+            *output_dir*.
 
     Returns:
         A :class:`FetchResult` describing what happened.
@@ -735,7 +765,7 @@ def fetch_one(
     entry = source if isinstance(source, UrlEntry) else UrlEntry(url=source)
     output_dir = Path(output_dir).expanduser()
     output_dir.mkdir(parents=True, exist_ok=True)
-    claims = {} if claims is None else claims
+    claims = existing_claims(output_dir) if claims is None else claims
 
     result = FetchResult(
         url=entry.url, status="failed", title=entry.title, ref=entry.ref
@@ -757,7 +787,7 @@ def fetch_one(
         return _save(resp.content, ext="pdf", fmt="pdf")
 
     html = resp.text
-    title = page_title(html) or ""
+    title = page_title(html, url=entry.url) or ""
     if not result.title:
         result.title = title or None
 
@@ -885,7 +915,7 @@ def fetch(
     output_dir = Path(output_dir).expanduser()
 
     results: list[FetchResult] = []
-    claims: Claims = {}
+    claims: Claims = existing_claims(output_dir)
     total = len(entries)
     for i, entry in enumerate(entries, 1):
         result = fetch_one(

@@ -230,3 +230,80 @@ def test_layout_table_cell_becomes_a_block():
     out = unwrap_layout_tables(html)
     assert "<table" not in out and "<td" not in out
     assert "The essay itself." in out
+
+
+# --- regressions found in review ---------------------------------------------
+
+PROSE = "This sentence is long enough to count as a paragraph of real prose. " * 2
+
+
+def test_code_comments_and_figure_code_blocks_survive():
+    page = (
+        f"<article><p>{PROSE}</p>"
+        '<pre><code>x = 1\n<span class="hljs-comment"># important comment</span>'
+        "</code></pre>"
+        '<pre><code><span class="token comment"># prism comment</span></code></pre>'
+        '<figure class="highlight"><pre><code>jekyll_code = 3</code></pre></figure>'
+        f"<p>{PROSE}</p></article>"
+    )
+    md = main_content_markdown(page)
+    for code in ("x = 1", "# important comment", "# prism comment", "jekyll_code = 3"):
+        assert code in md
+
+
+def test_article_wrapper_with_a_state_class_is_not_chrome():
+    comments = "".join(f"<p>Comment {i}: {PROSE}</p>" for i in range(6))
+    page = (
+        f'<div class="post-body share-enabled"><p>The article. {PROSE}</p></div>'
+        f'<div class="comments">{comments}</div>'
+    )
+    md = main_content_markdown(page)
+    assert "The article." in md
+    assert "Comment 0" not in md
+
+
+def test_short_conclusion_in_a_sibling_section_is_kept():
+    body = "".join(f"<p>Body paragraph {i}. {PROSE}</p>" for i in range(12))
+    page = (
+        f"<div><section>{body}</section>"
+        f"<section><p>In conclusion, {PROSE}</p></section>"
+        "<div class='share'><a href='/t'>Tweet</a> <a href='/f'>Share</a></div></div>"
+    )
+    md = main_content_markdown(page)
+    assert "Body paragraph 0." in md and "In conclusion," in md
+    assert "Tweet" not in md
+
+
+def test_edge_content_that_looks_like_chrome_is_kept():
+    page = (
+        "<article><table><tr><th>Version</th><td>1.2</td></tr></table>"
+        f"<p>{PROSE}</p><p>See the <a href='/paper.pdf'>paper</a>.</p>"
+        "<ol><li><a href='/r1'>Reference one</a></li>"
+        "<li><a href='/r2'>Reference two</a></li></ol></article>"
+    )
+    md = main_content_markdown(page)
+    assert "1.2" in md
+    assert "See the [paper](/paper.pdf)." in md
+    assert "Reference two" in md
+
+
+@pytest.mark.parametrize(
+    "head, expected",
+    [
+        (
+            "<title>Joel on Software - Fire and Motion</title>"
+            '<meta property="og:site_name" content="Joel on Software">',
+            "Fire and Motion",
+        ),
+        (
+            "<title>Hacker News | Show HN: A thing</title>"
+            '<meta property="og:title" content="Show HN: A thing">',
+            "Show HN: A thing",
+        ),
+        ("<title>Reading Code – Joel on Software</title>", "Reading Code"),
+    ],
+)
+def test_page_title_keeps_the_article_part(head, expected):
+    from citeget.main_content import page_title
+
+    assert page_title(f"<html><head>{head}</head><body></body></html>") == expected

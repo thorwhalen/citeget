@@ -13,7 +13,7 @@ def fake_web(monkeypatch):
     Returns ``serve(routes)``, where *routes* maps a URL to a response or to a
     list of responses handed out one per request (the last one repeating). A
     response is an HTML string (served 200), an ``(status, html)`` pair, or an
-    exception instance to raise. ``serve`` returns a dict counting requests per
+    exception instance to raise, or a ready ``httpx.Response``. ``serve`` returns a dict counting requests per
     URL; ``serve.sleeps`` records every backoff wait.
     """
     # ``citeget.fetch`` is also the name of a function re-exported by the package.
@@ -33,6 +33,8 @@ def fake_web(monkeypatch):
             answer = answers[min(calls[url], len(answers)) - 1]
             if isinstance(answer, Exception):
                 raise answer
+            if isinstance(answer, httpx.Response):
+                return answer
             status, html = answer if isinstance(answer, tuple) else (200, answer)
             return httpx.Response(
                 status, text=html, headers={"content-type": "text/html"}
