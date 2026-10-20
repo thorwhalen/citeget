@@ -82,3 +82,30 @@ def test_tiny_extraction_falls_back_to_full_page():
 def test_unknown_extractor_name():
     with pytest.raises(ValueError):
         html_to_markdown(PAGE, content="main", content_extractor="nope")
+
+
+def test_main_keeps_the_title_from_a_dropped_header():
+    page = f"<body><header><h1>The Essay</h1></header><div><p>{ARTICLE}</p><p>{ARTICLE}</p></div></body>"
+    assert "# The Essay" in html_to_markdown(page, content="main")
+
+
+def test_form_wrapped_page_is_kept():
+    page = f"<body><form><div><p>{ARTICLE}</p><p>{ARTICLE}</p></div></form></body>"
+    assert "Sentence number 3" in html_to_markdown(page, content="main")
+
+
+def test_scene_breaks_survive_and_stray_rules_do_not():
+    from citeget.content import drop_junk_lines
+
+    assert drop_junk_lines("one\n\n***\n\ntwo") == "one\n\n***\n\ntwo"
+    assert "---" not in drop_junk_lines("one\n---\ntwo\n\n---\n")
+
+
+def test_trafilatura_finding_nothing_falls_back_like_any_extractor(monkeypatch):
+    pytest.importorskip("trafilatura")
+    import trafilatura
+
+    monkeypatch.setattr(trafilatura, "extract", lambda *a, **k: None)
+    from citeget.content import trafilatura_extractor
+
+    assert trafilatura_extractor("<p>x</p>") == ""
