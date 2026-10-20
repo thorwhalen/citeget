@@ -30,6 +30,7 @@ citeget/
 ├── acquire_references.py    # Multi-strategy academic-reference acquisition
 ├── resolve.py               # Composable resolver/downloader/strategy registries
 ├── fetch.py                 # General URL → file (md/pdf/original) routing
+├── content.py               # Main-article extraction (extractor seam) + Wayback cleanup
 ├── netguard.py              # SSRF guard: every outbound HTTP request goes through it
 ├── joblimit.py              # Per-owner cap on concurrent acquisitions (flock slots)
 ├── extract.py               # Reference-text parsers

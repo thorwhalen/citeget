@@ -40,10 +40,17 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Iterator, Literal, Mapping, Optional, Tuple, Union
+from typing import Callable, Iterable, Iterator, Literal, Mapping, Optional, Tuple, Union
 from urllib.parse import urljoin, urlparse
 
 from citeget import netguard
+from citeget.content import (
+    DEFAULT_EXTRACTOR,
+    EXTRACTORS,
+    clean_wayback,
+    drop_junk_lines,
+    is_wayback_url,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -325,7 +332,15 @@ def _resolve_markdownify_options(overrides: Mapping) -> dict:
     return options
 
 
-def html_to_markdown(html: str, *, source_url: str = "", **markdownify_options) -> str:
+def html_to_markdown(
+    html: str,
+    *,
+    source_url: str = "",
+    content: Literal["main", "full"] = "full",
+    content_extractor: Union[str, Callable[[str], str]] = DEFAULT_EXTRACTOR,
+    include_links: bool = True,
+    **markdownify_options,
+) -> str:
     """Convert *html* to clean Markdown.
 
     Uses :mod:`markdownify` (MIT). Long paragraphs are left unwrapped, code
@@ -334,6 +349,12 @@ def html_to_markdown(html: str, *, source_url: str = "", **markdownify_options) 
     Args:
         html: The HTML source to convert.
         source_url: If given, prepended as an HTML comment provenance line.
+            A ``web.archive.org`` URL also triggers Wayback cleanup.
+        content: ``"full"`` (default here) converts the whole page; ``"main"``
+            first extracts the main article (see :mod:`citeget.content`).
+        content_extractor: With ``content="main"``, a name from
+            :data:`citeget.content.EXTRACTORS` or any callable ``html -> html``.
+        include_links: If False, links are reduced to their text.
         markdownify_options: Overrides for :data:`HTML_TO_MARKDOWN_DEFAULTS`,
             passed to ``markdownify``'s ``MarkdownConverter``. Unknown option
             names raise ``TypeError``. Passing ``convert=`` drops the default
@@ -353,13 +374,28 @@ def html_to_markdown(html: str, *, source_url: str = "", **markdownify_options) 
     from bs4 import BeautifulSoup
     from markdownify import MarkdownConverter
 
+    if content not in ("main", "full"):
+        raise ValueError(f"content must be 'main' or 'full', got {content!r}")
+    extractor = (
+        EXTRACTORS[content_extractor]
+        if isinstance(content_extractor, str)
+        else content_extractor
+    )
     options = _resolve_markdownify_options(markdownify_options)
+    if not include_links and "convert" not in markdownify_options:
+        options["strip"] = [*options.get("strip", []), "a"]
+    if is_wayback_url(source_url):
+        html = clean_wayback(html)
+    if content == "main":
+        html = extractor(html)
 
     soup = BeautifulSoup(html, "html.parser")
     for tag in soup.find_all(NON_CONTENT_TAGS):
         tag.decompose()
 
     md = MarkdownConverter(**options).convert_soup(soup)
+    if content == "main":
+        md = drop_junk_lines(md)
     md = _collapse_blank_runs(md).strip() + "\n"
 
     if source_url:
@@ -574,6 +610,9 @@ def fetch_one(
     prefer: PreferFormat = "md",
     timeout: int = 30,
     skip_existing: bool = True,
+    content: Literal["main", "full"] = "main",
+    content_extractor: Union[str, Callable[[str], str]] = DEFAULT_EXTRACTOR,
+    include_links: bool = True,
 ) -> FetchResult:
     """Fetch a single URL and save it under *output_dir*.
 
@@ -588,6 +627,10 @@ def fetch_one(
         timeout: HTTP timeout in seconds.
         skip_existing: If True (default), skip when the inferred output
             file already exists.
+        content: ``"main"`` (default) keeps only the main article in Markdown
+            output; ``"full"`` keeps the whole page (the previous behaviour).
+        content_extractor: Extractor name or callable ``html -> html``.
+        include_links: If False, Markdown links are reduced to their text.
 
     Returns:
         A :class:`FetchResult` describing what happened.
@@ -678,7 +721,13 @@ def fetch_one(
         )
 
     # --- Default: Markdown -------------------------------------------------
-    md = html_to_markdown(html, source_url=entry.url)
+    md = html_to_markdown(
+        html,
+        source_url=entry.url,
+        content=content,
+        content_extractor=content_extractor,
+        include_links=include_links,
+    )
     return _save_text(
         entry,
         output_dir,
@@ -821,6 +870,9 @@ def fetch(
     timeout: int = 30,
     skip_existing: bool = True,
     on_result=None,
+    content: Literal["main", "full"] = "main",
+    content_extractor: Union[str, Callable[[str], str]] = DEFAULT_EXTRACTOR,
+    include_links: bool = True,
 ) -> list[FetchResult]:
     """Fetch one or many URLs from a flexible *source*.
 
@@ -834,6 +886,7 @@ def fetch(
         skip_existing: Skip URLs whose inferred output file exists.
         on_result: Optional callback ``(index, total, FetchResult) -> None``
             invoked after each fetch (for progress reporting).
+        content, content_extractor, include_links: See :func:`fetch_one`.
 
     Returns:
         A list of :class:`FetchResult`, one per unique URL.
@@ -850,6 +903,9 @@ def fetch(
             prefer=prefer,
             timeout=timeout,
             skip_existing=skip_existing,
+            content=content,
+            content_extractor=content_extractor,
+            include_links=include_links,
         )
         results.append(result)
         if on_result is not None:

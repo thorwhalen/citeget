@@ -133,6 +133,7 @@ from citeget.resolve import (
     BUILTIN_URL_RULES,
 )
 
+from citeget.content import main_content
 from citeget.fetch import (
     fetch,
     fetch_one,
@@ -219,6 +220,7 @@ __all__ = [
     # General-purpose fetch (any URL → md/pdf)
     "fetch",
     "fetch_one",
+    "main_content",
     "extract_urls_from_text",
     "infer_filename",
     "html_to_markdown",
