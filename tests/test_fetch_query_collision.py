@@ -14,7 +14,7 @@ URLS = [f"{BASE}{i}" for i in (1, 2, 3)]
 
 @pytest.fixture
 def fake_http(monkeypatch):
-    def _get(url, *, timeout=30):
+    def _get(url, *, timeout=30, **_):
         return SimpleNamespace(
             headers={"content-type": "text/html"},
             text=f"<html><body><p>content of {url}</p></body></html>",
