@@ -40,7 +40,16 @@ import re
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, Literal, Mapping, Optional, Tuple, Union
+from typing import (
+    Callable,
+    Iterable,
+    Iterator,
+    Literal,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 from urllib.parse import urljoin, urlparse
 
 from citeget import netguard

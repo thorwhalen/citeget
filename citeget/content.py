@@ -24,7 +24,15 @@ Extractor = Callable[[str], str]
 
 #: Elements that are never article content.
 DROP_TAGS = (
-    "script", "style", "nav", "header", "footer", "aside", "form", "noscript", "iframe",
+    "script",
+    "style",
+    "nav",
+    "header",
+    "footer",
+    "aside",
+    "form",
+    "noscript",
+    "iframe",
 )
 
 #: Class/id fragments that mark chrome. Matched against single class/id tokens.
