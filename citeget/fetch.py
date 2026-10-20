@@ -127,12 +127,17 @@ def slugify(text: str, *, max_len: int = 80) -> str:
     return text
 
 
+#: Longest query-string slug folded into an inferred filename.
+_MAX_QUERY_SLUG = 40
+
+
 def infer_filename(entry: UrlEntry, ext: str) -> str:
     """Infer a filename for *entry*, ending in ``.{ext}``.
 
     Strategy (first non-empty wins):
     1. anchor text / citation title (slugified)
-    2. URL's last meaningful path segment
+    2. URL's last meaningful path segment, plus its query string
+       (``?currentPage=2`` → ``-currentpage-2``) so pages stay distinct
     3. domain + short hash
     """
     prefix = f"ref_{entry.ref.zfill(2)}_" if entry.ref else ""
@@ -149,6 +154,9 @@ def infer_filename(entry: UrlEntry, ext: str) -> str:
         segment = re.sub(r"\.(html?|php|aspx?)$", "", segment)
         slug = slugify(segment)
         if slug and len(slug) > 2:
+            query = slugify(parsed.query, max_len=_MAX_QUERY_SLUG)
+            if query:
+                slug = f"{slug}-{query}"
             return f"{prefix}{slug}.{ext}"
 
     domain = parsed.netloc.replace("www.", "").split(".")[0]
@@ -682,6 +690,40 @@ def fetch_one(
     )
 
 
+_SOURCE_RE = re.compile(r"\A<!-- Source: (.*?) -->")
+
+
+def _recorded_source(path: Path) -> Optional[str]:
+    """The URL a saved Markdown file says it came from, if it says."""
+    try:
+        with path.open(encoding="utf-8") as f:
+            m = _SOURCE_RE.match(f.read(2048))
+    except (OSError, UnicodeDecodeError):
+        return None
+    return m.group(1) if m else None
+
+
+def _resolve_out_path(
+    entry: UrlEntry, output_dir: Path, ext: str, *, skip_existing: bool
+) -> tuple[Path, bool]:
+    """Pick the output path for *entry* and whether it can be skipped.
+
+    An existing file is skipped only if it came from this URL. When it
+    records a different source, the URL's hash is folded into the name so
+    the two never share a file. A file that records no source (PDF, raw
+    bytes, hand-made) is trusted, as before.
+    """
+    out_path = output_dir / infer_filename(entry, ext)
+    if not out_path.exists():
+        return out_path, False
+    source = _recorded_source(out_path)
+    if source is None or source == entry.url:
+        return out_path, skip_existing
+    url_hash = hashlib.md5(entry.url.encode()).hexdigest()[:8]
+    out_path = out_path.with_name(f"{out_path.stem}-{url_hash}{out_path.suffix}")
+    return out_path, skip_existing and out_path.exists()
+
+
 def _save_bytes(
     entry: UrlEntry,
     output_dir: Path,
@@ -692,8 +734,10 @@ def _save_bytes(
     skip_existing: bool,
     result: FetchResult,
 ) -> FetchResult:
-    out_path = output_dir / infer_filename(entry, ext)
-    if skip_existing and out_path.exists():
+    out_path, skip = _resolve_out_path(
+        entry, output_dir, ext, skip_existing=skip_existing
+    )
+    if skip:
         result.status = "skipped"
         result.output_file = out_path
         result.format = fmt
@@ -715,8 +759,10 @@ def _save_text(
     skip_existing: bool,
     result: FetchResult,
 ) -> FetchResult:
-    out_path = output_dir / infer_filename(entry, ext)
-    if skip_existing and out_path.exists():
+    out_path, skip = _resolve_out_path(
+        entry, output_dir, ext, skip_existing=skip_existing
+    )
+    if skip:
         result.status = "skipped"
         result.output_file = out_path
         result.format = fmt
