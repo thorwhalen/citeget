@@ -44,7 +44,7 @@ def test_table_layout_without_paragraphs():
 
 def test_custom_extractor_seam():
     md = html_to_markdown(PAGE, content="main", content_extractor=lambda h: f"<p>only me {ARTICLE}</p>")
-    assert "only me" in md and "Sentence" not in md
+    assert "only me" in md and "View menu" not in md and "(c) site" not in md
 
 
 def test_include_links_false():
