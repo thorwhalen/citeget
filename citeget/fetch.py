@@ -247,7 +247,11 @@ def _http_get(
                 delay = retry_backoff * 2**attempt
                 logger.info(
                     "Transient failure fetching %s (%s); retry %d/%d in %.1fs",
-                    url, e, attempt + 1, retries, delay,
+                    url,
+                    e,
+                    attempt + 1,
+                    retries,
+                    delay,
                 )
                 sleep(delay)
                 continue
