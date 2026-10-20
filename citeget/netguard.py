@@ -594,8 +594,20 @@ def _deadline(policy: NetPolicy) -> Optional[float]:
     return time.monotonic() + seconds if seconds else None
 
 
-def request(method: str, url: str, *, policy: Optional[NetPolicy] = None, **kwargs):
+def request(
+    method: str,
+    url: str,
+    *,
+    policy: Optional[NetPolicy] = None,
+    session=None,
+    **kwargs,
+):
     """``requests.request`` with the destination guard. Same arguments and return.
+
+    ``session`` is a :func:`guarded_session` (under the same *policy*) to reuse, so
+    successive requests share connections; the caller closes it. The session's cookie
+    jar is emptied before and after each call: a redirect chain still carries cookies
+    from hop to hop, and nothing is kept between calls. Not for concurrent use.
 
     The body is read before returning (or, with ``stream=True``, as the caller
     iterates), up to ``policy.max_response_bytes``, and the whole exchange,
@@ -615,14 +627,24 @@ def request(method: str, url: str, *, policy: Optional[NetPolicy] = None, **kwar
     stream = kwargs.pop("stream", False)
     kwargs.setdefault("timeout", DEFAULT_TIMEOUT)
     deadline = _deadline(policy)
-    with guarded_session(policy=policy) as session:
-        session._citeget_deadline = deadline
-        resp = session.request(method, url, stream=True, **kwargs)
-        # stream=True: the caller reads, through a capped iterator, at constant
-        # memory. Otherwise the body is read here, capped, like requests does.
-        if stream:
-            return _guard_response(resp, policy, deadline=deadline)
-        return _read_capped(resp, policy, deadline=deadline)
+    if session is None:
+        with guarded_session(policy=policy) as own:
+            return _send(own, method, url, policy, deadline, stream, kwargs)
+    session.cookies.clear()
+    try:
+        return _send(session, method, url, policy, deadline, stream, kwargs)
+    finally:
+        session.cookies.clear()
+
+
+def _send(session, method, url, policy, deadline, stream, kwargs):
+    session._citeget_deadline = deadline
+    resp = session.request(method, url, stream=True, **kwargs)
+    # stream=True: the caller reads, through a capped iterator, at constant
+    # memory. Otherwise the body is read here, capped, like requests does.
+    if stream:
+        return _guard_response(resp, policy, deadline=deadline)
+    return _read_capped(resp, policy, deadline=deadline)
 
 
 def get(url: str, *, policy: Optional[NetPolicy] = None, **kwargs):
@@ -898,7 +920,12 @@ def browser_route_handler(
             :class:`BrowserDownloads`); a new one if not given. Exposed on the
             handler as ``handler.downloads``.
         fetch: The fetcher, ``(method, url, **requests_kwargs) -> Response``;
-            defaults to :func:`request` with *policy*. A seam for tests.
+            defaults to :func:`request` with *policy* over one guarded session
+            for the whole handler, so a page's subresources reuse connections
+            (the browser owns cookies; the session keeps none between requests).
+            A seam for tests. Playwright calls the handler from one thread.
+
+    The handler has ``.downloads`` and ``.close()``, which closes the session.
     """
     import logging
 
@@ -906,9 +933,15 @@ def browser_route_handler(
     # Resolved now, not per route: Playwright dispatches the handler from its
     # own loop, which need not see this context's response_ceiling.
     policy = capped(policy or default_policy())
-    fetch = fetch or (
-        lambda method, url, **kw: request(method, url, policy=policy, **kw)
-    )
+    session = None  # made on the first request, closed by handler.close()
+
+    def shared_fetch(method, url, **kw):
+        nonlocal session
+        if session is None:
+            session = guarded_session(policy=policy)
+        return request(method, url, policy=policy, session=session, **kw)
+
+    fetch = fetch or shared_fetch
     downloads = downloads if downloads is not None else BrowserDownloads()
 
     def handler(route):
@@ -961,7 +994,14 @@ def browser_route_handler(
             status=resp.status_code, headers=fulfill_headers, body=body
         )
 
+    def close():
+        nonlocal session
+        if session is not None:
+            session.close()
+            session = None
+
     handler.downloads = downloads
+    handler.close = close
     return handler
 
 
@@ -1003,6 +1043,7 @@ def guard_browser_context(
         stash = _CONTEXT_DOWNLOADS.pop(id(context), None)
         if stash is not None:
             stash.discard_all()
+        handler.close()
 
     context.route("**/*", handler)
     if hasattr(context, "route_web_socket"):  # Playwright >= 1.48
