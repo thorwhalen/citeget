@@ -8,7 +8,7 @@ optional, stronger one (Apache-2.0, ``pip install trafilatura``).
 
 Web Archive copies are cleaned by :func:`clean_wayback`: the toolbar/banner is
 dropped and ``web.archive.org/web/<ts>/`` link prefixes are rewritten back to
-the original URLs.
+the original URLs. This applies in every content mode, ``full`` included.
 
 >>> html = "<body><nav>Menu</nav><div><p>" + "Real text. " * 20 + "</p></div></body>"
 >>> "Menu" in main_content(html), "Real text." in main_content(html)
@@ -30,7 +30,6 @@ DROP_TAGS = (
     "header",
     "footer",
     "aside",
-    "form",
     "noscript",
     "iframe",
 )
@@ -42,6 +41,10 @@ DROP_CLASS_RE = re.compile(
     r"skip-link|post-navigation)([-_ ]|$)",
     re.I,
 )
+
+#: Elements dropped as chrome only when they hold little of the page: an ASP.NET
+#: page wraps its whole body in one ``<form>``, which is a layout wrapper then.
+CHROME_IF_SMALL_TAGS = ("form",)
 
 #: Tags considered as candidate containers for the article.
 CANDIDATE_TAGS = ("article", "main", "div", "td", "section", "font", "body")
@@ -94,9 +97,14 @@ def main_content(html: str) -> str:
     from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(html, "html.parser")
+    title = soup.find("h1")  # may sit in a <header>, which is dropped below
+    title_html = str(title) if title is not None else ""
     for tag in soup.find_all(DROP_TAGS):
         tag.decompose()
     total = _text_len(soup) or 1
+    for tag in soup.find_all(CHROME_IF_SMALL_TAGS):
+        if _text_len(tag) <= MAX_CHROME_TEXT_SHARE * total:
+            tag.decompose()
     for tag in [t for t in soup.find_all(True) if _is_chrome(t)]:
         if _text_len(tag) <= MAX_CHROME_TEXT_SHARE * total:
             tag.decompose()
@@ -106,9 +114,10 @@ def main_content(html: str) -> str:
         tighter = best in el.parents and score >= DESCENT_RATIO * best_score
         if score > best_score or tighter:
             best, best_score = el, score
-    if best.name == "td":  # a bare <td> would render as a table cell
-        return f"<div>{best.decode_contents()}</div>"
-    return str(best)
+    body = f"<div>{best.decode_contents()}</div>" if best.name == "td" else str(best)  # a bare <td> would render as a table cell
+    if title_html and best.find("h1") is None:  # keep the page title the extraction left behind
+        return f"{title_html}{body}"
+    return body
 
 
 def trafilatura_extractor(html: str) -> str:
@@ -121,7 +130,7 @@ def trafilatura_extractor(html: str) -> str:
             "(or `pip install citeget[extract]`)."
         ) from e
     out = trafilatura.extract(html, output_format="html", include_links=True)
-    return out or html
+    return out or ""  # nothing found: html_to_markdown falls back to the full page, as for every extractor
 
 
 #: Named extractors, for the CLI and for ``content_extractor="name"``.
@@ -161,21 +170,44 @@ def drop_junk_lines(markdown: str) -> str:
     """Remove rule-only / empty-bullet lines and unwrap one-cell table rows.
 
     Fenced code blocks are left alone. Blank lines are kept (they separate paragraphs).
+    A thematic break (``***``, ``---``, ``* * *``) standing alone between two paragraphs is a
+    scene break, and is kept.
 
     >>> drop_junk_lines("| hello |\\n| --- |\\n* \\n\\ntext")
     'hello\\n\\ntext'
+    >>> drop_junk_lines("one\\n\\n***\\n\\ntwo")
+    'one\\n\\n***\\n\\ntwo'
     """
     out, in_fence = [], False
-    for line in markdown.split("\n"):
+    lines = markdown.split("\n")
+    for i, line in enumerate(lines):
         if line.lstrip().startswith(("```", "~~~")):
             in_fence = not in_fence
             out.append(line)
             continue
         if not in_fence and line.strip():
             if _JUNK_LINE_RE.match(line):
+                if not _is_scene_break(lines, i):
+                    continue
+                out.append(line)
                 continue
             s = line.strip()
             if s.startswith("|") and s.endswith("|") and s.count("|") == 2:
                 line = s.strip("|").strip()
         out.append(line)
     return re.sub(r"\n{3,}", "\n\n", "\n".join(out))
+
+
+_THEMATIC_BREAK_RE = re.compile(r"^\s{0,3}([-*_])(\s*\1){2,}\s*$")
+
+
+def _is_scene_break(lines: list[str], i: int) -> bool:
+    """A thematic break with a blank line, then prose, on both sides."""
+    if not _THEMATIC_BREAK_RE.match(lines[i]):
+        return False
+
+    def prose(j: int) -> bool:
+        return 0 <= j < len(lines) and lines[j].strip() != "" and not _JUNK_LINE_RE.match(lines[j])
+
+    blank = lambda j: 0 <= j < len(lines) and not lines[j].strip()
+    return blank(i - 1) and blank(i + 1) and prose(i - 2) and prose(i + 2)
