@@ -47,6 +47,7 @@ from citeget import netguard
 from citeget.content import (
     DEFAULT_EXTRACTOR,
     EXTRACTORS,
+    MIN_MAIN_CHARS,
     clean_wayback,
     drop_junk_lines,
     is_wayback_url,
@@ -349,7 +350,9 @@ def html_to_markdown(
     Args:
         html: The HTML source to convert.
         source_url: If given, prepended as an HTML comment provenance line.
-            A ``web.archive.org`` URL also triggers Wayback cleanup.
+            A ``web.archive.org`` URL also triggers Wayback cleanup (any
+            *content* mode). Main mode falls back to the full page when the
+            extracted article is shorter than ``MIN_MAIN_CHARS``.
         content: ``"full"`` (default here) converts the whole page; ``"main"``
             first extracts the main article (see :mod:`citeget.content`).
         content_extractor: With ``content="main"``, a name from
@@ -376,26 +379,34 @@ def html_to_markdown(
 
     if content not in ("main", "full"):
         raise ValueError(f"content must be 'main' or 'full', got {content!r}")
-    extractor = (
-        EXTRACTORS[content_extractor]
-        if isinstance(content_extractor, str)
-        else content_extractor
-    )
+    if isinstance(content_extractor, str):
+        if content_extractor not in EXTRACTORS:
+            raise ValueError(
+                f"Unknown content_extractor {content_extractor!r}; "
+                f"choose from {sorted(EXTRACTORS)} or pass a callable."
+            )
+        extractor = EXTRACTORS[content_extractor]
+    else:
+        extractor = content_extractor
     options = _resolve_markdownify_options(markdownify_options)
     if not include_links and "convert" not in markdownify_options:
         options["strip"] = [*options.get("strip", []), "a"]
     if is_wayback_url(source_url):
         html = clean_wayback(html)
-    if content == "main":
-        html = extractor(html)
 
-    soup = BeautifulSoup(html, "html.parser")
-    for tag in soup.find_all(NON_CONTENT_TAGS):
-        tag.decompose()
+    def convert(fragment: str) -> str:
+        soup = BeautifulSoup(fragment, "html.parser")
+        for tag in soup.find_all(NON_CONTENT_TAGS):
+            tag.decompose()
+        return MarkdownConverter(**options).convert_soup(soup)
 
-    md = MarkdownConverter(**options).convert_soup(soup)
+    md = convert(html)
     if content == "main":
-        md = drop_junk_lines(md)
+        main_md = drop_junk_lines(convert(extractor(html)))
+        # An extractor that finds (almost) nothing must not silently empty the
+        # page: fall back to the whole thing.
+        if len(main_md.strip()) >= MIN_MAIN_CHARS or len(main_md) >= len(md):
+            md = main_md
     md = _collapse_blank_runs(md).strip() + "\n"
 
     if source_url:
@@ -938,7 +949,7 @@ def _html_to_md_downloader(url: str, filepath: Path, *, timeout: int = 30) -> bo
     except netguard.UnsafeURLError as e:
         logger.warning("%s", e)
         return False
-    md = html_to_markdown(html, source_url=url)
+    md = html_to_markdown(html, source_url=url, content="main")
     filepath.parent.mkdir(parents=True, exist_ok=True)
     filepath.write_text(md, encoding="utf-8")
     return filepath.stat().st_size > 100

@@ -43,7 +43,7 @@ def test_table_layout_without_paragraphs():
 
 
 def test_custom_extractor_seam():
-    md = html_to_markdown(PAGE, content="main", content_extractor=lambda h: "<p>only me</p>")
+    md = html_to_markdown(PAGE, content="main", content_extractor=lambda h: f"<p>only me {ARTICLE}</p>")
     assert "only me" in md and "Sentence" not in md
 
 
@@ -67,3 +67,18 @@ def test_wayback_links_and_toolbar():
 
 def test_main_content_returns_html():
     assert "<p>" in main_content(PAGE)
+
+
+def test_layout_wrapper_with_chrome_like_class_is_kept():
+    page = f'<body><div class="has-sidebar"><p>{ARTICLE}</p></div></body>'
+    assert "Sentence number 3" in html_to_markdown(page, content="main")
+
+
+def test_tiny_extraction_falls_back_to_full_page():
+    page = "<body><header><h1>Only title text here</h1></header></body>"
+    assert "Only title text here" in html_to_markdown(page, content="main")
+
+
+def test_unknown_extractor_name():
+    with pytest.raises(ValueError):
+        html_to_markdown(PAGE, content="main", content_extractor="nope")

@@ -48,6 +48,14 @@ NO_PARAGRAPH_FACTOR = 0.9
 #: (the tighter container, with less surrounding chrome).
 DESCENT_RATIO = 0.9
 
+#: A chrome-looking node holding more than this share of the page's text is a
+#: layout wrapper (``no-sidebar``, ``content-share``), not chrome: keep it.
+MAX_CHROME_TEXT_SHARE = 0.5
+
+#: Main-mode Markdown shorter than this (characters) is distrusted and the
+#: full page is converted instead (see ``html_to_markdown``).
+MIN_MAIN_CHARS = 200
+
 _WAYBACK_PREFIX_RE = re.compile(
     r"https?://web\.archive\.org/web/\d+(?:[a-z]{2}_)?/(?=https?:)", re.I
 )
@@ -80,8 +88,10 @@ def main_content(html: str) -> str:
     soup = BeautifulSoup(html, "html.parser")
     for tag in soup.find_all(DROP_TAGS):
         tag.decompose()
+    total = _text_len(soup) or 1
     for tag in [t for t in soup.find_all(True) if _is_chrome(t)]:
-        tag.decompose()
+        if _text_len(tag) <= MAX_CHROME_TEXT_SHARE * total:
+            tag.decompose()
     best, best_score = soup.body or soup, 0.0  # document order: ancestors first
     for el in soup.find_all(CANDIDATE_TAGS):
         score = _score(el)
