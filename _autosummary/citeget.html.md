@@ -635,7 +635,7 @@ Recognized forms (each URL deduped, first match wins):
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`UrlEntry`](#citeget.UrlEntry)]
 
-### citeget.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, on_result=None, content='main', content_extractor='readability-lite', include_links=True)
+### citeget.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, on_result=None, content='main', content_extractor='readability-lite', include_links=True, retries=2, retry_backoff=1.0)
 
 Fetch one or many URLs from a flexible *source*.
 
@@ -652,12 +652,14 @@ Fetch one or many URLs from a flexible *source*.
   * **content** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'main'`, `'full'`]) – See [`fetch_one()`](#citeget.fetch_one).
   * **content_extractor** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – See [`fetch_one()`](#citeget.fetch_one).
   * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – See [`fetch_one()`](#citeget.fetch_one).
+  * **retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – See [`fetch_one()`](#citeget.fetch_one).
+  * **retry_backoff** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – See [`fetch_one()`](#citeget.fetch_one).
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`FetchResult`](#citeget.FetchResult)]
 * **Returns:**
   A list of [`FetchResult`](#citeget.FetchResult), one per unique URL.
 
-### citeget.fetch_one(source, , output_dir, prefer='md', timeout=30, skip_existing=True, content='main', content_extractor='readability-lite', include_links=True)
+### citeget.fetch_one(source, , output_dir, prefer='md', timeout=30, skip_existing=True, content='main', content_extractor='readability-lite', include_links=True, retries=2, retry_backoff=1.0)
 
 Fetch a single URL and save it under *output_dir*.
 
@@ -676,6 +678,16 @@ Fetch a single URL and save it under *output_dir*.
     output; `"full"` keeps the whole page (the previous behaviour).
   * **content_extractor** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – Extractor name or callable `html -> html`.
   * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If False, Markdown links are reduced to their text.
+  * **retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Extra attempts on connection resets, 429 and
+    5xx, and the first sleep between them (doubled each time).
+  * **retry_backoff** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Extra attempts on connection resets, 429 and
+    5xx, and the first sleep between them (doubled each time).
+* **Return type:**
+  [*FetchResult*](#citeget.FetchResult)
+
+A URL given without a title takes the page’s own (`og:title`, `<title>`,
+first `<h1>`): it names the file and fills `FetchResult.title`.
+
 * **Return type:**
   [`FetchResult`](#citeget.FetchResult)
 * **Returns:**

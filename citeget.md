@@ -1,4 +1,4 @@
-> built 2026-10-20 07:12 UTC from 369fa3a (main) · citeget 0.2.19. Details: build_info.json
+> built 2026-10-20 09:50 UTC from dafe3c5 (main) · citeget 0.2.20. Details: build_info.json
 
 # index.html.md
 
@@ -2059,7 +2059,7 @@ Recognized forms (each URL deduped, first match wins):
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`UrlEntry`](_autosummary/citeget.html.md#citeget.UrlEntry)]
 
-### citeget.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, on_result=None, content='main', content_extractor='readability-lite', include_links=True)
+### citeget.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, on_result=None, content='main', content_extractor='readability-lite', include_links=True, retries=2, retry_backoff=1.0)
 
 Fetch one or many URLs from a flexible *source*.
 
@@ -2076,12 +2076,14 @@ Fetch one or many URLs from a flexible *source*.
   * **content** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'main'`, `'full'`]) – See [`fetch_one()`](_autosummary/citeget.html.md#citeget.fetch_one).
   * **content_extractor** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – See [`fetch_one()`](_autosummary/citeget.html.md#citeget.fetch_one).
   * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – See [`fetch_one()`](_autosummary/citeget.html.md#citeget.fetch_one).
+  * **retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – See [`fetch_one()`](_autosummary/citeget.html.md#citeget.fetch_one).
+  * **retry_backoff** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – See [`fetch_one()`](_autosummary/citeget.html.md#citeget.fetch_one).
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`FetchResult`](_autosummary/citeget.html.md#citeget.FetchResult)]
 * **Returns:**
   A list of [`FetchResult`](_autosummary/citeget.html.md#citeget.FetchResult), one per unique URL.
 
-### citeget.fetch_one(source, , output_dir, prefer='md', timeout=30, skip_existing=True, content='main', content_extractor='readability-lite', include_links=True)
+### citeget.fetch_one(source, , output_dir, prefer='md', timeout=30, skip_existing=True, content='main', content_extractor='readability-lite', include_links=True, retries=2, retry_backoff=1.0)
 
 Fetch a single URL and save it under *output_dir*.
 
@@ -2100,6 +2102,16 @@ Fetch a single URL and save it under *output_dir*.
     output; `"full"` keeps the whole page (the previous behaviour).
   * **content_extractor** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – Extractor name or callable `html -> html`.
   * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If False, Markdown links are reduced to their text.
+  * **retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Extra attempts on connection resets, 429 and
+    5xx, and the first sleep between them (doubled each time).
+  * **retry_backoff** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Extra attempts on connection resets, 429 and
+    5xx, and the first sleep between them (doubled each time).
+* **Return type:**
+  [*FetchResult*](_autosummary/citeget.html.md#citeget.FetchResult)
+
+A URL given without a title takes the page’s own (`og:title`, `<title>`,
+first `<h1>`): it names the file and fills `FetchResult.title`.
+
 * **Return type:**
   [`FetchResult`](_autosummary/citeget.html.md#citeget.FetchResult)
 * **Returns:**
@@ -4054,7 +4066,7 @@ Validate a file on disk. Extension defaults to the file’s own suffix.
 
 # About this build
 
-This documentation was built on **2026-10-20 07:12 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/369fa3a875ae3fc0ca75b352567b034160106bb7"><code>369fa3a</code></a> on branch <code>main</code>, for **citeget 0.2.19** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-20 09:50 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/dafe3c59ab79f5cf62709db7690600e9497c507c"><code>dafe3c5</code></a> on branch <code>main</code>, for **citeget 0.2.20** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -4063,9 +4075,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/369fa3a875ae3fc0ca75b352567b034160106bb7"><code>369fa3a875ae3fc0ca75b352567b034160106bb7</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/dafe3c59ab79f5cf62709db7690600e9497c507c"><code>dafe3c59ab79f5cf62709db7690600e9497c507c</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.2.19</code>                                                                                                                                       |
+| Tags at this commit | <code>0.2.20</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/citeget</code>                                                                                                        |
 
@@ -4074,9 +4086,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/citeget</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/39384772796">39384772796</a>   |
+| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/39403446271">39403446271</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>6f7dcca23a386b001949253716e70df3ba2d90e7</code> (in the history of the built commit) |
+| Event commit | <code>88868ee3a4a714d913d5a4d014e2459c49694744</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4101,13 +4113,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/citeget/0.2.19/">0.2.19</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/citeget/0.2.20/">0.2.20</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/citeget && cd citeget
-git checkout 369fa3a875ae3fc0ca75b352567b034160106bb7
+git checkout dafe3c59ab79f5cf62709db7690600e9497c507c
 pip install "epythet==0.2.18"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

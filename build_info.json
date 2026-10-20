@@ -1,34 +1,34 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-20T07:12:17Z",
+  "built_at": "2026-10-20T09:50:50Z",
   "package": {
     "name": "citeget",
-    "version": "0.2.19",
+    "version": "0.2.20",
     "display_name": "citeget",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "369fa3a875ae3fc0ca75b352567b034160106bb7",
-    "short_commit": "369fa3a",
+    "commit": "dafe3c59ab79f5cf62709db7690600e9497c507c",
+    "short_commit": "dafe3c5",
     "branch": "main",
     "tags": [
-      "0.2.19"
+      "0.2.20"
     ],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/citeget",
-    "commit_url": "https://github.com/thorwhalen/citeget/commit/369fa3a875ae3fc0ca75b352567b034160106bb7",
+    "commit_url": "https://github.com/thorwhalen/citeget/commit/dafe3c59ab79f5cf62709db7690600e9497c507c",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/citeget",
-    "sha": "6f7dcca23a386b001949253716e70df3ba2d90e7",
+    "sha": "88868ee3a4a714d913d5a4d014e2459c49694744",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "39384772796",
-    "run_url": "https://github.com/thorwhalen/citeget/actions/runs/39384772796",
+    "run_id": "39403446271",
+    "run_url": "https://github.com/thorwhalen/citeget/actions/runs/39403446271",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -62,11 +62,11 @@
   },
   "pypi": {
     "checked": true,
-    "latest": "0.2.19",
+    "latest": "0.2.20",
     "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/citeget && cd citeget\ngit checkout 369fa3a875ae3fc0ca75b352567b034160106bb7\npip install \"epythet==0.2.18\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/citeget && cd citeget\ngit checkout dafe3c59ab79f5cf62709db7690600e9497c507c\npip install \"epythet==0.2.18\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,
