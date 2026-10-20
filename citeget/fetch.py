@@ -37,8 +37,9 @@ from __future__ import annotations
 import hashlib
 import logging
 import re
+import time
 import unicodedata
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Callable, Iterable, Iterator, Literal, Mapping, Optional, Tuple, Union
 from urllib.parse import urljoin, urlparse
@@ -135,6 +136,9 @@ def slugify(text: str, *, max_len: int = 80) -> str:
     return text
 
 
+#: Shortest path-stem slug worth using as a filename (``hp`` of ``/hp.html``).
+_MIN_STEM_LEN = 2
+
 #: Longest query-string slug folded into an inferred filename.
 _MAX_QUERY_SLUG = 40
 
@@ -161,7 +165,7 @@ def infer_filename(entry: UrlEntry, ext: str) -> str:
         segment = path.rsplit("/", 1)[-1]
         segment = re.sub(r"\.(html?|php|aspx?)$", "", segment)
         slug = slugify(segment)
-        if slug and len(slug) > 2:
+        if slug and len(slug) >= _MIN_STEM_LEN:
             query = slugify(parsed.query, max_len=_MAX_QUERY_SLUG)
             if query:
                 slug = f"{slug}-{query}"
@@ -185,23 +189,80 @@ _HEADERS = {
 }
 
 
-def _http_get(url: str, *, timeout: int = 30):
+#: Extra attempts after a transient failure, and the first backoff in seconds
+#: (doubled each retry). Override per call with ``retries=`` / ``retry_backoff=``.
+DEFAULT_RETRIES = 2
+DEFAULT_RETRY_BACKOFF = 1.0
+
+#: HTTP statuses worth another attempt: rate limiting and server-side hiccups.
+_RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+
+
+def _is_transient(exc: Exception) -> bool:
+    """True for connection-level errors and retryable HTTP statuses."""
+    response = getattr(exc, "response", None)
+    status = getattr(response, "status_code", None)
+    if status is not None:
+        return status in _RETRY_STATUSES
+    # No response: reset, disconnect, timeout... (but never a refused URL).
+    return not isinstance(exc, netguard.UnsafeURLError)
+
+
+def _http_get(
+    url: str,
+    *,
+    timeout: int = 30,
+    retries: int = DEFAULT_RETRIES,
+    retry_backoff: float = DEFAULT_RETRY_BACKOFF,
+    sleep: Callable[[float], None] = time.sleep,
+):
     """Fetch *url*, following redirects. Returns the response or ``None``.
 
     Goes through :func:`citeget.netguard.get`, so a destination outside the
     public internet raises :class:`~citeget.netguard.UnsafeURLError` instead of
     being fetched. That one is raised, not swallowed: "refused" is an answer
     the caller should report, not a transient failure.
+
+    Transient failures (connection resets, 429, 5xx) are retried up to
+    *retries* more times, sleeping *retry_backoff*, then twice that, and so on.
     """
+    for attempt in range(retries + 1):
+        try:
+            resp = netguard.get(url, timeout=timeout, headers=_HEADERS)
+            resp.raise_for_status()
+            return resp
+        except netguard.UnsafeURLError:
+            raise
+        except Exception as e:
+            if attempt < retries and _is_transient(e):
+                delay = retry_backoff * 2**attempt
+                logger.info(
+                    "Transient failure fetching %s (%s); retry %d/%d in %.1fs",
+                    url, e, attempt + 1, retries, delay,
+                )
+                sleep(delay)
+                continue
+            logger.warning("Failed to fetch %s: %s", url, e)
+            return None
+    return None  # pragma: no cover
+
+
+def page_title(html: str) -> Optional[str]:
+    """The page's own title: ``og:title``, ``<title>``, else the first ``<h1>``."""
     try:
-        resp = netguard.get(url, timeout=timeout, headers=_HEADERS)
-        resp.raise_for_status()
-        return resp
-    except netguard.UnsafeURLError:
-        raise
-    except Exception as e:
-        logger.warning("Failed to fetch %s: %s", url, e)
+        from bs4 import BeautifulSoup
+    except ImportError:
         return None
+    soup = BeautifulSoup(html, "html.parser")
+    og = soup.find("meta", attrs={"property": "og:title"})
+    candidates = [og.get("content") if og else None]
+    for tag in (soup.title, soup.find("h1")):
+        candidates.append(tag.get_text(" ") if tag else None)
+    for text in candidates:
+        text = " ".join((text or "").split())
+        if text:
+            return text
+    return None
 
 
 def _is_pdf_response(resp) -> bool:
@@ -624,6 +685,8 @@ def fetch_one(
     content: Literal["main", "full"] = "main",
     content_extractor: Union[str, Callable[[str], str]] = DEFAULT_EXTRACTOR,
     include_links: bool = True,
+    retries: int = DEFAULT_RETRIES,
+    retry_backoff: float = DEFAULT_RETRY_BACKOFF,
 ) -> FetchResult:
     """Fetch a single URL and save it under *output_dir*.
 
@@ -642,6 +705,11 @@ def fetch_one(
             output; ``"full"`` keeps the whole page (the previous behaviour).
         content_extractor: Extractor name or callable ``html -> html``.
         include_links: If False, Markdown links are reduced to their text.
+        retries, retry_backoff: Extra attempts on connection resets, 429 and
+            5xx, and the first sleep between them (doubled each time).
+
+    A URL given without a title takes the page's own (``og:title``, ``<title>``,
+    first ``<h1>``): it names the file and fills ``FetchResult.title``.
 
     Returns:
         A :class:`FetchResult` describing what happened.
@@ -655,7 +723,9 @@ def fetch_one(
     )
 
     try:
-        resp = _http_get(entry.url, timeout=timeout)
+        resp = _http_get(
+            entry.url, timeout=timeout, retries=retries, retry_backoff=retry_backoff
+        )
     except netguard.UnsafeURLError as e:
         result.error = str(e)
         return result
@@ -683,13 +753,24 @@ def fetch_one(
         result.error = str(e)
         return result
 
+    if not entry.title:
+        title = page_title(html)
+        if title:
+            entry = replace(entry, title=title)
+            result.title = title
+
     # --- prefer=pdf: try direct PDF link, then HTML→PDF --------------------
     if prefer == "pdf":
         pdf_url = _find_pdf_link(entry.url, html)
         if pdf_url:
             logger.info("Found embedded PDF link: %s", pdf_url)
             try:
-                pdf_resp = _http_get(pdf_url, timeout=timeout)
+                pdf_resp = _http_get(
+                    pdf_url,
+                    timeout=timeout,
+                    retries=retries,
+                    retry_backoff=retry_backoff,
+                )
             except netguard.UnsafeURLError as e:
                 logger.warning("%s", e)
                 pdf_resp = None
@@ -884,6 +965,8 @@ def fetch(
     content: Literal["main", "full"] = "main",
     content_extractor: Union[str, Callable[[str], str]] = DEFAULT_EXTRACTOR,
     include_links: bool = True,
+    retries: int = DEFAULT_RETRIES,
+    retry_backoff: float = DEFAULT_RETRY_BACKOFF,
 ) -> list[FetchResult]:
     """Fetch one or many URLs from a flexible *source*.
 
@@ -897,7 +980,8 @@ def fetch(
         skip_existing: Skip URLs whose inferred output file exists.
         on_result: Optional callback ``(index, total, FetchResult) -> None``
             invoked after each fetch (for progress reporting).
-        content, content_extractor, include_links: See :func:`fetch_one`.
+        content, content_extractor, include_links, retries, retry_backoff:
+            See :func:`fetch_one`.
 
     Returns:
         A list of :class:`FetchResult`, one per unique URL.
@@ -917,6 +1001,8 @@ def fetch(
             content=content,
             content_extractor=content_extractor,
             include_links=include_links,
+            retries=retries,
+            retry_backoff=retry_backoff,
         )
         results.append(result)
         if on_result is not None:
