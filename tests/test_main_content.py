@@ -109,3 +109,11 @@ def test_trafilatura_finding_nothing_falls_back_like_any_extractor(monkeypatch):
     from citeget.content import trafilatura_extractor
 
     assert trafilatura_extractor("<p>x</p>") == ""
+
+
+def test_long_intro_stays_with_the_article():
+    """A nested child holding >90% of the text must not shed an intro of several hundred characters."""
+    intro = "<p>" + "Intro sentence about the study. " * 25 + "</p>"  # ~800 chars
+    body = "".join(f"<p>{'Body sentence number %d of the article. ' % i * 8}</p>" for i in range(40))
+    html = f"<html><body><article>{intro}<div class='post'>{body}</div></article></body></html>"
+    assert "Intro sentence about the study." in main_content(html)

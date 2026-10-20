@@ -59,6 +59,10 @@ NO_PARAGRAPH_FACTOR = 0.9
 #: (the tighter container, with less surrounding chrome).
 DESCENT_RATIO = 0.9
 
+#: ...but never by shedding more than this many characters of paragraph text:
+#: on a long page 10% can be a whole intro, which belongs to the article.
+MAX_DESCENT_LOSS = 500
+
 #: A chrome-looking node holding more than this share of the page's text is a
 #: layout wrapper (``no-sidebar``, ``content-share``), not chrome: keep it.
 MAX_CHROME_TEXT_SHARE = 0.5
@@ -111,7 +115,7 @@ def main_content(html: str) -> str:
     best, best_score = soup.body or soup, 0.0  # document order: ancestors first
     for el in soup.find_all(CANDIDATE_TAGS):
         score = _score(el)
-        tighter = best in el.parents and score >= DESCENT_RATIO * best_score
+        tighter = best in el.parents and score >= max(DESCENT_RATIO * best_score, best_score - MAX_DESCENT_LOSS)
         if score > best_score or tighter:
             best, best_score = el, score
     body = f"<div>{best.decode_contents()}</div>" if best.name == "td" else str(best)  # a bare <td> would render as a table cell
