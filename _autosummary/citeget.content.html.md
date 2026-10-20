@@ -10,7 +10,7 @@ optional, stronger one (Apache-2.0, `pip install trafilatura`).
 
 Web Archive copies are cleaned by [`clean_wayback()`](#citeget.content.clean_wayback): the toolbar/banner is
 dropped and `web.archive.org/web/<ts>/` link prefixes are rewritten back to
-the original URLs.
+the original URLs. This applies in every content mode, `full` included.
 
 ```pycon
 >>> html = "<body><nav>Menu</nav><div><p>" + "Real text. " * 20 + "</p></div></body>"
@@ -23,6 +23,7 @@ the original URLs.
 | [`DROP_TAGS`](#citeget.content.DROP_TAGS)             | Elements that are never article content.                                                                                                        |
 |------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
 | [`DROP_CLASS_RE`](#citeget.content.DROP_CLASS_RE)         | Class/id fragments that mark chrome.                                                                                                            |
+| [`CHROME_IF_SMALL_TAGS`](#citeget.content.CHROME_IF_SMALL_TAGS)  | an ASP.NET page wraps its whole body in one `<form>`, which is a layout wrapper then.                                                           |
 | [`CANDIDATE_TAGS`](#citeget.content.CANDIDATE_TAGS)        | Tags considered as candidate containers for the article.                                                                                        |
 | [`LINK_PENALTY`](#citeget.content.LINK_PENALTY)          | Weight of link text subtracted from a candidate's score (menus are all links).                                                                  |
 | [`NO_PARAGRAPH_FACTOR`](#citeget.content.NO_PARAGRAPH_FACTOR)   | Pages without `<p>` (e.g. `<br><br>` separated) score by raw text times this.                                                                   |
@@ -44,6 +45,14 @@ the original URLs.
 
 Tags considered as candidate containers for the article.
 
+### citeget.content.CHROME_IF_SMALL_TAGS *= ('form',)*
+
+an ASP.NET
+page wraps its whole body in one `<form>`, which is a layout wrapper then.
+
+* **Type:**
+  Elements dropped as chrome only when they hold little of the page
+
 ### citeget.content.DESCENT_RATIO *= 0.9*
 
 A descendant of the current best wins if it keeps this share of its score
@@ -53,7 +62,7 @@ A descendant of the current best wins if it keeps this share of its score
 
 Class/id fragments that mark chrome. Matched against single class/id tokens.
 
-### citeget.content.DROP_TAGS *= ('script', 'style', 'nav', 'header', 'footer', 'aside', 'form', 'noscript', 'iframe')*
+### citeget.content.DROP_TAGS *= ('script', 'style', 'nav', 'header', 'footer', 'aside', 'noscript', 'iframe')*
 
 Elements that are never article content.
 
@@ -97,10 +106,14 @@ Drop the Wayback Machine toolbar/banner and un-prefix archived links.
 Remove rule-only / empty-bullet lines and unwrap one-cell table rows.
 
 Fenced code blocks are left alone. Blank lines are kept (they separate paragraphs).
+A thematic break (`***`, `---`, `* * *`) standing alone between two paragraphs is a
+scene break, and is kept.
 
 ```pycon
 >>> drop_junk_lines("| hello |\n| --- |\n* \n\ntext")
 'hello\n\ntext'
+>>> drop_junk_lines("one\n\n***\n\ntwo")
+'one\n\n***\n\ntwo'
 ```
 
 * **Return type:**

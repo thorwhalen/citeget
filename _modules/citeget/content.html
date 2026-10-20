@@ -183,7 +183,7 @@
 </span><span id="line-8">
 </span><span id="line-9"><span class="sd">Web Archive copies are cleaned by :func:`clean_wayback`: the toolbar/banner is</span>
 </span><span id="line-10"><span class="sd">dropped and ``web.archive.org/web/&lt;ts&gt;/`` link prefixes are rewritten back to</span>
-</span><span id="line-11"><span class="sd">the original URLs.</span>
+</span><span id="line-11"><span class="sd">the original URLs. This applies in every content mode, ``full`` included.</span>
 </span><span id="line-12">
 </span><span id="line-13"><span class="sd">&gt;&gt;&gt; html = "&lt;body&gt;&lt;nav&gt;Menu&lt;/nav&gt;&lt;div&gt;&lt;p&gt;" + "Real text. " * 20 + "&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;"</span>
 </span><span id="line-14"><span class="sd">&gt;&gt;&gt; "Menu" in main_content(html), "Real text." in main_content(html)</span>
@@ -205,167 +205,209 @@
 </span><span id="line-30">    <span class="s2">"header"</span><span class="p">,</span>
 </span><span id="line-31">    <span class="s2">"footer"</span><span class="p">,</span>
 </span><span id="line-32">    <span class="s2">"aside"</span><span class="p">,</span>
-</span><span id="line-33">    <span class="s2">"form"</span><span class="p">,</span>
-</span><span id="line-34">    <span class="s2">"noscript"</span><span class="p">,</span>
-</span><span id="line-35">    <span class="s2">"iframe"</span><span class="p">,</span>
-</span><span id="line-36"><span class="p">)</span>
-</span><span id="line-37">
-</span><span id="line-38"><span class="c1">#: Class/id fragments that mark chrome. Matched against single class/id tokens.</span>
-</span><span id="line-39"><span class="n">DROP_CLASS_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-</span><span id="line-40">    <span class="sa">r</span><span class="s2">"(^|[-_ ])(comments?|share|sharing|related|sidebar|newsletter|subscribe|"</span>
-</span><span id="line-41">    <span class="sa">r</span><span class="s2">"subscription|footer|nav|navbar|menu|author-bio|byline|cookie|breadcrumbs?|"</span>
-</span><span id="line-42">    <span class="sa">r</span><span class="s2">"skip-link|post-navigation)([-_ ]|$)"</span><span class="p">,</span>
-</span><span id="line-43">    <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">,</span>
-</span><span id="line-44"><span class="p">)</span>
-</span><span id="line-45">
-</span><span id="line-46"><span class="c1">#: Tags considered as candidate containers for the article.</span>
-</span><span id="line-47"><span class="n">CANDIDATE_TAGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"article"</span><span class="p">,</span> <span class="s2">"main"</span><span class="p">,</span> <span class="s2">"div"</span><span class="p">,</span> <span class="s2">"td"</span><span class="p">,</span> <span class="s2">"section"</span><span class="p">,</span> <span class="s2">"font"</span><span class="p">,</span> <span class="s2">"body"</span><span class="p">)</span>
+</span><span id="line-33">    <span class="s2">"noscript"</span><span class="p">,</span>
+</span><span id="line-34">    <span class="s2">"iframe"</span><span class="p">,</span>
+</span><span id="line-35"><span class="p">)</span>
+</span><span id="line-36">
+</span><span id="line-37"><span class="c1">#: Class/id fragments that mark chrome. Matched against single class/id tokens.</span>
+</span><span id="line-38"><span class="n">DROP_CLASS_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+</span><span id="line-39">    <span class="sa">r</span><span class="s2">"(^|[-_ ])(comments?|share|sharing|related|sidebar|newsletter|subscribe|"</span>
+</span><span id="line-40">    <span class="sa">r</span><span class="s2">"subscription|footer|nav|navbar|menu|author-bio|byline|cookie|breadcrumbs?|"</span>
+</span><span id="line-41">    <span class="sa">r</span><span class="s2">"skip-link|post-navigation)([-_ ]|$)"</span><span class="p">,</span>
+</span><span id="line-42">    <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">,</span>
+</span><span id="line-43"><span class="p">)</span>
+</span><span id="line-44">
+</span><span id="line-45"><span class="c1">#: Elements dropped as chrome only when they hold little of the page: an ASP.NET</span>
+</span><span id="line-46"><span class="c1">#: page wraps its whole body in one ``&lt;form&gt;``, which is a layout wrapper then.</span>
+</span><span id="line-47"><span class="n">CHROME_IF_SMALL_TAGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"form"</span><span class="p">,)</span>
 </span><span id="line-48">
-</span><span id="line-49"><span class="c1">#: Weight of link text subtracted from a candidate's score (menus are all links).</span>
-</span><span id="line-50"><span class="n">LINK_PENALTY</span> <span class="o">=</span> <span class="mf">0.3</span>
+</span><span id="line-49"><span class="c1">#: Tags considered as candidate containers for the article.</span>
+</span><span id="line-50"><span class="n">CANDIDATE_TAGS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"article"</span><span class="p">,</span> <span class="s2">"main"</span><span class="p">,</span> <span class="s2">"div"</span><span class="p">,</span> <span class="s2">"td"</span><span class="p">,</span> <span class="s2">"section"</span><span class="p">,</span> <span class="s2">"font"</span><span class="p">,</span> <span class="s2">"body"</span><span class="p">)</span>
 </span><span id="line-51">
-</span><span id="line-52"><span class="c1">#: Pages without ``&lt;p&gt;`` (e.g. ``&lt;br&gt;&lt;br&gt;`` separated) score by raw text times this.</span>
-</span><span id="line-53"><span class="n">NO_PARAGRAPH_FACTOR</span> <span class="o">=</span> <span class="mf">0.9</span>
+</span><span id="line-52"><span class="c1">#: Weight of link text subtracted from a candidate's score (menus are all links).</span>
+</span><span id="line-53"><span class="n">LINK_PENALTY</span> <span class="o">=</span> <span class="mf">0.3</span>
 </span><span id="line-54">
-</span><span id="line-55"><span class="c1">#: A descendant of the current best wins if it keeps this share of its score</span>
-</span><span id="line-56"><span class="c1">#: (the tighter container, with less surrounding chrome).</span>
-</span><span id="line-57"><span class="n">DESCENT_RATIO</span> <span class="o">=</span> <span class="mf">0.9</span>
-</span><span id="line-58">
-</span><span id="line-59"><span class="c1">#: A chrome-looking node holding more than this share of the page's text is a</span>
-</span><span id="line-60"><span class="c1">#: layout wrapper (``no-sidebar``, ``content-share``), not chrome: keep it.</span>
-</span><span id="line-61"><span class="n">MAX_CHROME_TEXT_SHARE</span> <span class="o">=</span> <span class="mf">0.5</span>
-</span><span id="line-62">
-</span><span id="line-63"><span class="c1">#: Main-mode Markdown shorter than this (characters) is distrusted and the</span>
-</span><span id="line-64"><span class="c1">#: full page is converted instead (see ``html_to_markdown``).</span>
-</span><span id="line-65"><span class="n">MIN_MAIN_CHARS</span> <span class="o">=</span> <span class="mi">200</span>
-</span><span id="line-66">
-</span><span id="line-67"><span class="n">_WAYBACK_PREFIX_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-</span><span id="line-68">    <span class="sa">r</span><span class="s2">"https?://web\.archive\.org/web/\d+(?:[a-z]</span><span class="si">{2}</span><span class="s2">_)?/(?=https?:)"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span>
-</span><span id="line-69"><span class="p">)</span>
-</span><span id="line-70">
-</span><span id="line-71">
-</span><span id="line-72"><span class="k">def</span><span class="w"> </span><span class="nf">_text_len</span><span class="p">(</span><span class="n">el</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span id="line-73">    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">get_text</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="n">strip</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</span><span id="line-55"><span class="c1">#: Pages without ``&lt;p&gt;`` (e.g. ``&lt;br&gt;&lt;br&gt;`` separated) score by raw text times this.</span>
+</span><span id="line-56"><span class="n">NO_PARAGRAPH_FACTOR</span> <span class="o">=</span> <span class="mf">0.9</span>
+</span><span id="line-57">
+</span><span id="line-58"><span class="c1">#: A descendant of the current best wins if it keeps this share of its score</span>
+</span><span id="line-59"><span class="c1">#: (the tighter container, with less surrounding chrome).</span>
+</span><span id="line-60"><span class="n">DESCENT_RATIO</span> <span class="o">=</span> <span class="mf">0.9</span>
+</span><span id="line-61">
+</span><span id="line-62"><span class="c1">#: A chrome-looking node holding more than this share of the page's text is a</span>
+</span><span id="line-63"><span class="c1">#: layout wrapper (``no-sidebar``, ``content-share``), not chrome: keep it.</span>
+</span><span id="line-64"><span class="n">MAX_CHROME_TEXT_SHARE</span> <span class="o">=</span> <span class="mf">0.5</span>
+</span><span id="line-65">
+</span><span id="line-66"><span class="c1">#: Main-mode Markdown shorter than this (characters) is distrusted and the</span>
+</span><span id="line-67"><span class="c1">#: full page is converted instead (see ``html_to_markdown``).</span>
+</span><span id="line-68"><span class="n">MIN_MAIN_CHARS</span> <span class="o">=</span> <span class="mi">200</span>
+</span><span id="line-69">
+</span><span id="line-70"><span class="n">_WAYBACK_PREFIX_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+</span><span id="line-71">    <span class="sa">r</span><span class="s2">"https?://web\.archive\.org/web/\d+(?:[a-z]</span><span class="si">{2}</span><span class="s2">_)?/(?=https?:)"</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span>
+</span><span id="line-72"><span class="p">)</span>
+</span><span id="line-73">
 </span><span id="line-74">
-</span><span id="line-75">
-</span><span id="line-76"><span class="k">def</span><span class="w"> </span><span class="nf">_score</span><span class="p">(</span><span class="n">el</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-</span><span id="line-77">    <span class="n">paragraphs</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">"p"</span><span class="p">)</span>
-</span><span id="line-78">    <span class="k">if</span> <span class="n">paragraphs</span><span class="p">:</span>
-</span><span id="line-79">        <span class="n">score</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">_text_len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paragraphs</span><span class="p">)</span>
-</span><span id="line-80">    <span class="k">else</span><span class="p">:</span>
-</span><span id="line-81">        <span class="n">score</span> <span class="o">=</span> <span class="n">_text_len</span><span class="p">(</span><span class="n">el</span><span class="p">)</span> <span class="o">*</span> <span class="n">NO_PARAGRAPH_FACTOR</span>
-</span><span id="line-82">    <span class="k">return</span> <span class="n">score</span> <span class="o">-</span> <span class="n">LINK_PENALTY</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">_text_len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">el</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">"a"</span><span class="p">))</span>
-</span><span id="line-83">
-</span><span id="line-84">
-</span><span id="line-85"><span class="k">def</span><span class="w"> </span><span class="nf">_is_chrome</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="line-86">    <span class="k">if</span> <span class="n">tag</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"html"</span><span class="p">,</span> <span class="s2">"body"</span><span class="p">):</span>
-</span><span id="line-87">        <span class="k">return</span> <span class="kc">False</span>
-</span><span id="line-88">    <span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="p">(</span><span class="n">tag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"class"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]),</span> <span class="n">tag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">]</span>
-</span><span id="line-89">    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">DROP_CLASS_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tokens</span> <span class="k">if</span> <span class="n">t</span><span class="p">)</span>
-</span><span id="line-90">
-</span><span id="line-91">
+</span><span id="line-75"><span class="k">def</span><span class="w"> </span><span class="nf">_text_len</span><span class="p">(</span><span class="n">el</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span id="line-76">    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">el</span><span class="o">.</span><span class="n">get_text</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="n">strip</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</span><span id="line-77">
+</span><span id="line-78">
+</span><span id="line-79"><span class="k">def</span><span class="w"> </span><span class="nf">_score</span><span class="p">(</span><span class="n">el</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+</span><span id="line-80">    <span class="n">paragraphs</span> <span class="o">=</span> <span class="n">el</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">"p"</span><span class="p">)</span>
+</span><span id="line-81">    <span class="k">if</span> <span class="n">paragraphs</span><span class="p">:</span>
+</span><span id="line-82">        <span class="n">score</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">_text_len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">paragraphs</span><span class="p">)</span>
+</span><span id="line-83">    <span class="k">else</span><span class="p">:</span>
+</span><span id="line-84">        <span class="n">score</span> <span class="o">=</span> <span class="n">_text_len</span><span class="p">(</span><span class="n">el</span><span class="p">)</span> <span class="o">*</span> <span class="n">NO_PARAGRAPH_FACTOR</span>
+</span><span id="line-85">    <span class="k">return</span> <span class="n">score</span> <span class="o">-</span> <span class="n">LINK_PENALTY</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">_text_len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">el</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s2">"a"</span><span class="p">))</span>
+</span><span id="line-86">
+</span><span id="line-87">
+</span><span id="line-88"><span class="k">def</span><span class="w"> </span><span class="nf">_is_chrome</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="line-89">    <span class="k">if</span> <span class="n">tag</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"html"</span><span class="p">,</span> <span class="s2">"body"</span><span class="p">):</span>
+</span><span id="line-90">        <span class="k">return</span> <span class="kc">False</span>
+</span><span id="line-91">    <span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="p">(</span><span class="n">tag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"class"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[]),</span> <span class="n">tag</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">]</span>
+</span><span id="line-92">    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">DROP_CLASS_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tokens</span> <span class="k">if</span> <span class="n">t</span><span class="p">)</span>
+</span><span id="line-93">
+</span><span id="line-94">
 <div class="viewcode-block" id="main_content">
 <a class="viewcode-back" href="../../_autosummary/citeget.content.html#citeget.main_content">[docs]</a>
-</span><span id="line-92"><span class="k">def</span><span class="w"> </span><span class="nf">main_content</span><span class="p">(</span><span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-93"><span class="w">    </span><span class="sd">"""The HTML of the block that most likely holds the article body."""</span>
-</span><span id="line-94">    <span class="kn">from</span><span class="w"> </span><span class="nn">bs4</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeautifulSoup</span>
-</span><span id="line-95">
-</span><span id="line-96">    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="s2">"html.parser"</span><span class="p">)</span>
-</span><span id="line-97">    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="n">DROP_TAGS</span><span class="p">):</span>
-</span><span id="line-98">        <span class="n">tag</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span>
-</span><span id="line-99">    <span class="n">total</span> <span class="o">=</span> <span class="n">_text_len</span><span class="p">(</span><span class="n">soup</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">1</span>
-</span><span id="line-100">    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">_is_chrome</span><span class="p">(</span><span class="n">t</span><span class="p">)]:</span>
-</span><span id="line-101">        <span class="k">if</span> <span class="n">_text_len</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">MAX_CHROME_TEXT_SHARE</span> <span class="o">*</span> <span class="n">total</span><span class="p">:</span>
-</span><span id="line-102">            <span class="n">tag</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span>
-</span><span id="line-103">    <span class="n">best</span><span class="p">,</span> <span class="n">best_score</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">body</span> <span class="ow">or</span> <span class="n">soup</span><span class="p">,</span> <span class="mf">0.0</span>  <span class="c1"># document order: ancestors first</span>
-</span><span id="line-104">    <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="n">CANDIDATE_TAGS</span><span class="p">):</span>
-</span><span id="line-105">        <span class="n">score</span> <span class="o">=</span> <span class="n">_score</span><span class="p">(</span><span class="n">el</span><span class="p">)</span>
-</span><span id="line-106">        <span class="n">tighter</span> <span class="o">=</span> <span class="n">best</span> <span class="ow">in</span> <span class="n">el</span><span class="o">.</span><span class="n">parents</span> <span class="ow">and</span> <span class="n">score</span> <span class="o">&gt;=</span> <span class="n">DESCENT_RATIO</span> <span class="o">*</span> <span class="n">best_score</span>
-</span><span id="line-107">        <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span> <span class="ow">or</span> <span class="n">tighter</span><span class="p">:</span>
-</span><span id="line-108">            <span class="n">best</span><span class="p">,</span> <span class="n">best_score</span> <span class="o">=</span> <span class="n">el</span><span class="p">,</span> <span class="n">score</span>
-</span><span id="line-109">    <span class="k">if</span> <span class="n">best</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"td"</span><span class="p">:</span>  <span class="c1"># a bare &lt;td&gt; would render as a table cell</span>
-</span><span id="line-110">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"&lt;div&gt;</span><span class="si">{</span><span class="n">best</span><span class="o">.</span><span class="n">decode_contents</span><span class="p">()</span><span class="si">}</span><span class="s2">&lt;/div&gt;"</span>
-</span><span id="line-111">    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">best</span><span class="p">)</span></div>
-
-</span><span id="line-112">
-</span><span id="line-113">
-<div class="viewcode-block" id="trafilatura_extractor">
-<a class="viewcode-back" href="../../_autosummary/citeget.content.html#citeget.trafilatura_extractor">[docs]</a>
-</span><span id="line-114"><span class="k">def</span><span class="w"> </span><span class="nf">trafilatura_extractor</span><span class="p">(</span><span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-115"><span class="w">    </span><span class="sd">"""Extractor backed by ``trafilatura`` (optional dependency, Apache-2.0)."""</span>
-</span><span id="line-116">    <span class="k">try</span><span class="p">:</span>
-</span><span id="line-117">        <span class="kn">import</span><span class="w"> </span><span class="nn">trafilatura</span>
-</span><span id="line-118">    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover - depends on environment</span>
-</span><span id="line-119">        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
-</span><span id="line-120">            <span class="s2">"content_extractor='trafilatura' needs `pip install trafilatura` "</span>
-</span><span id="line-121">            <span class="s2">"(or `pip install citeget[extract]`)."</span>
-</span><span id="line-122">        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
-</span><span id="line-123">    <span class="n">out</span> <span class="o">=</span> <span class="n">trafilatura</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="n">output_format</span><span class="o">=</span><span class="s2">"html"</span><span class="p">,</span> <span class="n">include_links</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="line-124">    <span class="k">return</span> <span class="n">out</span> <span class="ow">or</span> <span class="n">html</span></div>
+</span><span id="line-95"><span class="k">def</span><span class="w"> </span><span class="nf">main_content</span><span class="p">(</span><span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-96"><span class="w">    </span><span class="sd">"""The HTML of the block that most likely holds the article body."""</span>
+</span><span id="line-97">    <span class="kn">from</span><span class="w"> </span><span class="nn">bs4</span><span class="w"> </span><span class="kn">import</span> <span class="n">BeautifulSoup</span>
+</span><span id="line-98">
+</span><span id="line-99">    <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="s2">"html.parser"</span><span class="p">)</span>
+</span><span id="line-100">    <span class="n">title</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"h1"</span><span class="p">)</span>  <span class="c1"># may sit in a &lt;header&gt;, which is dropped below</span>
+</span><span id="line-101">    <span class="n">title_html</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">title</span><span class="p">)</span> <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span id="line-102">    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="n">DROP_TAGS</span><span class="p">):</span>
+</span><span id="line-103">        <span class="n">tag</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span>
+</span><span id="line-104">    <span class="n">total</span> <span class="o">=</span> <span class="n">_text_len</span><span class="p">(</span><span class="n">soup</span><span class="p">)</span> <span class="ow">or</span> <span class="mi">1</span>
+</span><span id="line-105">    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="n">CHROME_IF_SMALL_TAGS</span><span class="p">):</span>
+</span><span id="line-106">        <span class="k">if</span> <span class="n">_text_len</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">MAX_CHROME_TEXT_SHARE</span> <span class="o">*</span> <span class="n">total</span><span class="p">:</span>
+</span><span id="line-107">            <span class="n">tag</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span>
+</span><span id="line-108">    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">[</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">_is_chrome</span><span class="p">(</span><span class="n">t</span><span class="p">)]:</span>
+</span><span id="line-109">        <span class="k">if</span> <span class="n">_text_len</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">MAX_CHROME_TEXT_SHARE</span> <span class="o">*</span> <span class="n">total</span><span class="p">:</span>
+</span><span id="line-110">            <span class="n">tag</span><span class="o">.</span><span class="n">decompose</span><span class="p">()</span>
+</span><span id="line-111">    <span class="n">best</span><span class="p">,</span> <span class="n">best_score</span> <span class="o">=</span> <span class="n">soup</span><span class="o">.</span><span class="n">body</span> <span class="ow">or</span> <span class="n">soup</span><span class="p">,</span> <span class="mf">0.0</span>  <span class="c1"># document order: ancestors first</span>
+</span><span id="line-112">    <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="n">CANDIDATE_TAGS</span><span class="p">):</span>
+</span><span id="line-113">        <span class="n">score</span> <span class="o">=</span> <span class="n">_score</span><span class="p">(</span><span class="n">el</span><span class="p">)</span>
+</span><span id="line-114">        <span class="n">tighter</span> <span class="o">=</span> <span class="n">best</span> <span class="ow">in</span> <span class="n">el</span><span class="o">.</span><span class="n">parents</span> <span class="ow">and</span> <span class="n">score</span> <span class="o">&gt;=</span> <span class="n">DESCENT_RATIO</span> <span class="o">*</span> <span class="n">best_score</span>
+</span><span id="line-115">        <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span> <span class="ow">or</span> <span class="n">tighter</span><span class="p">:</span>
+</span><span id="line-116">            <span class="n">best</span><span class="p">,</span> <span class="n">best_score</span> <span class="o">=</span> <span class="n">el</span><span class="p">,</span> <span class="n">score</span>
+</span><span id="line-117">    <span class="n">body</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="line-118">        <span class="sa">f</span><span class="s2">"&lt;div&gt;</span><span class="si">{</span><span class="n">best</span><span class="o">.</span><span class="n">decode_contents</span><span class="p">()</span><span class="si">}</span><span class="s2">&lt;/div&gt;"</span> <span class="k">if</span> <span class="n">best</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"td"</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">best</span><span class="p">)</span>
+</span><span id="line-119">    <span class="p">)</span>  <span class="c1"># a bare &lt;td&gt; would render as a table cell</span>
+</span><span id="line-120">    <span class="k">if</span> <span class="p">(</span>
+</span><span id="line-121">        <span class="n">title_html</span> <span class="ow">and</span> <span class="n">best</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">"h1"</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
+</span><span id="line-122">    <span class="p">):</span>  <span class="c1"># keep the page title the extraction left behind</span>
+</span><span id="line-123">        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">title_html</span><span class="si">}{</span><span class="n">body</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="line-124">    <span class="k">return</span> <span class="n">body</span></div>
 
 </span><span id="line-125">
 </span><span id="line-126">
-</span><span id="line-127"><span class="c1">#: Named extractors, for the CLI and for ``content_extractor="name"``.</span>
-</span><span id="line-128"><span class="n">EXTRACTORS</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Extractor</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-</span><span id="line-129">    <span class="s2">"readability-lite"</span><span class="p">:</span> <span class="n">main_content</span><span class="p">,</span>
-</span><span id="line-130">    <span class="s2">"trafilatura"</span><span class="p">:</span> <span class="n">trafilatura_extractor</span><span class="p">,</span>
-</span><span id="line-131"><span class="p">}</span>
-</span><span id="line-132">
-</span><span id="line-133"><span class="n">DEFAULT_EXTRACTOR</span> <span class="o">=</span> <span class="s2">"readability-lite"</span>
-</span><span id="line-134">
-</span><span id="line-135">
+<div class="viewcode-block" id="trafilatura_extractor">
+<a class="viewcode-back" href="../../_autosummary/citeget.content.html#citeget.trafilatura_extractor">[docs]</a>
+</span><span id="line-127"><span class="k">def</span><span class="w"> </span><span class="nf">trafilatura_extractor</span><span class="p">(</span><span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-128"><span class="w">    </span><span class="sd">"""Extractor backed by ``trafilatura`` (optional dependency, Apache-2.0)."""</span>
+</span><span id="line-129">    <span class="k">try</span><span class="p">:</span>
+</span><span id="line-130">        <span class="kn">import</span><span class="w"> </span><span class="nn">trafilatura</span>
+</span><span id="line-131">    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover - depends on environment</span>
+</span><span id="line-132">        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+</span><span id="line-133">            <span class="s2">"content_extractor='trafilatura' needs `pip install trafilatura` "</span>
+</span><span id="line-134">            <span class="s2">"(or `pip install citeget[extract]`)."</span>
+</span><span id="line-135">        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+</span><span id="line-136">    <span class="n">out</span> <span class="o">=</span> <span class="n">trafilatura</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">html</span><span class="p">,</span> <span class="n">output_format</span><span class="o">=</span><span class="s2">"html"</span><span class="p">,</span> <span class="n">include_links</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-137">    <span class="k">return</span> <span class="p">(</span>
+</span><span id="line-138">        <span class="n">out</span> <span class="ow">or</span> <span class="s2">""</span>
+</span><span id="line-139">    <span class="p">)</span>  <span class="c1"># nothing found: html_to_markdown falls back to the full page, as for every extractor</span></div>
+
+</span><span id="line-140">
+</span><span id="line-141">
+</span><span id="line-142"><span class="c1">#: Named extractors, for the CLI and for ``content_extractor="name"``.</span>
+</span><span id="line-143"><span class="n">EXTRACTORS</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Extractor</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="line-144">    <span class="s2">"readability-lite"</span><span class="p">:</span> <span class="n">main_content</span><span class="p">,</span>
+</span><span id="line-145">    <span class="s2">"trafilatura"</span><span class="p">:</span> <span class="n">trafilatura_extractor</span><span class="p">,</span>
+</span><span id="line-146"><span class="p">}</span>
+</span><span id="line-147">
+</span><span id="line-148"><span class="n">DEFAULT_EXTRACTOR</span> <span class="o">=</span> <span class="s2">"readability-lite"</span>
+</span><span id="line-149">
+</span><span id="line-150">
 <div class="viewcode-block" id="clean_wayback">
 <a class="viewcode-back" href="../../_autosummary/citeget.content.html#citeget.clean_wayback">[docs]</a>
-</span><span id="line-136"><span class="k">def</span><span class="w"> </span><span class="nf">clean_wayback</span><span class="p">(</span><span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-137"><span class="w">    </span><span class="sd">"""Drop the Wayback Machine toolbar/banner and un-prefix archived links.</span>
-</span><span id="line-138">
-</span><span id="line-139"><span class="sd">    &gt;&gt;&gt; h = '&lt;a href="https://web.archive.org/web/2020/http://x.org/a"&gt;a&lt;/a&gt;'</span>
-</span><span id="line-140"><span class="sd">    &gt;&gt;&gt; clean_wayback(h)</span>
-</span><span id="line-141"><span class="sd">    '&lt;a href="http://x.org/a"&gt;a&lt;/a&gt;'</span>
-</span><span id="line-142"><span class="sd">    """</span>
-</span><span id="line-143">    <span class="n">html</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
-</span><span id="line-144">        <span class="sa">r</span><span class="s2">"&lt;!--\s*BEGIN WAYBACK TOOLBAR INSERT\s*--&gt;.*?&lt;!--\s*END WAYBACK TOOLBAR INSERT\s*--&gt;"</span><span class="p">,</span>
-</span><span id="line-145">        <span class="s2">""</span><span class="p">,</span>
-</span><span id="line-146">        <span class="n">html</span><span class="p">,</span>
-</span><span id="line-147">        <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">S</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">,</span>
-</span><span id="line-148">    <span class="p">)</span>
-</span><span id="line-149">    <span class="k">return</span> <span class="n">_WAYBACK_PREFIX_RE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">html</span><span class="p">)</span></div>
+</span><span id="line-151"><span class="k">def</span><span class="w"> </span><span class="nf">clean_wayback</span><span class="p">(</span><span class="n">html</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-152"><span class="w">    </span><span class="sd">"""Drop the Wayback Machine toolbar/banner and un-prefix archived links.</span>
+</span><span id="line-153">
+</span><span id="line-154"><span class="sd">    &gt;&gt;&gt; h = '&lt;a href="https://web.archive.org/web/2020/http://x.org/a"&gt;a&lt;/a&gt;'</span>
+</span><span id="line-155"><span class="sd">    &gt;&gt;&gt; clean_wayback(h)</span>
+</span><span id="line-156"><span class="sd">    '&lt;a href="http://x.org/a"&gt;a&lt;/a&gt;'</span>
+</span><span id="line-157"><span class="sd">    """</span>
+</span><span id="line-158">    <span class="n">html</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span>
+</span><span id="line-159">        <span class="sa">r</span><span class="s2">"&lt;!--\s*BEGIN WAYBACK TOOLBAR INSERT\s*--&gt;.*?&lt;!--\s*END WAYBACK TOOLBAR INSERT\s*--&gt;"</span><span class="p">,</span>
+</span><span id="line-160">        <span class="s2">""</span><span class="p">,</span>
+</span><span id="line-161">        <span class="n">html</span><span class="p">,</span>
+</span><span id="line-162">        <span class="n">flags</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">S</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">,</span>
+</span><span id="line-163">    <span class="p">)</span>
+</span><span id="line-164">    <span class="k">return</span> <span class="n">_WAYBACK_PREFIX_RE</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="n">html</span><span class="p">)</span></div>
 
-</span><span id="line-150">
-</span><span id="line-151">
-</span><span id="line-152"><span class="k">def</span><span class="w"> </span><span class="nf">is_wayback_url</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span id="line-153">    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">"https?://web\.archive\.org/web/"</span><span class="p">,</span> <span class="n">url</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">))</span>
-</span><span id="line-154">
-</span><span id="line-155">
-</span><span id="line-156"><span class="c1">#: Lines of converted Markdown that carry no content (table scaffolding, rules, empty bullets).</span>
-</span><span id="line-157"><span class="n">_JUNK_LINE_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[\s|\-_*=:]*$"</span><span class="p">)</span>
-</span><span id="line-158">
-</span><span id="line-159">
+</span><span id="line-165">
+</span><span id="line-166">
+</span><span id="line-167"><span class="k">def</span><span class="w"> </span><span class="nf">is_wayback_url</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="line-168">    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s2">"https?://web\.archive\.org/web/"</span><span class="p">,</span> <span class="n">url</span> <span class="ow">or</span> <span class="s2">""</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">))</span>
+</span><span id="line-169">
+</span><span id="line-170">
+</span><span id="line-171"><span class="c1">#: Lines of converted Markdown that carry no content (table scaffolding, rules, empty bullets).</span>
+</span><span id="line-172"><span class="n">_JUNK_LINE_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^[\s|\-_*=:]*$"</span><span class="p">)</span>
+</span><span id="line-173">
+</span><span id="line-174">
 <div class="viewcode-block" id="drop_junk_lines">
 <a class="viewcode-back" href="../../_autosummary/citeget.content.html#citeget.drop_junk_lines">[docs]</a>
-</span><span id="line-160"><span class="k">def</span><span class="w"> </span><span class="nf">drop_junk_lines</span><span class="p">(</span><span class="n">markdown</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="line-161"><span class="w">    </span><span class="sd">"""Remove rule-only / empty-bullet lines and unwrap one-cell table rows.</span>
-</span><span id="line-162">
-</span><span id="line-163"><span class="sd">    Fenced code blocks are left alone. Blank lines are kept (they separate paragraphs).</span>
-</span><span id="line-164">
-</span><span id="line-165"><span class="sd">    &gt;&gt;&gt; drop_junk_lines("| hello |\\n| --- |\\n* \\n\\ntext")</span>
-</span><span id="line-166"><span class="sd">    'hello\\n\\ntext'</span>
-</span><span id="line-167"><span class="sd">    """</span>
-</span><span id="line-168">    <span class="n">out</span><span class="p">,</span> <span class="n">in_fence</span> <span class="o">=</span> <span class="p">[],</span> <span class="kc">False</span>
-</span><span id="line-169">    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">markdown</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">):</span>
-</span><span id="line-170">        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">"```"</span><span class="p">,</span> <span class="s2">"~~~"</span><span class="p">)):</span>
-</span><span id="line-171">            <span class="n">in_fence</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">in_fence</span>
-</span><span id="line-172">            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-</span><span id="line-173">            <span class="k">continue</span>
-</span><span id="line-174">        <span class="k">if</span> <span class="ow">not</span> <span class="n">in_fence</span> <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
-</span><span id="line-175">            <span class="k">if</span> <span class="n">_JUNK_LINE_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
-</span><span id="line-176">                <span class="k">continue</span>
-</span><span id="line-177">            <span class="n">s</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span id="line-178">            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"|"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"|"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">"|"</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-</span><span id="line-179">                <span class="n">line</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"|"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-</span><span id="line-180">        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-</span><span id="line-181">    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\n{3,}"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">))</span></div>
+</span><span id="line-175"><span class="k">def</span><span class="w"> </span><span class="nf">drop_junk_lines</span><span class="p">(</span><span class="n">markdown</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="line-176"><span class="w">    </span><span class="sd">"""Remove rule-only / empty-bullet lines and unwrap one-cell table rows.</span>
+</span><span id="line-177">
+</span><span id="line-178"><span class="sd">    Fenced code blocks are left alone. Blank lines are kept (they separate paragraphs).</span>
+</span><span id="line-179"><span class="sd">    A thematic break (``***``, ``---``, ``* * *``) standing alone between two paragraphs is a</span>
+</span><span id="line-180"><span class="sd">    scene break, and is kept.</span>
+</span><span id="line-181">
+</span><span id="line-182"><span class="sd">    &gt;&gt;&gt; drop_junk_lines("| hello |\\n| --- |\\n* \\n\\ntext")</span>
+</span><span id="line-183"><span class="sd">    'hello\\n\\ntext'</span>
+</span><span id="line-184"><span class="sd">    &gt;&gt;&gt; drop_junk_lines("one\\n\\n***\\n\\ntwo")</span>
+</span><span id="line-185"><span class="sd">    'one\\n\\n***\\n\\ntwo'</span>
+</span><span id="line-186"><span class="sd">    """</span>
+</span><span id="line-187">    <span class="n">out</span><span class="p">,</span> <span class="n">in_fence</span> <span class="o">=</span> <span class="p">[],</span> <span class="kc">False</span>
+</span><span id="line-188">    <span class="n">lines</span> <span class="o">=</span> <span class="n">markdown</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-189">    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+</span><span id="line-190">        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">((</span><span class="s2">"```"</span><span class="p">,</span> <span class="s2">"~~~"</span><span class="p">)):</span>
+</span><span id="line-191">            <span class="n">in_fence</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">in_fence</span>
+</span><span id="line-192">            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</span><span id="line-193">            <span class="k">continue</span>
+</span><span id="line-194">        <span class="k">if</span> <span class="ow">not</span> <span class="n">in_fence</span> <span class="ow">and</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+</span><span id="line-195">            <span class="k">if</span> <span class="n">_JUNK_LINE_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+</span><span id="line-196">                <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_scene_break</span><span class="p">(</span><span class="n">lines</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+</span><span id="line-197">                    <span class="k">continue</span>
+</span><span id="line-198">                <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</span><span id="line-199">                <span class="k">continue</span>
+</span><span id="line-200">            <span class="n">s</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span id="line-201">            <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"|"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"|"</span><span class="p">)</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">"|"</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+</span><span id="line-202">                <span class="n">line</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">"|"</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span id="line-203">        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+</span><span id="line-204">    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">"\n{3,}"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\n\n</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">))</span></div>
 
+</span><span id="line-205">
+</span><span id="line-206">
+</span><span id="line-207"><span class="n">_THEMATIC_BREAK_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">"^\s{0,3}([-*_])(\s*\1){2,}\s*$"</span><span class="p">)</span>
+</span><span id="line-208">
+</span><span id="line-209">
+</span><span id="line-210"><span class="k">def</span><span class="w"> </span><span class="nf">_is_scene_break</span><span class="p">(</span><span class="n">lines</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="line-211"><span class="w">    </span><span class="sd">"""A thematic break with a blank line, then prose, on both sides."""</span>
+</span><span id="line-212">    <span class="k">if</span> <span class="ow">not</span> <span class="n">_THEMATIC_BREAK_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+</span><span id="line-213">        <span class="k">return</span> <span class="kc">False</span>
+</span><span id="line-214">
+</span><span id="line-215">    <span class="k">def</span><span class="w"> </span><span class="nf">prose</span><span class="p">(</span><span class="n">j</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span id="line-216">        <span class="k">return</span> <span class="p">(</span>
+</span><span id="line-217">            <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+</span><span id="line-218">            <span class="ow">and</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">""</span>
+</span><span id="line-219">            <span class="ow">and</span> <span class="ow">not</span> <span class="n">_JUNK_LINE_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+</span><span id="line-220">        <span class="p">)</span>
+</span><span id="line-221">
+</span><span id="line-222">    <span class="n">blank</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">j</span><span class="p">:</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">lines</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+</span><span id="line-223">    <span class="k">return</span> <span class="n">blank</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">blank</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="n">prose</span><span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="ow">and</span> <span class="n">prose</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span>
 </span></code></pre></div>
     </div></div>
           </main>
@@ -379,7 +421,7 @@
 </footer>
     </div>
     
-    <script src="../../_static/documentation_options.js?v=20e0ead2"></script>
+    <script src="../../_static/documentation_options.js?v=84986ecb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

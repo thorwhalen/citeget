@@ -135,7 +135,7 @@ can replace it (the <em>extractor</em> seam); <a class="reference internal" href
 optional, stronger one (Apache-2.0, <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">trafilatura</span></code>).</p>
 <p>Web Archive copies are cleaned by <a class="reference internal" href="#citeget.content.clean_wayback" title="citeget.content.clean_wayback"><code class="xref py py-func docutils literal notranslate"><span class="pre">clean_wayback()</span></code></a>: the toolbar/banner is
 dropped and <code class="docutils literal notranslate"><span class="pre">web.archive.org/web/&lt;ts&gt;/</span></code> link prefixes are rewritten back to
-the original URLs.</p>
+the original URLs. This applies in every content mode, <code class="docutils literal notranslate"><span class="pre">full</span></code> included.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">html</span> <span class="o">=</span> <span class="s2">"&lt;body&gt;&lt;nav&gt;Menu&lt;/nav&gt;&lt;div&gt;&lt;p&gt;"</span> <span class="o">+</span> <span class="s2">"Real text. "</span> <span class="o">*</span> <span class="mi">20</span> <span class="o">+</span> <span class="s2">"&lt;/p&gt;&lt;/div&gt;&lt;/body&gt;"</span>
 </span><span id="line-2"><span class="gp">&gt;&gt;&gt; </span><span class="s2">"Menu"</span> <span class="ow">in</span> <span class="n">main_content</span><span class="p">(</span><span class="n">html</span><span class="p">),</span> <span class="s2">"Real text."</span> <span class="ow">in</span> <span class="n">main_content</span><span class="p">(</span><span class="n">html</span><span class="p">)</span>
 </span><span id="line-3"><span class="go">(False, True)</span>
@@ -150,25 +150,28 @@ the original URLs.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#citeget.content.DROP_CLASS_RE" title="citeget.content.DROP_CLASS_RE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DROP_CLASS_RE</span></code></a></p></td>
 <td><p>Class/id fragments that mark chrome.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.content.CANDIDATE_TAGS" title="citeget.content.CANDIDATE_TAGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CANDIDATE_TAGS</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.content.CHROME_IF_SMALL_TAGS" title="citeget.content.CHROME_IF_SMALL_TAGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CHROME_IF_SMALL_TAGS</span></code></a></p></td>
+<td><p>an ASP.NET page wraps its whole body in one <code class="docutils literal notranslate"><span class="pre">&lt;form&gt;</span></code>, which is a layout wrapper then.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.content.CANDIDATE_TAGS" title="citeget.content.CANDIDATE_TAGS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CANDIDATE_TAGS</span></code></a></p></td>
 <td><p>Tags considered as candidate containers for the article.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.content.LINK_PENALTY" title="citeget.content.LINK_PENALTY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LINK_PENALTY</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.content.LINK_PENALTY" title="citeget.content.LINK_PENALTY"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LINK_PENALTY</span></code></a></p></td>
 <td><p>Weight of link text subtracted from a candidate's score (menus are all links).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.content.NO_PARAGRAPH_FACTOR" title="citeget.content.NO_PARAGRAPH_FACTOR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NO_PARAGRAPH_FACTOR</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.content.NO_PARAGRAPH_FACTOR" title="citeget.content.NO_PARAGRAPH_FACTOR"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NO_PARAGRAPH_FACTOR</span></code></a></p></td>
 <td><p>Pages without <code class="docutils literal notranslate"><span class="pre">&lt;p&gt;</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">&lt;br&gt;&lt;br&gt;</span></code> separated) score by raw text times this.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.content.DESCENT_RATIO" title="citeget.content.DESCENT_RATIO"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESCENT_RATIO</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.content.DESCENT_RATIO" title="citeget.content.DESCENT_RATIO"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESCENT_RATIO</span></code></a></p></td>
 <td><p>A descendant of the current best wins if it keeps this share of its score (the tighter container, with less surrounding chrome).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.content.MAX_CHROME_TEXT_SHARE" title="citeget.content.MAX_CHROME_TEXT_SHARE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_CHROME_TEXT_SHARE</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.content.MAX_CHROME_TEXT_SHARE" title="citeget.content.MAX_CHROME_TEXT_SHARE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_CHROME_TEXT_SHARE</span></code></a></p></td>
 <td><p>A chrome-looking node holding more than this share of the page's text is a layout wrapper (<code class="docutils literal notranslate"><span class="pre">no-sidebar</span></code>, <code class="docutils literal notranslate"><span class="pre">content-share</span></code>), not chrome: keep it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.content.MIN_MAIN_CHARS" title="citeget.content.MIN_MAIN_CHARS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MIN_MAIN_CHARS</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.content.MIN_MAIN_CHARS" title="citeget.content.MIN_MAIN_CHARS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MIN_MAIN_CHARS</span></code></a></p></td>
 <td><p>Main-mode Markdown shorter than this (characters) is distrusted and the full page is converted instead (see <code class="docutils literal notranslate"><span class="pre">html_to_markdown</span></code>).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.content.EXTRACTORS" title="citeget.content.EXTRACTORS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EXTRACTORS</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.content.EXTRACTORS" title="citeget.content.EXTRACTORS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EXTRACTORS</span></code></a></p></td>
 <td><p>Named extractors, for the CLI and for <code class="docutils literal notranslate"><span class="pre">content_extractor="name"</span></code>.</p></td>
 </tr>
 </tbody>
@@ -199,6 +202,17 @@ the original URLs.</p>
 <dd><p>Tags considered as candidate containers for the article.</p>
 </dd></dl>
 <dl class="py data">
+<dt class="sig sig-object py" id="citeget.content.CHROME_IF_SMALL_TAGS">
+<span class="sig-prename descclassname"><span class="pre">citeget.content.</span></span><span class="sig-name descname"><span class="pre">CHROME_IF_SMALL_TAGS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('form',)</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.content.CHROME_IF_SMALL_TAGS" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.content.CHROME_IF_SMALL_TAGS'">¶</a></dt>
+<dd><p>an ASP.NET
+page wraps its whole body in one <code class="docutils literal notranslate"><span class="pre">&lt;form&gt;</span></code>, which is a layout wrapper then.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Elements dropped as chrome only when they hold little of the page</p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py data">
 <dt class="sig sig-object py" id="citeget.content.DESCENT_RATIO">
 <span class="sig-prename descclassname"><span class="pre">citeget.content.</span></span><span class="sig-name descname"><span class="pre">DESCENT_RATIO</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.9</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.content.DESCENT_RATIO" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.content.DESCENT_RATIO'">¶</a></dt>
 <dd><p>A descendant of the current best wins if it keeps this share of its score
@@ -211,7 +225,7 @@ the original URLs.</p>
 </dd></dl>
 <dl class="py data">
 <dt class="sig sig-object py" id="citeget.content.DROP_TAGS">
-<span class="sig-prename descclassname"><span class="pre">citeget.content.</span></span><span class="sig-name descname"><span class="pre">DROP_TAGS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('script',</span> <span class="pre">'style',</span> <span class="pre">'nav',</span> <span class="pre">'header',</span> <span class="pre">'footer',</span> <span class="pre">'aside',</span> <span class="pre">'form',</span> <span class="pre">'noscript',</span> <span class="pre">'iframe')</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.content.DROP_TAGS" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.content.DROP_TAGS'">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">citeget.content.</span></span><span class="sig-name descname"><span class="pre">DROP_TAGS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('script',</span> <span class="pre">'style',</span> <span class="pre">'nav',</span> <span class="pre">'header',</span> <span class="pre">'footer',</span> <span class="pre">'aside',</span> <span class="pre">'noscript',</span> <span class="pre">'iframe')</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.content.DROP_TAGS" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.content.DROP_TAGS'">¶</a></dt>
 <dd><p>Elements that are never article content.</p>
 </dd></dl>
 <dl class="py data">
@@ -260,9 +274,13 @@ full page is converted instead (see <code class="docutils literal notranslate"><
 <dt class="sig sig-object py" id="citeget.content.drop_junk_lines">
 <span class="sig-prename descclassname"><span class="pre">citeget.content.</span></span><span class="sig-name descname"><span class="pre">drop_junk_lines</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">markdown</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/content.html#drop_junk_lines"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.content.drop_junk_lines" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.content.drop_junk_lines'">¶</a></dt>
 <dd><p>Remove rule-only / empty-bullet lines and unwrap one-cell table rows.</p>
-<p>Fenced code blocks are left alone. Blank lines are kept (they separate paragraphs).</p>
+<p>Fenced code blocks are left alone. Blank lines are kept (they separate paragraphs).
+A thematic break (<code class="docutils literal notranslate"><span class="pre">***</span></code>, <code class="docutils literal notranslate"><span class="pre">---</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span> <span class="pre">*</span> <span class="pre">*</span></code>) standing alone between two paragraphs is a
+scene break, and is kept.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="gp">&gt;&gt;&gt; </span><span class="n">drop_junk_lines</span><span class="p">(</span><span class="s2">"| hello |</span><span class="se">\n</span><span class="s2">| --- |</span><span class="se">\n</span><span class="s2">* </span><span class="se">\n\n</span><span class="s2">text"</span><span class="p">)</span>
 </span><span id="line-2"><span class="go">'hello\n\ntext'</span>
+</span><span id="line-3"><span class="gp">&gt;&gt;&gt; </span><span class="n">drop_junk_lines</span><span class="p">(</span><span class="s2">"one</span><span class="se">\n\n</span><span class="s2">***</span><span class="se">\n\n</span><span class="s2">two"</span><span class="p">)</span>
+</span><span id="line-4"><span class="go">'one\n\n***\n\ntwo'</span>
 </span></code></pre></div>
 </div>
 <dl class="field-list simple">
@@ -296,6 +314,7 @@ full page is converted instead (see <code class="docutils literal notranslate"><
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
 <li><a :data-current="activeSection === '#citeget.content.CANDIDATE_TAGS'" class="reference internal" href="#citeget.content.CANDIDATE_TAGS"><code class="docutils literal notranslate"><span class="pre">CANDIDATE_TAGS</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.content.CHROME_IF_SMALL_TAGS'" class="reference internal" href="#citeget.content.CHROME_IF_SMALL_TAGS"><code class="docutils literal notranslate"><span class="pre">CHROME_IF_SMALL_TAGS</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.content.DESCENT_RATIO'" class="reference internal" href="#citeget.content.DESCENT_RATIO"><code class="docutils literal notranslate"><span class="pre">DESCENT_RATIO</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.content.DROP_CLASS_RE'" class="reference internal" href="#citeget.content.DROP_CLASS_RE"><code class="docutils literal notranslate"><span class="pre">DROP_CLASS_RE</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.content.DROP_TAGS'" class="reference internal" href="#citeget.content.DROP_TAGS"><code class="docutils literal notranslate"><span class="pre">DROP_TAGS</span></code></a></li>
@@ -321,7 +340,7 @@ full page is converted instead (see <code class="docutils literal notranslate"><
 </div>
 </footer>
 </div>
-<script src="../_static/documentation_options.js?v=20e0ead2"></script>
+<script src="../_static/documentation_options.js?v=84986ecb"></script>
 <script src="../_static/doctools.js?v=fd6eb6e6"></script>
 <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
 <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

@@ -10,6 +10,7 @@ citeget.content
    
       DROP_TAGS
       DROP_CLASS_RE
+      CHROME_IF_SMALL_TAGS
       CANDIDATE_TAGS
       LINK_PENALTY
       NO_PARAGRAPH_FACTOR
