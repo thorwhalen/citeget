@@ -114,8 +114,12 @@ def main_content(html: str) -> str:
         tighter = best in el.parents and score >= DESCENT_RATIO * best_score
         if score > best_score or tighter:
             best, best_score = el, score
-    body = f"<div>{best.decode_contents()}</div>" if best.name == "td" else str(best)  # a bare <td> would render as a table cell
-    if title_html and best.find("h1") is None:  # keep the page title the extraction left behind
+    body = (
+        f"<div>{best.decode_contents()}</div>" if best.name == "td" else str(best)
+    )  # a bare <td> would render as a table cell
+    if (
+        title_html and best.find("h1") is None
+    ):  # keep the page title the extraction left behind
         return f"{title_html}{body}"
     return body
 
@@ -130,7 +134,9 @@ def trafilatura_extractor(html: str) -> str:
             "(or `pip install citeget[extract]`)."
         ) from e
     out = trafilatura.extract(html, output_format="html", include_links=True)
-    return out or ""  # nothing found: html_to_markdown falls back to the full page, as for every extractor
+    return (
+        out or ""
+    )  # nothing found: html_to_markdown falls back to the full page, as for every extractor
 
 
 #: Named extractors, for the CLI and for ``content_extractor="name"``.
@@ -207,7 +213,11 @@ def _is_scene_break(lines: list[str], i: int) -> bool:
         return False
 
     def prose(j: int) -> bool:
-        return 0 <= j < len(lines) and lines[j].strip() != "" and not _JUNK_LINE_RE.match(lines[j])
+        return (
+            0 <= j < len(lines)
+            and lines[j].strip() != ""
+            and not _JUNK_LINE_RE.match(lines[j])
+        )
 
     blank = lambda j: 0 <= j < len(lines) and not lines[j].strip()
     return blank(i - 1) and blank(i + 1) and prose(i - 2) and prose(i + 2)
