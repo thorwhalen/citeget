@@ -20,17 +20,18 @@ the original URLs. This applies in every content mode, `full` included.
 
 ### Module Attributes
 
-| [`DROP_TAGS`](#citeget.content.DROP_TAGS)             | Elements that are never article content.                                                                                                        |
-|------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`DROP_CLASS_RE`](#citeget.content.DROP_CLASS_RE)         | Class/id fragments that mark chrome.                                                                                                            |
-| [`CHROME_IF_SMALL_TAGS`](#citeget.content.CHROME_IF_SMALL_TAGS)  | an ASP.NET page wraps its whole body in one `<form>`, which is a layout wrapper then.                                                           |
-| [`CANDIDATE_TAGS`](#citeget.content.CANDIDATE_TAGS)        | Tags considered as candidate containers for the article.                                                                                        |
-| [`LINK_PENALTY`](#citeget.content.LINK_PENALTY)          | Weight of link text subtracted from a candidate's score (menus are all links).                                                                  |
-| [`NO_PARAGRAPH_FACTOR`](#citeget.content.NO_PARAGRAPH_FACTOR)   | Pages without `<p>` (e.g. `<br><br>` separated) score by raw text times this.                                                                   |
-| [`DESCENT_RATIO`](#citeget.content.DESCENT_RATIO)         | A descendant of the current best wins if it keeps this share of its score (the tighter container, with less surrounding chrome).                |
-| [`MAX_CHROME_TEXT_SHARE`](#citeget.content.MAX_CHROME_TEXT_SHARE) | A chrome-looking node holding more than this share of the page's text is a layout wrapper (`no-sidebar`, `content-share`), not chrome: keep it. |
-| [`MIN_MAIN_CHARS`](#citeget.content.MIN_MAIN_CHARS)        | Main-mode Markdown shorter than this (characters) is distrusted and the full page is converted instead (see `html_to_markdown`).                |
-| [`EXTRACTORS`](#citeget.content.EXTRACTORS)            | Named extractors, for the CLI and for `content_extractor="name"`.                                                                               |
+| [`DROP_TAGS`](#citeget.content.DROP_TAGS)             | Elements that are never article content.                                                                                                          |
+|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`DROP_CLASS_RE`](#citeget.content.DROP_CLASS_RE)         | Class/id fragments that mark chrome.                                                                                                              |
+| [`CHROME_IF_SMALL_TAGS`](#citeget.content.CHROME_IF_SMALL_TAGS)  | an ASP.NET page wraps its whole body in one `<form>`, which is a layout wrapper then.                                                             |
+| [`CANDIDATE_TAGS`](#citeget.content.CANDIDATE_TAGS)        | Tags considered as candidate containers for the article.                                                                                          |
+| [`LINK_PENALTY`](#citeget.content.LINK_PENALTY)          | Weight of link text subtracted from a candidate's score (menus are all links).                                                                    |
+| [`NO_PARAGRAPH_FACTOR`](#citeget.content.NO_PARAGRAPH_FACTOR)   | Pages without `<p>` (e.g. `<br><br>` separated) score by raw text times this.                                                                     |
+| [`DESCENT_RATIO`](#citeget.content.DESCENT_RATIO)         | A descendant of the current best wins if it keeps this share of its score (the tighter container, with less surrounding chrome).                  |
+| [`MAX_DESCENT_LOSS`](#citeget.content.MAX_DESCENT_LOSS)      | ...but never by shedding more than this many characters of paragraph text: on a long page 10% can be a whole intro, which belongs to the article. |
+| [`MAX_CHROME_TEXT_SHARE`](#citeget.content.MAX_CHROME_TEXT_SHARE) | A chrome-looking node holding more than this share of the page's text is a layout wrapper (`no-sidebar`, `content-share`), not chrome: keep it.   |
+| [`MIN_MAIN_CHARS`](#citeget.content.MIN_MAIN_CHARS)        | Main-mode Markdown shorter than this (characters) is distrusted and the full page is converted instead (see `html_to_markdown`).                  |
+| [`EXTRACTORS`](#citeget.content.EXTRACTORS)            | Named extractors, for the CLI and for `content_extractor="name"`.                                                                                 |
 
 ### Functions
 
@@ -78,6 +79,11 @@ Weight of link text subtracted from a candidate’s score (menus are all links).
 
 A chrome-looking node holding more than this share of the page’s text is a
 layout wrapper (`no-sidebar`, `content-share`), not chrome: keep it.
+
+### citeget.content.MAX_DESCENT_LOSS *= 500*
+
+…but never by shedding more than this many characters of paragraph text:
+on a long page 10% can be a whole intro, which belongs to the article.
 
 ### citeget.content.MIN_MAIN_CHARS *= 200*
 

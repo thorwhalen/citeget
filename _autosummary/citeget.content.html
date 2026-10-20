@@ -165,13 +165,16 @@ the original URLs. This applies in every content mode, <code class="docutils lit
 <tr class="row-odd"><td><p><a class="reference internal" href="#citeget.content.DESCENT_RATIO" title="citeget.content.DESCENT_RATIO"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DESCENT_RATIO</span></code></a></p></td>
 <td><p>A descendant of the current best wins if it keeps this share of its score (the tighter container, with less surrounding chrome).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.content.MAX_CHROME_TEXT_SHARE" title="citeget.content.MAX_CHROME_TEXT_SHARE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_CHROME_TEXT_SHARE</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.content.MAX_DESCENT_LOSS" title="citeget.content.MAX_DESCENT_LOSS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_DESCENT_LOSS</span></code></a></p></td>
+<td><p>...but never by shedding more than this many characters of paragraph text: on a long page 10% can be a whole intro, which belongs to the article.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.content.MAX_CHROME_TEXT_SHARE" title="citeget.content.MAX_CHROME_TEXT_SHARE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_CHROME_TEXT_SHARE</span></code></a></p></td>
 <td><p>A chrome-looking node holding more than this share of the page's text is a layout wrapper (<code class="docutils literal notranslate"><span class="pre">no-sidebar</span></code>, <code class="docutils literal notranslate"><span class="pre">content-share</span></code>), not chrome: keep it.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.content.MIN_MAIN_CHARS" title="citeget.content.MIN_MAIN_CHARS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MIN_MAIN_CHARS</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.content.MIN_MAIN_CHARS" title="citeget.content.MIN_MAIN_CHARS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MIN_MAIN_CHARS</span></code></a></p></td>
 <td><p>Main-mode Markdown shorter than this (characters) is distrusted and the full page is converted instead (see <code class="docutils literal notranslate"><span class="pre">html_to_markdown</span></code>).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.content.EXTRACTORS" title="citeget.content.EXTRACTORS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EXTRACTORS</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.content.EXTRACTORS" title="citeget.content.EXTRACTORS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EXTRACTORS</span></code></a></p></td>
 <td><p>Named extractors, for the CLI and for <code class="docutils literal notranslate"><span class="pre">content_extractor="name"</span></code>.</p></td>
 </tr>
 </tbody>
@@ -243,6 +246,12 @@ page wraps its whole body in one <code class="docutils literal notranslate"><spa
 <span class="sig-prename descclassname"><span class="pre">citeget.content.</span></span><span class="sig-name descname"><span class="pre">MAX_CHROME_TEXT_SHARE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.5</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.content.MAX_CHROME_TEXT_SHARE" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.content.MAX_CHROME_TEXT_SHARE'">¶</a></dt>
 <dd><p>A chrome-looking node holding more than this share of the page’s text is a
 layout wrapper (<code class="docutils literal notranslate"><span class="pre">no-sidebar</span></code>, <code class="docutils literal notranslate"><span class="pre">content-share</span></code>), not chrome: keep it.</p>
+</dd></dl>
+<dl class="py data">
+<dt class="sig sig-object py" id="citeget.content.MAX_DESCENT_LOSS">
+<span class="sig-prename descclassname"><span class="pre">citeget.content.</span></span><span class="sig-name descname"><span class="pre">MAX_DESCENT_LOSS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">500</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.content.MAX_DESCENT_LOSS" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.content.MAX_DESCENT_LOSS'">¶</a></dt>
+<dd><p>…but never by shedding more than this many characters of paragraph text:
+on a long page 10% can be a whole intro, which belongs to the article.</p>
 </dd></dl>
 <dl class="py data">
 <dt class="sig sig-object py" id="citeget.content.MIN_MAIN_CHARS">
@@ -321,6 +330,7 @@ scene break, and is kept.</p>
 <li><a :data-current="activeSection === '#citeget.content.EXTRACTORS'" class="reference internal" href="#citeget.content.EXTRACTORS"><code class="docutils literal notranslate"><span class="pre">EXTRACTORS</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.content.LINK_PENALTY'" class="reference internal" href="#citeget.content.LINK_PENALTY"><code class="docutils literal notranslate"><span class="pre">LINK_PENALTY</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.content.MAX_CHROME_TEXT_SHARE'" class="reference internal" href="#citeget.content.MAX_CHROME_TEXT_SHARE"><code class="docutils literal notranslate"><span class="pre">MAX_CHROME_TEXT_SHARE</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.content.MAX_DESCENT_LOSS'" class="reference internal" href="#citeget.content.MAX_DESCENT_LOSS"><code class="docutils literal notranslate"><span class="pre">MAX_DESCENT_LOSS</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.content.MIN_MAIN_CHARS'" class="reference internal" href="#citeget.content.MIN_MAIN_CHARS"><code class="docutils literal notranslate"><span class="pre">MIN_MAIN_CHARS</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.content.NO_PARAGRAPH_FACTOR'" class="reference internal" href="#citeget.content.NO_PARAGRAPH_FACTOR"><code class="docutils literal notranslate"><span class="pre">NO_PARAGRAPH_FACTOR</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.content.clean_wayback'" class="reference internal" href="#citeget.content.clean_wayback"><code class="docutils literal notranslate"><span class="pre">clean_wayback()</span></code></a></li>
@@ -340,7 +350,7 @@ scene break, and is kept.</p>
 </div>
 </footer>
 </div>
-<script src="../_static/documentation_options.js?v=84986ecb"></script>
+<script src="../_static/documentation_options.js?v=b360e4a1"></script>
 <script src="../_static/doctools.js?v=fd6eb6e6"></script>
 <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
 <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

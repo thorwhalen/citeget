@@ -1,4 +1,4 @@
-> built 2026-10-20 10:29 UTC from fb42df1 (main) · citeget 0.2.21. Details: build_info.json
+> built 2026-10-20 10:48 UTC from b0dde01 (main) · citeget 0.2.22. Details: build_info.json
 
 # index.html.md
 
@@ -809,17 +809,18 @@ the original URLs. This applies in every content mode, `full` included.
 
 ### Module Attributes
 
-| [`DROP_TAGS`](_autosummary/citeget.content.html.md#citeget.content.DROP_TAGS)             | Elements that are never article content.                                                                                                        |
-|------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| [`DROP_CLASS_RE`](_autosummary/citeget.content.html.md#citeget.content.DROP_CLASS_RE)         | Class/id fragments that mark chrome.                                                                                                            |
-| [`CHROME_IF_SMALL_TAGS`](_autosummary/citeget.content.html.md#citeget.content.CHROME_IF_SMALL_TAGS)  | an ASP.NET page wraps its whole body in one `<form>`, which is a layout wrapper then.                                                           |
-| [`CANDIDATE_TAGS`](_autosummary/citeget.content.html.md#citeget.content.CANDIDATE_TAGS)        | Tags considered as candidate containers for the article.                                                                                        |
-| [`LINK_PENALTY`](_autosummary/citeget.content.html.md#citeget.content.LINK_PENALTY)          | Weight of link text subtracted from a candidate's score (menus are all links).                                                                  |
-| [`NO_PARAGRAPH_FACTOR`](_autosummary/citeget.content.html.md#citeget.content.NO_PARAGRAPH_FACTOR)   | Pages without `<p>` (e.g. `<br><br>` separated) score by raw text times this.                                                                   |
-| [`DESCENT_RATIO`](_autosummary/citeget.content.html.md#citeget.content.DESCENT_RATIO)         | A descendant of the current best wins if it keeps this share of its score (the tighter container, with less surrounding chrome).                |
-| [`MAX_CHROME_TEXT_SHARE`](_autosummary/citeget.content.html.md#citeget.content.MAX_CHROME_TEXT_SHARE) | A chrome-looking node holding more than this share of the page's text is a layout wrapper (`no-sidebar`, `content-share`), not chrome: keep it. |
-| [`MIN_MAIN_CHARS`](_autosummary/citeget.content.html.md#citeget.content.MIN_MAIN_CHARS)        | Main-mode Markdown shorter than this (characters) is distrusted and the full page is converted instead (see `html_to_markdown`).                |
-| [`EXTRACTORS`](_autosummary/citeget.content.html.md#citeget.content.EXTRACTORS)            | Named extractors, for the CLI and for `content_extractor="name"`.                                                                               |
+| [`DROP_TAGS`](_autosummary/citeget.content.html.md#citeget.content.DROP_TAGS)             | Elements that are never article content.                                                                                                          |
+|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`DROP_CLASS_RE`](_autosummary/citeget.content.html.md#citeget.content.DROP_CLASS_RE)         | Class/id fragments that mark chrome.                                                                                                              |
+| [`CHROME_IF_SMALL_TAGS`](_autosummary/citeget.content.html.md#citeget.content.CHROME_IF_SMALL_TAGS)  | an ASP.NET page wraps its whole body in one `<form>`, which is a layout wrapper then.                                                             |
+| [`CANDIDATE_TAGS`](_autosummary/citeget.content.html.md#citeget.content.CANDIDATE_TAGS)        | Tags considered as candidate containers for the article.                                                                                          |
+| [`LINK_PENALTY`](_autosummary/citeget.content.html.md#citeget.content.LINK_PENALTY)          | Weight of link text subtracted from a candidate's score (menus are all links).                                                                    |
+| [`NO_PARAGRAPH_FACTOR`](_autosummary/citeget.content.html.md#citeget.content.NO_PARAGRAPH_FACTOR)   | Pages without `<p>` (e.g. `<br><br>` separated) score by raw text times this.                                                                     |
+| [`DESCENT_RATIO`](_autosummary/citeget.content.html.md#citeget.content.DESCENT_RATIO)         | A descendant of the current best wins if it keeps this share of its score (the tighter container, with less surrounding chrome).                  |
+| [`MAX_DESCENT_LOSS`](_autosummary/citeget.content.html.md#citeget.content.MAX_DESCENT_LOSS)      | ...but never by shedding more than this many characters of paragraph text: on a long page 10% can be a whole intro, which belongs to the article. |
+| [`MAX_CHROME_TEXT_SHARE`](_autosummary/citeget.content.html.md#citeget.content.MAX_CHROME_TEXT_SHARE) | A chrome-looking node holding more than this share of the page's text is a layout wrapper (`no-sidebar`, `content-share`), not chrome: keep it.   |
+| [`MIN_MAIN_CHARS`](_autosummary/citeget.content.html.md#citeget.content.MIN_MAIN_CHARS)        | Main-mode Markdown shorter than this (characters) is distrusted and the full page is converted instead (see `html_to_markdown`).                  |
+| [`EXTRACTORS`](_autosummary/citeget.content.html.md#citeget.content.EXTRACTORS)            | Named extractors, for the CLI and for `content_extractor="name"`.                                                                                 |
 
 ### Functions
 
@@ -867,6 +868,11 @@ Weight of link text subtracted from a candidate’s score (menus are all links).
 
 A chrome-looking node holding more than this share of the page’s text is a
 layout wrapper (`no-sidebar`, `content-share`), not chrome: keep it.
+
+### citeget.content.MAX_DESCENT_LOSS *= 500*
+
+…but never by shedding more than this many characters of paragraph text:
+on a long page 10% can be a whole intro, which belongs to the article.
 
 ### citeget.content.MIN_MAIN_CHARS *= 200*
 
@@ -4079,7 +4085,7 @@ Validate a file on disk. Extension defaults to the file’s own suffix.
 
 # About this build
 
-This documentation was built on **2026-10-20 10:29 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/fb42df159ac120580d01ac2eead53d5a6e755d93"><code>fb42df1</code></a> on branch <code>main</code>, for **citeget 0.2.21** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-20 10:48 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/b0dde010114967c57d12e4d30f4cde83f3e929f2"><code>b0dde01</code></a> on branch <code>main</code>, for **citeget 0.2.22** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -4088,9 +4094,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/fb42df159ac120580d01ac2eead53d5a6e755d93"><code>fb42df159ac120580d01ac2eead53d5a6e755d93</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/b0dde010114967c57d12e4d30f4cde83f3e929f2"><code>b0dde010114967c57d12e4d30f4cde83f3e929f2</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.2.21</code>                                                                                                                                       |
+| Tags at this commit | <code>0.2.22</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/citeget</code>                                                                                                        |
 
@@ -4099,15 +4105,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/citeget</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/39408069840">39408069840</a>   |
+| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/39410285536">39410285536</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>e870c463b69bc3de70a8e8c0cc2b979df8df88bb</code> (in the history of the built commit) |
+| Event commit | <code>5eb37ab5842d6fd4ec40c2d519daf14cc58881c0</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.18  |
+| epythet  | 0.2.19  |
 | Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
@@ -4126,14 +4132,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/citeget/0.2.21/">0.2.21</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/citeget/0.2.22/">0.2.22</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/citeget && cd citeget
-git checkout fb42df159ac120580d01ac2eead53d5a6e755d93
-pip install "epythet==0.2.18"
+git checkout b0dde010114967c57d12e4d30f4cde83f3e929f2
+pip install "epythet==0.2.19"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

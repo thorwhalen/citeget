@@ -1,38 +1,38 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-20T10:29:37Z",
+  "built_at": "2026-10-20T10:48:20Z",
   "package": {
     "name": "citeget",
-    "version": "0.2.21",
+    "version": "0.2.22",
     "display_name": "citeget",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "fb42df159ac120580d01ac2eead53d5a6e755d93",
-    "short_commit": "fb42df1",
+    "commit": "b0dde010114967c57d12e4d30f4cde83f3e929f2",
+    "short_commit": "b0dde01",
     "branch": "main",
     "tags": [
-      "0.2.21"
+      "0.2.22"
     ],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/citeget",
-    "commit_url": "https://github.com/thorwhalen/citeget/commit/fb42df159ac120580d01ac2eead53d5a6e755d93",
+    "commit_url": "https://github.com/thorwhalen/citeget/commit/b0dde010114967c57d12e4d30f4cde83f3e929f2",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/citeget",
-    "sha": "e870c463b69bc3de70a8e8c0cc2b979df8df88bb",
+    "sha": "5eb37ab5842d6fd4ec40c2d519daf14cc58881c0",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "39408069840",
-    "run_url": "https://github.com/thorwhalen/citeget/actions/runs/39408069840",
+    "run_id": "39410285536",
+    "run_url": "https://github.com/thorwhalen/citeget/actions/runs/39410285536",
     "server_url": "https://github.com"
   },
   "tools": {
-    "epythet": "0.2.18",
+    "epythet": "0.2.19",
     "sphinx": "9.1.1",
     "docutils": "0.22.4",
     "python": "3.12.15"
@@ -58,15 +58,15 @@
   },
   "site": {
     "modules_documented": 13,
-    "objects_documented": 231
+    "objects_documented": 232
   },
   "pypi": {
     "checked": true,
-    "latest": "0.2.21",
+    "latest": "0.2.22",
     "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/citeget && cd citeget\ngit checkout fb42df159ac120580d01ac2eead53d5a6e755d93\npip install \"epythet==0.2.18\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/citeget && cd citeget\ngit checkout b0dde010114967c57d12e4d30f4cde83f3e929f2\npip install \"epythet==0.2.19\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,
