@@ -59,9 +59,6 @@ Format *authors* APA 7 style, surnames only.
 1 author -> `"Smith"`; 2 -> `"Smith & Jones"`; 3+ -> `"Smith et al."`;
 nothing usable -> `"Unknown"`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> apa7_authors("Moore, Geoffrey A.")
 'Moore'
@@ -71,15 +68,15 @@ nothing usable -> `"Unknown"`.
 'Unknown'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### citeget.names.candidate_surnames(authors)
 
 Normalized surnames usable for matching, in either name ordering.
 
 Multi-word surnames contribute their last word, since that is what a
 caller-supplied author string is most likely to share.
-
-* **Return type:**
-  [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)
 
 ```pycon
 >>> sorted(candidate_surnames("Alice Smith & Bob Jones"))
@@ -88,24 +85,24 @@ caller-supplied author string is most likely to share.
 ['linden']
 ```
 
+* **Return type:**
+  [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)
+
 ### citeget.names.normalize_name(text)
 
 Fold *text* to lowercase ASCII alphanumerics plus spaces, for matching.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> normalize_name("Émile Durkheim")
 'emile durkheim'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### citeget.names.split_author_chunks(authors)
 
 Split an authors string into one chunk per author, cleaned of role markers.
-
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
 ```pycon
 >>> split_author_chunks("Tufte, Edward R. (author);Krasny, Dmitry (author)")
@@ -116,6 +113,9 @@ Split an authors string into one chunk per author, cleaned of role markers.
 ['Brian Christian', 'Tom Griffiths']
 ```
 
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
+
 ### citeget.names.surname_of(chunk)
 
 Extract the surname from a single author *chunk*, preserving its casing.
@@ -123,9 +123,6 @@ Extract the surname from a single author *chunk*, preserving its casing.
 If the chunk contains a comma, the surname is everything before it
 (libgen’s `"Surname, Given"` form). Otherwise it is the last token that
 is not an initial.
-
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ```pycon
 >>> surname_of("Moore, Geoffrey A.")
@@ -140,12 +137,12 @@ is not an initial.
 'Moore'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### citeget.names.surnames(authors)
 
 Surnames of every author in *authors*, in order, casing preserved.
-
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
 ```pycon
 >>> surnames("Tufte, Edward R. (author);Krasny, Dmitry (author)")
@@ -153,3 +150,6 @@ Surnames of every author in *authors*, in order, casing preserved.
 >>> surnames("Chris Voss & Tahl Raz")
 ['Voss', 'Raz']
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)

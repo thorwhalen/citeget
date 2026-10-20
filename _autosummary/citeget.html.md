@@ -116,7 +116,7 @@ Topics (for libgen search):
 | [`UnsafeURLError`](#citeget.UnsafeURLError)           | A URL, or an address it resolved to, is outside what the policy allows.   |
 | [`JobLimitExceeded`](#citeget.JobLimitExceeded)         | The owner already has as many acquisitions running as allowed.            |
 
-### *class* citeget.AcquisitionResult(reference, success=False, filepath=None, method='', queries_tried=<factory>, notes='')
+### *class* citeget.AcquisitionResult(reference, success=False, filepath=None, method='', queries_tried=list(), notes='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -238,30 +238,48 @@ What counts as an acceptable download.
 
 Absolute floor below which nothing can be a real document.
 
+* **Type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
 #### min_pdf_bytes
 
 Higher floor for PDFs, which is where landing-page stubs
 show up. A genuine short EPUB can be ~100 kB, so this cannot be a
 single shared floor.
 
+* **Type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
 #### require_magic
 
 Reject a file whose leading bytes do not match its
 extension. Unknown extensions are always accepted.
 
+* **Type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
 #### reject_html
 
 Reject a body that opens like an HTML document.
+
+* **Type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 #### truncation_ratio
 
 Reject a file smaller than this fraction of the size
 the search result advertised. Set to 0 to disable.
 
+* **Type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
 #### min_pages
 
 Minimum PDF page count (0 disables the check). Only sensible
 when the caller knows the download should be a complete book.
+
+* **Type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
 #### min_epub_markup_bytes
 
@@ -269,7 +287,10 @@ Minimum total size of the markup entries inside
 an EPUB (0 disables). Measures content volume rather than file size,
 so a small-but-complete EPUB passes where a raw size floor fails.
 
-### *class* citeget.ValidationResult(ok, reason='', detail=<factory>)
+* **Type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
+### *class* citeget.ValidationResult(ok, reason='', detail=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -397,9 +418,6 @@ Format *authors* APA 7 style, surnames only.
 1 author -> `"Smith"`; 2 -> `"Smith & Jones"`; 3+ -> `"Smith et al."`;
 nothing usable -> `"Unknown"`.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> apa7_authors("Moore, Geoffrey A.")
 'Moore'
@@ -409,6 +427,9 @@ nothing usable -> `"Unknown"`.
 'Unknown'
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### citeget.candidate_surnames(authors)
 
 Normalized surnames usable for matching, in either name ordering.
@@ -416,15 +437,15 @@ Normalized surnames usable for matching, in either name ordering.
 Multi-word surnames contribute their last word, since that is what a
 caller-supplied author string is most likely to share.
 
-* **Return type:**
-  [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)
-
 ```pycon
 >>> sorted(candidate_surnames("Alice Smith & Bob Jones"))
 ['jones', 'smith']
 >>> sorted(candidate_surnames("Sander van der Linden"))
 ['linden']
 ```
+
+* **Return type:**
+  [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)
 
 ### citeget.chain_extractors(\*extractors)
 
@@ -620,7 +641,7 @@ Fetch one or many URLs from a flexible *source*.
 * **Parameters:**
   * **source** – A URL, list of URLs, path to a file containing URLs, or
     a string of prose / markdown / reference-style text.
-  * **output_dir** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Where to save files (created if missing).
+  * **output_dir** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – Where to save files (created if missing).
   * **prefer** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'md'`, `'pdf'`, `'original'`, `'auto'`]) – `"md"` (default), `"pdf"`, `"original"`, or `"auto"`.
     See [`fetch_one()`](#citeget.fetch_one) for details.
   * **timeout** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – HTTP timeout per request.
@@ -637,7 +658,7 @@ Fetch one or many URLs from a flexible *source*.
 Fetch a single URL and save it under *output_dir*.
 
 * **Parameters:**
-  * **source** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`UrlEntry`](#citeget.UrlEntry)]) – A URL string or a [`UrlEntry`](#citeget.UrlEntry) (carries title/ref context).
+  * **source** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`UrlEntry`](#citeget.UrlEntry)]) – A URL string or a [`UrlEntry`](#citeget.UrlEntry) (carries title/ref context).
   * **output_dir** ([`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)) – Directory to write into (created if missing).
   * **prefer** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'md'`, `'pdf'`, `'original'`, `'auto'`]) – Output format. `"md"` (default) converts HTML to Markdown;
     PDFs are saved as-is. `"pdf"` tries to keep/produce a PDF
@@ -765,7 +786,8 @@ Infer a filename for *entry*, ending in `.{ext}`.
 Strategy (first non-empty wins):
 
 1. anchor text / citation title (slugified)
-2. URL’s last meaningful path segment
+2. URL’s last meaningful path segment, plus its query string
+   (`?currentPage=2` → `-currentpage-2`) so pages stay distinct
 3. domain + short hash
 
 * **Return type:**
@@ -823,12 +845,12 @@ Fields from earlier extractors take priority; later ones fill blanks.
 
 Parse a reference string into a Reference object.
 
-* **Return type:**
-  [`Reference`](citeget.acquire_references.html.md#citeget.acquire_references.Reference)
-
 Handles formats like:
 : [1] A. Author, “Title,” in *Venue*, year. URL
   A. Author, “Title,” Venue, vol. X, pp. Y-Z, year.
+
+* **Return type:**
+  [`Reference`](citeget.acquire_references.html.md#citeget.acquire_references.Reference)
 
 ### citeget.parse_references_section(text)
 
@@ -849,7 +871,7 @@ Return `results` as [`ScoredResult`](#citeget.ScoredResult) objects, best match 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
-### citeget.regex_extractor(, section_patterns=('(?mi)^#{1,3}\\\\\\\\s\*(references|bibliography|works\\\\\\\\s+cited|literature)\\\\\\\\s\*$',), entry_pattern='^\\\\\\\\s\*\\\\\\\\[(\\\\\\\\d+)\\\\\\\\]', stop_pattern='(?m)^#{1,3}\\\\\\\\s+\\\\\\\\S', whole_document_fallback=True)
+### citeget.regex_extractor(, section_patterns=('(?mi)^#{1,3}\\\\s\*(references|bibliography|works\\\\s+cited|literature)\\\\s\*$',), entry_pattern='^\\\\s\*\\\\[(\\\\d+)\\\\]', stop_pattern='(?m)^#{1,3}\\\\s+\\\\S', whole_document_fallback=True)
 
 Create an extractor from regex patterns.
 
@@ -942,7 +964,7 @@ Rules:
   * [**ValueError**](https://docs.python.org/3/builtins/exceptions.html#ValueError) – If inputs are insufficient or invalid.
   * [**FileNotFoundError**](https://docs.python.org/3/builtins/exceptions.html#FileNotFoundError) – If a specified parent directory doesn’t exist.
 
-### citeget.score_result(result, \*, title, authors=None, format_preference=('pdf', 'epub', 'azw3', 'mobi', 'azw', 'djvu', 'fb2', 'txt'), language='english', weights=ScoreWeights(title=5.0, author=3.0, format=1.2, language=1.0, size=0.8, decoy_penalty=6.0, stub_penalty=3.0), size_bounds=SizeBounds(min_bytes=80000, min_pdf_bytes=300000, implausible_bytes=120000000), decoy_pattern=re.compile('\\\\\\\\b(summary|summaries|workbook|study guide|sparknotes|cliffs?notes|key takeaways|conversation starters|review and analysis|analysis of|insights (?:on|from)|companion to|instaread|blinkist|downloaden|, re.IGNORECASE))
+### citeget.score_result(result, \*, title, authors=None, format_preference=('pdf', 'epub', 'azw3', 'mobi', 'azw', 'djvu', 'fb2', 'txt'), language='english', weights=ScoreWeights(title=5.0, author=3.0, format=1.2, language=1.0, size=0.8, decoy_penalty=6.0, stub_penalty=3.0), size_bounds=SizeBounds(min_bytes=80000, min_pdf_bytes=300000, implausible_bytes=120000000), decoy_pattern=re.compile('\\\\b(summary|summaries|workbook|study guide|sparknotes|cliffs?notes|key takeaways|conversation starters|review and analysis|analysis of|insights (?:on|from)|companion to|instaread|blinkist|downloaden|, re.IGNORECASE))
 
 Score one `search()` result against a requested title and author.
 
@@ -1048,15 +1070,15 @@ asked for.
 
 Surnames of every author in *authors*, in order, casing preserved.
 
-* **Return type:**
-  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
-
 ```pycon
 >>> surnames("Tufte, Edward R. (author);Krasny, Dmitry (author)")
 ['Tufte', 'Krasny']
 >>> surnames("Chris Voss & Tahl Raz")
 ['Voss', 'Raz']
 ```
+
+* **Return type:**
+  [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
 ### citeget.url_rewriter(, rules=None)
 
@@ -1093,7 +1115,7 @@ False
 Validate a file on disk. Extension defaults to the file’s own suffix.
 
 * **Parameters:**
-  * **path** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – File to check.
+  * **path** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – File to check.
   * **extension** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Override the expected extension; defaults to `path`’s suffix.
   * **expected_bytes** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Size the search result advertised, for the truncation check.
   * **policy** ([`ValidationPolicy`](citeget.validate.html.md#citeget.validate.ValidationPolicy)) – Which checks to apply.

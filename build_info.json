@@ -1,39 +1,39 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-14T01:12:05Z",
+  "built_at": "2026-10-20T06:50:18Z",
   "package": {
     "name": "citeget",
-    "version": "0.2.17",
+    "version": "0.2.18",
     "display_name": "citeget",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "7ef0dd9390fb2f11af982c596e2e1f6a0c3b260e",
-    "short_commit": "7ef0dd9",
+    "commit": "e347e926faabf08316d614d5048568aa27356ba0",
+    "short_commit": "e347e92",
     "branch": "main",
     "tags": [
-      "0.2.17"
+      "0.2.18"
     ],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/citeget",
-    "commit_url": "https://github.com/thorwhalen/citeget/commit/7ef0dd9390fb2f11af982c596e2e1f6a0c3b260e",
+    "commit_url": "https://github.com/thorwhalen/citeget/commit/e347e926faabf08316d614d5048568aa27356ba0",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/citeget",
-    "sha": "2260d9ecd6662f0248b763dcbdb581d3681cc591",
+    "sha": "1e7a234fe326993084a643a25659160bfd5d48f9",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "38494191043",
-    "run_url": "https://github.com/thorwhalen/citeget/actions/runs/38494191043",
+    "run_id": "39382510959",
+    "run_url": "https://github.com/thorwhalen/citeget/actions/runs/39382510959",
     "server_url": "https://github.com"
   },
   "tools": {
-    "epythet": "0.2.17",
-    "sphinx": "9.1.0",
+    "epythet": "0.2.18",
+    "sphinx": "9.1.1",
     "docutils": "0.22.4",
     "python": "3.12.15"
   },
@@ -62,11 +62,11 @@
   },
   "pypi": {
     "checked": true,
-    "latest": "0.2.17",
+    "latest": "0.2.18",
     "relation": "same",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/citeget && cd citeget\ngit checkout 7ef0dd9390fb2f11af982c596e2e1f6a0c3b260e\npip install \"epythet==0.2.17\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/citeget && cd citeget\ngit checkout e347e926faabf08316d614d5048568aa27356ba0\npip install \"epythet==0.2.18\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
     "aligned": true,

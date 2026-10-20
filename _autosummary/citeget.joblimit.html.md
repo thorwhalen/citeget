@@ -80,10 +80,10 @@ Yields the slot number, or `None` when no cap applies.
 
 The cap in force: *value* if given, else the environment, else the default.
 
-* **Return type:**
-  [`int`](https://docs.python.org/3/builtins/functions.html#int)
-
 ```pycon
 >>> max_concurrent_jobs(5)
 5
 ```
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)

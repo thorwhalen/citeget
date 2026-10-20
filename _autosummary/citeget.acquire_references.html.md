@@ -42,7 +42,7 @@ The query strategy for libgen searches:
 |-------------------------------------------------------------------------------------------------|--------------------------------------------|
 | [`Reference`](#citeget.acquire_references.Reference)(number, raw[, title, authors, ...])  | A parsed academic reference.               |
 
-### *class* citeget.acquire_references.AcquisitionResult(reference, success=False, filepath=None, method='', queries_tried=<factory>, notes='')
+### *class* citeget.acquire_references.AcquisitionResult(reference, success=False, filepath=None, method='', queries_tried=list(), notes='')
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -197,12 +197,12 @@ Returns list of (query_string, description) tuples.
 
 Parse a reference string into a Reference object.
 
-* **Return type:**
-  [`Reference`](#citeget.acquire_references.Reference)
-
 Handles formats like:
 : [1] A. Author, “Title,” in *Venue*, year. URL
   A. Author, “Title,” Venue, vol. X, pp. Y-Z, year.
+
+* **Return type:**
+  [`Reference`](#citeget.acquire_references.Reference)
 
 ### citeget.acquire_references.parse_references_section(text)
 

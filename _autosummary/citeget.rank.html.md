@@ -88,15 +88,15 @@ Normalized surnames usable for matching, in either name ordering.
 Multi-word surnames contribute their last word, since that is what a
 caller-supplied author string is most likely to share.
 
-* **Return type:**
-  [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)
-
 ```pycon
 >>> sorted(candidate_surnames("Alice Smith & Bob Jones"))
 ['jones', 'smith']
 >>> sorted(candidate_surnames("Sander van der Linden"))
 ['linden']
 ```
+
+* **Return type:**
+  [`set`](https://docs.python.org/3/builtins/stdtypes.html#set)
 
 ### citeget.rank.dedupe_key(result)
 
@@ -125,9 +125,6 @@ returns the same kind it was given.
 
 Bytes from a libgen size string such as `'2 MB'`; 0 if unparseable.
 
-* **Return type:**
-  [`int`](https://docs.python.org/3/builtins/functions.html#int)
-
 ```pycon
 >>> parse_size("2 MB")
 2000000
@@ -136,6 +133,9 @@ Bytes from a libgen size string such as `'2 MB'`; 0 if unparseable.
 >>> parse_size("")
 0
 ```
+
+* **Return type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
 ### citeget.rank.rank_results(results, , title, authors=None, \*\*kwargs)
 
@@ -147,7 +147,7 @@ Return `results` as [`ScoredResult`](#citeget.rank.ScoredResult) objects, best m
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
-### citeget.rank.score_result(result, \*, title, authors=None, format_preference=('pdf', 'epub', 'azw3', 'mobi', 'azw', 'djvu', 'fb2', 'txt'), language='english', weights=ScoreWeights(title=5.0, author=3.0, format=1.2, language=1.0, size=0.8, decoy_penalty=6.0, stub_penalty=3.0), size_bounds=SizeBounds(min_bytes=80000, min_pdf_bytes=300000, implausible_bytes=120000000), decoy_pattern=re.compile('\\\\\\\\b(summary|summaries|workbook|study guide|sparknotes|cliffs?notes|key takeaways|conversation starters|review and analysis|analysis of|insights (?:on|from)|companion to|instaread|blinkist|downloaden|, re.IGNORECASE))
+### citeget.rank.score_result(result, \*, title, authors=None, format_preference=('pdf', 'epub', 'azw3', 'mobi', 'azw', 'djvu', 'fb2', 'txt'), language='english', weights=ScoreWeights(title=5.0, author=3.0, format=1.2, language=1.0, size=0.8, decoy_penalty=6.0, stub_penalty=3.0), size_bounds=SizeBounds(min_bytes=80000, min_pdf_bytes=300000, implausible_bytes=120000000), decoy_pattern=re.compile('\\\\b(summary|summaries|workbook|study guide|sparknotes|cliffs?notes|key takeaways|conversation starters|review and analysis|analysis of|insights (?:on|from)|companion to|instaread|blinkist|downloaden|, re.IGNORECASE))
 
 Score one `search()` result against a requested title and author.
 

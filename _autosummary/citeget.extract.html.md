@@ -159,7 +159,7 @@ Fields from earlier extractors take priority; later ones fill blanks.
 * **Return type:**
   [`Extractor`](#citeget.extract.Extractor)
 
-### citeget.extract.regex_extractor(, section_patterns=('(?mi)^#{1,3}\\\\\\\\s\*(references|bibliography|works\\\\\\\\s+cited|literature)\\\\\\\\s\*$',), entry_pattern='^\\\\\\\\s\*\\\\\\\\[(\\\\\\\\d+)\\\\\\\\]', stop_pattern='(?m)^#{1,3}\\\\\\\\s+\\\\\\\\S', whole_document_fallback=True)
+### citeget.extract.regex_extractor(, section_patterns=('(?mi)^#{1,3}\\\\s\*(references|bibliography|works\\\\s+cited|literature)\\\\s\*$',), entry_pattern='^\\\\s\*\\\\[(\\\\d+)\\\\]', stop_pattern='(?m)^#{1,3}\\\\s+\\\\S', whole_document_fallback=True)
 
 Create an extractor from regex patterns.
 

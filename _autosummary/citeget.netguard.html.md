@@ -331,15 +331,15 @@ A `context.route("**/*", ...)` handler that fetches through the guard.
 
 Vet a URL before `page.goto`: refuses `file:`, `data:`, internal IPs.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> check_navigation("data:text/html,<p>hi</p>")
 Traceback (most recent call last):
   ...
 citeget.netguard.UnsafeURLError: Refused data:text/html,<p>hi</p>: scheme 'data' is not allowed (allowed: http, https)
 ```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### citeget.netguard.check_url(url, , policy=None)
 
@@ -350,9 +350,6 @@ IP literal is judged here too. Hostnames are judged when the connection is
 made (see [`resolve_public()`](#citeget.netguard.resolve_public)), since that is the only check a DNS
 rebind cannot race.
 
-* **Return type:**
-  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
-
 ```pycon
 >>> check_url("https://example.org/paper.pdf")
 'https://example.org/paper.pdf'
@@ -362,17 +359,20 @@ Traceback (most recent call last):
 citeget.netguard.UnsafeURLError: Refused http://[::1]:8080/: ::1 is not a public address
 ```
 
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
 ### citeget.netguard.default_policy()
 
 The policy in force when none is passed, read from the environment now.
-
-* **Return type:**
-  [`NetPolicy`](#citeget.netguard.NetPolicy)
 
 ```pycon
 >>> default_policy().allow_private in (True, False)
 True
 ```
+
+* **Return type:**
+  [`NetPolicy`](#citeget.netguard.NetPolicy)
 
 ### citeget.netguard.env_limit(var, default)
 
@@ -406,9 +406,6 @@ DNS points and honours environment proxies like plain `requests`.
 
 True if *address* (an IP literal, possibly with a `%zone`) is public.
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> is_public_address("fe80::1%eth0")
 False
@@ -421,6 +418,9 @@ False
 >>> is_public_address("fec0::1")  # deprecated site-local
 False
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### citeget.netguard.launch_guarded_chromium(playwright, , headless=True, policy=None, \*\*context_kwargs)
 

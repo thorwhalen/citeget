@@ -98,30 +98,48 @@ What counts as an acceptable download.
 
 Absolute floor below which nothing can be a real document.
 
+* **Type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
 #### min_pdf_bytes
 
 Higher floor for PDFs, which is where landing-page stubs
 show up. A genuine short EPUB can be ~100 kB, so this cannot be a
 single shared floor.
 
+* **Type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
 #### require_magic
 
 Reject a file whose leading bytes do not match its
 extension. Unknown extensions are always accepted.
 
+* **Type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
+
 #### reject_html
 
 Reject a body that opens like an HTML document.
+
+* **Type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 #### truncation_ratio
 
 Reject a file smaller than this fraction of the size
 the search result advertised. Set to 0 to disable.
 
+* **Type:**
+  [`float`](https://docs.python.org/3/builtins/functions.html#float)
+
 #### min_pages
 
 Minimum PDF page count (0 disables the check). Only sensible
 when the caller knows the download should be a complete book.
+
+* **Type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
 
 #### min_epub_markup_bytes
 
@@ -129,7 +147,10 @@ Minimum total size of the markup entries inside
 an EPUB (0 disables). Measures content volume rather than file size,
 so a small-but-complete EPUB passes where a raw size floor fails.
 
-### *class* citeget.validate.ValidationResult(ok, reason='', detail=<factory>)
+* **Type:**
+  [`int`](https://docs.python.org/3/builtins/functions.html#int)
+
+### *class* citeget.validate.ValidationResult(ok, reason='', detail=dict())
 
 Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
 
@@ -153,13 +174,13 @@ Return self when valid, else raise [`InvalidDownloadError`](#citeget.validate.In
 
 Best-guess format name from magic bytes, or None if unrecognized.
 
-* **Return type:**
-  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
-
 ```pycon
 >>> detect_format(b"%PDF-1.4")
 'pdf'
 ```
+
+* **Return type:**
+  [`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
 
 ### citeget.validate.epub_markup_bytes(source)
 
@@ -175,15 +196,15 @@ complete-but-compact EPUB from an excerpt far better than file size does.
 
 True if *head* opens like an HTML document rather than a binary file.
 
-* **Return type:**
-  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
-
 ```pycon
 >>> looks_like_html(b"<!DOCTYPE html>\n<html>")
 True
 >>> looks_like_html(b"%PDF-1.7")
 False
 ```
+
+* **Return type:**
+  [`bool`](https://docs.python.org/3/builtins/functions.html#bool)
 
 ### citeget.validate.pdf_page_count(source)
 
@@ -220,7 +241,7 @@ False
 Validate a file on disk. Extension defaults to the file’s own suffix.
 
 * **Parameters:**
-  * **path** (`Union`[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – File to check.
+  * **path** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path)]) – File to check.
   * **extension** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Override the expected extension; defaults to `path`’s suffix.
   * **expected_bytes** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`int`](https://docs.python.org/3/builtins/functions.html#int)]) – Size the search result advertised, for the truncation check.
   * **policy** ([`ValidationPolicy`](#citeget.validate.ValidationPolicy)) – Which checks to apply.
