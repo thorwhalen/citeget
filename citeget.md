@@ -1,4 +1,4 @@
-> built 2026-10-20 10:48 UTC from b0dde01 (main) · citeget 0.2.22. Details: build_info.json
+> built 2026-10-20 12:32 UTC from 1645f23 (main) · citeget 0.2.23. Details: build_info.json
 
 # index.html.md
 
@@ -2960,7 +2960,7 @@ citeget.netguard.UnsafeURLError: Refused file:///etc/passwd: scheme 'file' is no
 | [`is_public_address`](_autosummary/citeget.netguard.html.md#citeget.netguard.is_public_address)(address)                     | True if *address* (an IP literal, possibly with a `%zone`) is public.                                               |
 | [`launch_guarded_chromium`](_autosummary/citeget.netguard.html.md#citeget.netguard.launch_guarded_chromium)(playwright, \*[, ...]) | Launch Chromium with no network of its own and return `(browser, context)`.                                         |
 | [`remove_stale_spools`](_autosummary/citeget.netguard.html.md#citeget.netguard.remove_stale_spools)(\*[, max_age])             | Delete spooled downloads older than *max_age* seconds.                                                              |
-| [`request`](_autosummary/citeget.netguard.html.md#citeget.netguard.request)(method, url, \*[, policy])             | `requests.request` with the destination guard.                                                                      |
+| [`request`](_autosummary/citeget.netguard.html.md#citeget.netguard.request)(method, url, \*[, policy, session])    | `requests.request` with the destination guard.                                                                      |
 | [`resolve_public`](_autosummary/citeget.netguard.html.md#citeget.netguard.resolve_public)(host, port, \*[, policy])       | Resolve *host* and return its addresses, refusing if any is not public.                                             |
 | [`response_ceiling`](_autosummary/citeget.netguard.html.md#citeget.netguard.response_ceiling)(limit, \*[, source])          | Cap every response body fetched in this block at *limit* bytes.                                                     |
 | [`spool_dir`](_autosummary/citeget.netguard.html.md#citeget.netguard.spool_dir)()                                    | The directory browser downloads are spooled to (per uid, created 0700).                                             |
@@ -3199,7 +3199,12 @@ A `context.route("**/*", ...)` handler that fetches through the guard.
     [`BrowserDownloads`](_autosummary/citeget.netguard.html.md#citeget.netguard.BrowserDownloads)); a new one if not given. Exposed on the
     handler as `handler.downloads`.
   * **fetch** – The fetcher, `(method, url, **requests_kwargs) -> Response`;
-    defaults to [`request()`](_autosummary/citeget.netguard.html.md#citeget.netguard.request) with *policy*. A seam for tests.
+    defaults to [`request()`](_autosummary/citeget.netguard.html.md#citeget.netguard.request) with *policy* over one guarded session
+    for the whole handler, so a page’s subresources reuse connections
+    (the browser owns cookies; the session keeps none between requests).
+    A seam for tests. Playwright calls the handler from one thread.
+
+The handler has `.downloads` and `.close()`, which closes the session.
 
 ### citeget.netguard.capped(policy)
 
@@ -3316,9 +3321,14 @@ Delete spooled downloads older than *max_age* seconds.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### citeget.netguard.request(method, url, , policy=None, \*\*kwargs)
+### citeget.netguard.request(method, url, , policy=None, session=None, \*\*kwargs)
 
 `requests.request` with the destination guard. Same arguments and return.
+
+`session` is a [`guarded_session()`](_autosummary/citeget.netguard.html.md#citeget.netguard.guarded_session) (under the same *policy*) to reuse, so
+successive requests share connections; the caller closes it. The session’s cookie
+jar is emptied before and after each call: a redirect chain still carries cookies
+from hop to hop, and nothing is kept between calls. Not for concurrent use.
 
 The body is read before returning (or, with `stream=True`, as the caller
 iterates), up to `policy.max_response_bytes`, and the whole exchange,
@@ -4085,7 +4095,7 @@ Validate a file on disk. Extension defaults to the file’s own suffix.
 
 # About this build
 
-This documentation was built on **2026-10-20 10:48 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/b0dde010114967c57d12e4d30f4cde83f3e929f2"><code>b0dde01</code></a> on branch <code>main</code>, for **citeget 0.2.22** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-20 12:32 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/1645f23b357e8ade79a6971c237a35beba4d7e3e"><code>1645f23</code></a> on branch <code>main</code>, for **citeget 0.2.23** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -4094,9 +4104,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/b0dde010114967c57d12e4d30f4cde83f3e929f2"><code>b0dde010114967c57d12e4d30f4cde83f3e929f2</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/1645f23b357e8ade79a6971c237a35beba4d7e3e"><code>1645f23b357e8ade79a6971c237a35beba4d7e3e</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.2.22</code>                                                                                                                                       |
+| Tags at this commit | <code>0.2.23</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/citeget</code>                                                                                                        |
 
@@ -4105,15 +4115,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/citeget</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/39410285536">39410285536</a>   |
+| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/39422717885">39422717885</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>5eb37ab5842d6fd4ec40c2d519daf14cc58881c0</code> (in the history of the built commit) |
+| Event commit | <code>47fcf275eeff130270d04f2f96efe06927db4a1b</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.19  |
+| epythet  | 0.2.20  |
 | Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
@@ -4132,14 +4142,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/citeget/0.2.22/">0.2.22</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/citeget/0.2.23/">0.2.23</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/citeget && cd citeget
-git checkout b0dde010114967c57d12e4d30f4cde83f3e929f2
-pip install "epythet==0.2.19"
+git checkout 1645f23b357e8ade79a6971c237a35beba4d7e3e
+pip install "epythet==0.2.20"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

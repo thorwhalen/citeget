@@ -79,7 +79,7 @@ citeget.netguard.UnsafeURLError: Refused file:///etc/passwd: scheme 'file' is no
 | [`is_public_address`](#citeget.netguard.is_public_address)(address)                     | True if *address* (an IP literal, possibly with a `%zone`) is public.                                               |
 | [`launch_guarded_chromium`](#citeget.netguard.launch_guarded_chromium)(playwright, \*[, ...]) | Launch Chromium with no network of its own and return `(browser, context)`.                                         |
 | [`remove_stale_spools`](#citeget.netguard.remove_stale_spools)(\*[, max_age])             | Delete spooled downloads older than *max_age* seconds.                                                              |
-| [`request`](#citeget.netguard.request)(method, url, \*[, policy])             | `requests.request` with the destination guard.                                                                      |
+| [`request`](#citeget.netguard.request)(method, url, \*[, policy, session])    | `requests.request` with the destination guard.                                                                      |
 | [`resolve_public`](#citeget.netguard.resolve_public)(host, port, \*[, policy])       | Resolve *host* and return its addresses, refusing if any is not public.                                             |
 | [`response_ceiling`](#citeget.netguard.response_ceiling)(limit, \*[, source])          | Cap every response body fetched in this block at *limit* bytes.                                                     |
 | [`spool_dir`](#citeget.netguard.spool_dir)()                                    | The directory browser downloads are spooled to (per uid, created 0700).                                             |
@@ -318,7 +318,12 @@ A `context.route("**/*", ...)` handler that fetches through the guard.
     [`BrowserDownloads`](#citeget.netguard.BrowserDownloads)); a new one if not given. Exposed on the
     handler as `handler.downloads`.
   * **fetch** – The fetcher, `(method, url, **requests_kwargs) -> Response`;
-    defaults to [`request()`](#citeget.netguard.request) with *policy*. A seam for tests.
+    defaults to [`request()`](#citeget.netguard.request) with *policy* over one guarded session
+    for the whole handler, so a page’s subresources reuse connections
+    (the browser owns cookies; the session keeps none between requests).
+    A seam for tests. Playwright calls the handler from one thread.
+
+The handler has `.downloads` and `.close()`, which closes the session.
 
 ### citeget.netguard.capped(policy)
 
@@ -435,9 +440,14 @@ Delete spooled downloads older than *max_age* seconds.
 * **Return type:**
   [`None`](https://docs.python.org/3/builtins/constants.html#None)
 
-### citeget.netguard.request(method, url, , policy=None, \*\*kwargs)
+### citeget.netguard.request(method, url, , policy=None, session=None, \*\*kwargs)
 
 `requests.request` with the destination guard. Same arguments and return.
+
+`session` is a [`guarded_session()`](#citeget.netguard.guarded_session) (under the same *policy*) to reuse, so
+successive requests share connections; the caller closes it. The session’s cookie
+jar is emptied before and after each call: a redirect chain still carries cookies
+from hop to hop, and nothing is kept between calls. Not for concurrent use.
 
 The body is read before returning (or, with `stream=True`, as the caller
 iterates), up to `policy.max_response_bytes`, and the whole exchange,

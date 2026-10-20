@@ -250,7 +250,7 @@ their own LAN or <code class="docutils literal notranslate"><span class="pre">lo
 <tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.remove_stale_spools" title="citeget.netguard.remove_stale_spools"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_stale_spools</span></code></a>(*[, max_age])</p></td>
 <td><p>Delete spooled downloads older than <em>max_age</em> seconds.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.request" title="citeget.netguard.request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span></code></a>(method, url, *[, policy])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.netguard.request" title="citeget.netguard.request"><code class="xref py py-obj docutils literal notranslate"><span class="pre">request</span></code></a>(method, url, *[, policy, session])</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">requests.request</span></code> with the destination guard.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#citeget.netguard.resolve_public" title="citeget.netguard.resolve_public"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resolve_public</span></code></a>(host, port, *[, policy])</p></td>
@@ -550,10 +550,14 @@ has succeeded. False if there is no such file (or <em>context</em> is unguarded)
 <a class="reference internal" href="#citeget.netguard.BrowserDownloads" title="citeget.netguard.BrowserDownloads"><code class="xref py py-class docutils literal notranslate"><span class="pre">BrowserDownloads</span></code></a>); a new one if not given. Exposed on the
 handler as <code class="docutils literal notranslate"><span class="pre">handler.downloads</span></code>.</p></li>
 <li><p><strong>fetch</strong> – The fetcher, <code class="docutils literal notranslate"><span class="pre">(method,</span> <span class="pre">url,</span> <span class="pre">**requests_kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">Response</span></code>;
-defaults to <a class="reference internal" href="#citeget.netguard.request" title="citeget.netguard.request"><code class="xref py py-func docutils literal notranslate"><span class="pre">request()</span></code></a> with <em>policy</em>. A seam for tests.</p></li>
+defaults to <a class="reference internal" href="#citeget.netguard.request" title="citeget.netguard.request"><code class="xref py py-func docutils literal notranslate"><span class="pre">request()</span></code></a> with <em>policy</em> over one guarded session
+for the whole handler, so a page’s subresources reuse connections
+(the browser owns cookies; the session keeps none between requests).
+A seam for tests. Playwright calls the handler from one thread.</p></li>
 </ul>
 </dd>
 </dl>
+<p>The handler has <code class="docutils literal notranslate"><span class="pre">.downloads</span></code> and <code class="docutils literal notranslate"><span class="pre">.close()</span></code>, which closes the session.</p>
 </dd></dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="citeget.netguard.capped">
@@ -697,8 +701,12 @@ DNS points and honours environment proxies like plain <code class="docutils lite
 </dd></dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="citeget.netguard.request">
-<span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/netguard.html#request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.request" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.request'">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">citeget.netguard.</span></span><span class="sig-name descname"><span class="pre">request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">policy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/netguard.html#request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.netguard.request" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.netguard.request'">¶</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">requests.request</span></code> with the destination guard. Same arguments and return.</p>
+<p><code class="docutils literal notranslate"><span class="pre">session</span></code> is a <a class="reference internal" href="#citeget.netguard.guarded_session" title="citeget.netguard.guarded_session"><code class="xref py py-func docutils literal notranslate"><span class="pre">guarded_session()</span></code></a> (under the same <em>policy</em>) to reuse, so
+successive requests share connections; the caller closes it. The session’s cookie
+jar is emptied before and after each call: a redirect chain still carries cookies
+from hop to hop, and nothing is kept between calls. Not for concurrent use.</p>
 <p>The body is read before returning (or, with <code class="docutils literal notranslate"><span class="pre">stream=True</span></code>, as the caller
 iterates), up to <code class="docutils literal notranslate"><span class="pre">policy.max_response_bytes</span></code>, and the whole exchange,
 redirects included, must finish within <code class="docutils literal notranslate"><span class="pre">policy.max_response_seconds</span></code> of
@@ -818,7 +826,7 @@ fetch.</p>
 </div>
 </footer>
 </div>
-<script src="../_static/documentation_options.js?v=b360e4a1"></script>
+<script src="../_static/documentation_options.js?v=171860b8"></script>
 <script src="../_static/doctools.js?v=fd6eb6e6"></script>
 <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
 <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
