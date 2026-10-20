@@ -221,6 +221,9 @@ def fetch(
     timeout: int = 30,
     skip_existing: bool = True,
     manifest: str = "",
+    content: str = "main",
+    content_extractor: str = "readability-lite",
+    include_links: bool = True,
 ):
     """Fetch URLs and save them as Markdown (default), PDF, or original.
 
@@ -237,6 +240,11 @@ def fetch(
         timeout: HTTP timeout per request, in seconds.
         skip_existing: If true (default), skip URLs whose output exists.
         manifest: Optional path to write a JSON manifest of results.
+        content: "main" (default) keeps only the main article in Markdown;
+            "full" keeps the whole page, site chrome included.
+        content_extractor: "readability-lite" (default, no extra dependency)
+            or "trafilatura" (needs `pip install trafilatura`).
+        include_links: If false, links are reduced to their text.
     """
     import json
     from pathlib import Path
@@ -265,6 +273,9 @@ def fetch(
         timeout=timeout,
         skip_existing=skip_existing,
         on_result=_on_result,
+        content=content,
+        content_extractor=content_extractor,
+        include_links=include_links,
     )
 
     ok = sum(1 for r in results if r.status == "ok")

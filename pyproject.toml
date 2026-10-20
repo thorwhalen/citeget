@@ -54,6 +54,9 @@ dev = [
     "pytest-cov>=4.0",
     "ruff>=0.1.0",
 ]
+extract = [
+    "trafilatura>=1.8",
+]
 docs = [
     "sphinx>=6.0",
     "sphinx-rtd-theme>=1.0",
