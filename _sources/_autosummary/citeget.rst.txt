@@ -51,6 +51,7 @@
       write_missed_references_md
       fetch
       fetch_one
+      main_content
       extract_urls_from_text
       infer_filename
       html_to_markdown
@@ -91,6 +92,7 @@
    acquire_references
    article_pub
    cli
+   content
    core
    extract
    joblimit

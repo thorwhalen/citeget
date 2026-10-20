@@ -66,7 +66,7 @@ edition once per format. To acquire one copy of a specific book, use
   * **base_url** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Force a single mirror (e.g. [https://libgen.vg](https://libgen.vg)).
   * **mirrors** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Comma-separated ordered list of mirror base URLs to try.
 
-### citeget.cli.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, manifest='')
+### citeget.cli.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, manifest='', content='main', content_extractor='readability-lite', include_links=True)
 
 Fetch URLs and save them as Markdown (default), PDF, or original.
 
@@ -83,6 +83,11 @@ automatically.
   * **timeout** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – HTTP timeout per request, in seconds.
   * **skip_existing** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If true (default), skip URLs whose output exists.
   * **manifest** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Optional path to write a JSON manifest of results.
+  * **content** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – “main” (default) keeps only the main article in Markdown;
+    “full” keeps the whole page, site chrome included.
+  * **content_extractor** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – “readability-lite” (default, no extra dependency)
+    or “trafilatura” (needs `pip install trafilatura`).
+  * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If false, links are reduced to their text.
 
 ### citeget.cli.get_book(title, , authors='', download_dir='.', query='', topic='books', max_candidates=5, base_url='', mirrors='')
 

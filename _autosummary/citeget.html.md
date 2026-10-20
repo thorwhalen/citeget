@@ -87,9 +87,10 @@ Topics (for libgen search):
 | [`write_missed_references_md`](#citeget.write_missed_references_md)(failures, output_file)  | Write a markdown file listing references that could not be acquired.                                         |
 | [`fetch`](#citeget.fetch)(source, \*[, output_dir, prefer, ...])       | Fetch one or many URLs from a flexible *source*.                                                             |
 | [`fetch_one`](#citeget.fetch_one)(source, \*, output_dir[, prefer, ...])   | Fetch a single URL and save it under *output_dir*.                                                           |
+| [`main_content`](#citeget.main_content)(html)                                 | The HTML of the block that most likely holds the article body.                                               |
 | [`extract_urls_from_text`](#citeget.extract_urls_from_text)(text)                       | Parse URLs from prose / markdown / reference-style citations.                                                |
 | [`infer_filename`](#citeget.infer_filename)(entry, ext)                         | Infer a filename for *entry*, ending in `.{ext}`.                                                            |
-| [`html_to_markdown`](#citeget.html_to_markdown)(html, \*[, source_url])           | Convert *html* to clean Markdown.                                                                            |
+| [`html_to_markdown`](#citeget.html_to_markdown)(html, \*[, source_url, ...])      | Convert *html* to clean Markdown.                                                                            |
 | [`html_to_pdf`](#citeget.html_to_pdf)(url, \*[, html, policy])               | Render *url* to PDF bytes via pdfkit/wkhtmltopdf.                                                            |
 | [`job_slot`](#citeget.job_slot)(key, \*[, max_concurrent, lock_dir])      | Hold one of *key*'s concurrency slots for the duration of the block.                                         |
 
@@ -634,7 +635,7 @@ Recognized forms (each URL deduped, first match wins):
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`UrlEntry`](#citeget.UrlEntry)]
 
-### citeget.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, on_result=None)
+### citeget.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, on_result=None, content='main', content_extractor='readability-lite', include_links=True)
 
 Fetch one or many URLs from a flexible *source*.
 
@@ -648,12 +649,15 @@ Fetch one or many URLs from a flexible *source*.
   * **skip_existing** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip URLs whose inferred output file exists.
   * **on_result** – Optional callback `(index, total, FetchResult) -> None`
     invoked after each fetch (for progress reporting).
+  * **content** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'main'`, `'full'`]) – See [`fetch_one()`](#citeget.fetch_one).
+  * **content_extractor** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – See [`fetch_one()`](#citeget.fetch_one).
+  * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – See [`fetch_one()`](#citeget.fetch_one).
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`FetchResult`](#citeget.FetchResult)]
 * **Returns:**
   A list of [`FetchResult`](#citeget.FetchResult), one per unique URL.
 
-### citeget.fetch_one(source, , output_dir, prefer='md', timeout=30, skip_existing=True)
+### citeget.fetch_one(source, , output_dir, prefer='md', timeout=30, skip_existing=True, content='main', content_extractor='readability-lite', include_links=True)
 
 Fetch a single URL and save it under *output_dir*.
 
@@ -668,6 +672,10 @@ Fetch a single URL and save it under *output_dir*.
   * **timeout** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – HTTP timeout in seconds.
   * **skip_existing** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If True (default), skip when the inferred output
     file already exists.
+  * **content** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'main'`, `'full'`]) – `"main"` (default) keeps only the main article in Markdown
+    output; `"full"` keeps the whole page (the previous behaviour).
+  * **content_extractor** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – Extractor name or callable `html -> html`.
+  * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If False, Markdown links are reduced to their text.
 * **Return type:**
   [`FetchResult`](#citeget.FetchResult)
 * **Returns:**
@@ -729,7 +737,7 @@ path = get_book("Crossing the Chasm", authors="Geoffrey A. Moore",
 * **Raises:**
   [**MirrorUnreachableError**](#citeget.MirrorUnreachableError) – if no candidate mirror could be reached.
 
-### citeget.html_to_markdown(html, , source_url='', \*\*markdownify_options)
+### citeget.html_to_markdown(html, , source_url='', content='full', content_extractor='readability-lite', include_links=True, \*\*markdownify_options)
 
 Convert *html* to clean Markdown.
 
@@ -739,6 +747,14 @@ blocks become fenced blocks and tables become GitHub-flavoured tables.
 * **Parameters:**
   * **html** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – The HTML source to convert.
   * **source_url** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – If given, prepended as an HTML comment provenance line.
+    A `web.archive.org` URL also triggers Wayback cleanup (any
+    *content* mode). Main mode falls back to the full page when the
+    extracted article is shorter than `MIN_MAIN_CHARS`.
+  * **content** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'main'`, `'full'`]) – `"full"` (default here) converts the whole page; `"main"`
+    first extracts the main article (see [`citeget.content`](citeget.content.html.md#module-citeget.content)).
+  * **content_extractor** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – With `content="main"`, a name from
+    [`citeget.content.EXTRACTORS`](citeget.content.html.md#citeget.content.EXTRACTORS) or any callable `html -> html`.
+  * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If False, links are reduced to their text.
   * **markdownify_options** – Overrides for `HTML_TO_MARKDOWN_DEFAULTS`,
     passed to `markdownify`’s `MarkdownConverter`. Unknown option
     names raise `TypeError`. Passing `convert=` drops the default
@@ -831,6 +847,13 @@ Return names of all registered strategies.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### citeget.main_content(html)
+
+The HTML of the block that most likely holds the article body.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### citeget.merge_extractors(\*extractors)
 
@@ -1136,6 +1159,7 @@ Write a references.md with hyperlinks to local downloaded files.
 |---------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
 | [`article_pub`](citeget.article_pub.html.md#module-citeget.article_pub)                 | Article publication toolkit — journal profiling, checking, and formatting.        |
 | [`cli`](citeget.cli.html.md#module-citeget.cli)                                 | CLI entry points for citeget.                                                     |
+| [`content`](citeget.content.html.md#module-citeget.content)                         | Main-article extraction: strip site chrome from HTML before it becomes Markdown.  |
 | [`core`](citeget.core.html.md#module-citeget.core)                               | Core search and download logic for libgen (libgen.vg-family mirrors).             |
 | [`extract`](citeget.extract.html.md#module-citeget.extract)                         | Composable reference extraction from documents.                                   |
 | [`joblimit`](citeget.joblimit.html.md#module-citeget.joblimit)                       | Cap how many acquisitions one owner runs at the same time.                        |

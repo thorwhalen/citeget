@@ -86,6 +86,7 @@
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.acquire_references.html">citeget.acquire_references</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.article_pub.html">citeget.article_pub</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.cli.html">citeget.cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.content.html">citeget.content</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.core.html">citeget.core</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.extract.html">citeget.extract</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_autosummary/citeget.joblimit.html">citeget.joblimit</a></li>
@@ -397,6 +398,12 @@ of URLs, or prose with embedded URLs, and saves each one as Markdown
 <p>URL parsing recognizes markdown links <code class="docutils literal notranslate"><span class="pre">[anchor](url)</span></code>, reference-style
 <code class="docutils literal notranslate"><span class="pre">[1]</span> <span class="pre">...</span> <span class="pre">https://url</span></code> citations, and bare URLs in prose. Filenames are
 inferred from anchor text → URL path → domain hash.</p>
+<p>Markdown output keeps only the <strong>main article</strong> by default (site menus,
+sidebars and footers are dropped; Wayback Machine banners and link prefixes
+are cleaned). Use <code class="docutils literal notranslate"><span class="pre">--content</span> <span class="pre">full</span></code> (<code class="docutils literal notranslate"><span class="pre">content="full"</span></code>) for the whole page,
+<code class="docutils literal notranslate"><span class="pre">--no-include-links</span></code> to drop link targets, and <code class="docutils literal notranslate"><span class="pre">--content-extractor</span> <span class="pre">trafilatura</span></code>
+(<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">'citeget[extract]'</span></code>) for a stronger extractor. Any callable
+<code class="docutils literal notranslate"><span class="pre">html</span> <span class="pre">-&gt;</span> <span class="pre">html</span></code> works as <code class="docutils literal notranslate"><span class="pre">content_extractor=</span></code> in Python.</p>
 <p>PDF rendering is opt-in (HTML→PDF needs <code class="docutils literal notranslate"><span class="pre">wkhtmltopdf</span></code>):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1">pip<span class="w"> </span>install<span class="w"> </span><span class="s1">'citeget[fetch]'</span>
 </span><span id="line-2">brew<span class="w"> </span>install<span class="w"> </span>wkhtmltopdf<span class="w">      </span><span class="c1"># or apt-get install wkhtmltopdf</span>
@@ -479,7 +486,7 @@ audit what was tried, what matched, and what failed.</p>
 
 </section>
 </section>
-<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-20 06:50 UTC from <a href="https://github.com/thorwhalen/citeget/commit/e347e926faabf08316d614d5048568aa27356ba0">e347e92</a> (main) · citeget 0.2.18 · <a href="about-this-build.html">about this build</a></p>
+<p class="epythet-provenance" style="font-size:.8em;opacity:.65;margin-top:2.5em;text-align:right">built 2026-10-20 07:12 UTC from <a href="https://github.com/thorwhalen/citeget/commit/369fa3a875ae3fc0ca75b352567b034160106bb7">369fa3a</a> (main) · citeget 0.2.19 · <a href="about-this-build.html">about this build</a></p>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
@@ -514,7 +521,7 @@ audit what was tried, what matched, and what failed.</p>
 </div>
 </footer>
 </div>
-<script src="_static/documentation_options.js?v=ae23a911"></script>
+<script src="_static/documentation_options.js?v=0a5b2d08"></script>
 <script src="_static/doctools.js?v=fd6eb6e6"></script>
 <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
 <script src="_static/clipboard.min.js?v=a7894cd8"></script>

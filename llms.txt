@@ -11,6 +11,7 @@
 - [citeget.acquire_references](_autosummary/citeget.acquire_references.html.md): Tools for acquiring academic references as PDFs.
 - [citeget.article_pub](_autosummary/citeget.article_pub.html.md): Article publication toolkit — journal profiling, checking, and formatting.
 - [citeget.cli](_autosummary/citeget.cli.html.md): CLI entry points for citeget.
+- [citeget.content](_autosummary/citeget.content.html.md): Main-article extraction: strip site chrome from HTML before it becomes Markdown.
 - [citeget.core](_autosummary/citeget.core.html.md): Core search and download logic for libgen (libgen.vg-family mirrors).
 - [citeget.extract](_autosummary/citeget.extract.html.md): Composable reference extraction from documents.
 - [citeget.joblimit](_autosummary/citeget.joblimit.html.md): Cap how many acquisitions one owner runs at the same time.
@@ -20,7 +21,7 @@
 - [citeget.resolve](_autosummary/citeget.resolve.html.md): Composable download and URL-resolution for academic references.
 - [citeget.validate](_autosummary/citeget.validate.html.md): Validate that a downloaded file is actually the book or paper it claims to be.
 - [For AI agents](ai-agents.html.md): &#96;citeget&#96; ships artifacts for coding agents alongside its code. This page lists
-- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-20 06:50 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
+- [About this build](about-this-build.html.md): This documentation was built on &#42;&#42;2026-10-20 07:12 UTC&#42;&#42; from commit &lt;a href="https://github.com/tho...
 
 ## Optional
 

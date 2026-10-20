@@ -9,6 +9,7 @@
 - [citeget.acquire_references](citeget.acquire_references.html.md): Tools for acquiring academic references as PDFs.
 - [citeget.article_pub](citeget.article_pub.html.md): Article publication toolkit — journal profiling, checking, and formatting.
 - [citeget.cli](citeget.cli.html.md): CLI entry points for citeget.
+- [citeget.content](citeget.content.html.md): Main-article extraction: strip site chrome from HTML before it becomes Markdown.
 - [citeget.core](citeget.core.html.md): Core search and download logic for libgen (libgen.vg-family mirrors).
 - [citeget.extract](citeget.extract.html.md): Composable reference extraction from documents.
 - [citeget.joblimit](citeget.joblimit.html.md): Cap how many acquisitions one owner runs at the same time.

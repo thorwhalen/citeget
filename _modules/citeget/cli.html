@@ -117,6 +117,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.acquire_references.html">citeget.acquire_references</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.article_pub.html">citeget.article_pub</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.cli.html">citeget.cli</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.content.html">citeget.content</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.core.html">citeget.core</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.extract.html">citeget.extract</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../_autosummary/citeget.joblimit.html">citeget.joblimit</a></li>
@@ -406,206 +407,217 @@
 </span><span id="line-221">    <span class="n">timeout</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
 </span><span id="line-222">    <span class="n">skip_existing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span id="line-223">    <span class="n">manifest</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span id="line-224"><span class="p">):</span>
-</span><span id="line-225"><span class="w">    </span><span class="sd">"""Fetch URLs and save them as Markdown (default), PDF, or original.</span>
-</span><span id="line-226">
-</span><span id="line-227"><span class="sd">    *source* may be a URL, a file path containing URLs, or a string with</span>
-</span><span id="line-228"><span class="sd">    prose / markdown / reference-style citations. Multiple URLs are extracted</span>
-</span><span id="line-229"><span class="sd">    automatically.</span>
-</span><span id="line-230">
-</span><span id="line-231"><span class="sd">    Args:</span>
-</span><span id="line-232"><span class="sd">        source: A URL, file path, or text containing URLs.</span>
-</span><span id="line-233"><span class="sd">        output_dir: Where to save files (default: ~/Downloads).</span>
-</span><span id="line-234"><span class="sd">        prefer: "md" (default), "pdf", "original", or "auto".</span>
-</span><span id="line-235"><span class="sd">            PDF requires the `[fetch]` extra (`pip install citeget[fetch]`)</span>
-</span><span id="line-236"><span class="sd">            and a `wkhtmltopdf` system binary for HTML→PDF conversion.</span>
-</span><span id="line-237"><span class="sd">        timeout: HTTP timeout per request, in seconds.</span>
-</span><span id="line-238"><span class="sd">        skip_existing: If true (default), skip URLs whose output exists.</span>
-</span><span id="line-239"><span class="sd">        manifest: Optional path to write a JSON manifest of results.</span>
-</span><span id="line-240"><span class="sd">    """</span>
-</span><span id="line-241">    <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
-</span><span id="line-242">    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-</span><span id="line-243">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch</span> <span class="k">as</span> <span class="n">do_fetch</span>
-</span><span id="line-244">
-</span><span id="line-245">    <span class="k">def</span><span class="w"> </span><span class="nf">_on_result</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">total</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
-</span><span id="line-246">        <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" — </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">title</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span id="line-247">        <span class="n">ref</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">ref</span><span class="si">}</span><span class="s2">] "</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">ref</span> <span class="k">else</span> <span class="s2">""</span>
-</span><span id="line-248">        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"ok"</span><span class="p">:</span>
-</span><span id="line-249">            <span class="nb">print</span><span class="p">(</span>
-</span><span id="line-250">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total</span><span class="si">}</span><span class="s2">] OK   </span><span class="si">{</span><span class="n">ref</span><span class="si">}{</span><span class="n">result</span><span class="o">.</span><span class="n">url</span><span class="si">}{</span><span class="n">title</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
-</span><span id="line-251">                <span class="sa">f</span><span class="s2">"           -&gt; </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">output_file</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">format</span><span class="si">}</span><span class="s2">)"</span>
-</span><span id="line-252">            <span class="p">)</span>
-</span><span id="line-253">        <span class="k">elif</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"skipped"</span><span class="p">:</span>
-</span><span id="line-254">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total</span><span class="si">}</span><span class="s2">] SKIP </span><span class="si">{</span><span class="n">ref</span><span class="si">}{</span><span class="n">result</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2"> (exists)"</span><span class="p">)</span>
-</span><span id="line-255">        <span class="k">else</span><span class="p">:</span>
-</span><span id="line-256">            <span class="nb">print</span><span class="p">(</span>
-</span><span id="line-257">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total</span><span class="si">}</span><span class="s2">] FAIL </span><span class="si">{</span><span class="n">ref</span><span class="si">}{</span><span class="n">result</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">: "</span>
-</span><span id="line-258">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">error</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'unknown'</span><span class="si">}</span><span class="s2">"</span>
-</span><span id="line-259">            <span class="p">)</span>
-</span><span id="line-260">
-</span><span id="line-261">    <span class="n">results</span> <span class="o">=</span> <span class="n">do_fetch</span><span class="p">(</span>
-</span><span id="line-262">        <span class="n">source</span><span class="p">,</span>
-</span><span id="line-263">        <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
-</span><span id="line-264">        <span class="n">prefer</span><span class="o">=</span><span class="n">prefer</span><span class="p">,</span>
-</span><span id="line-265">        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
-</span><span id="line-266">        <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
-</span><span id="line-267">        <span class="n">on_result</span><span class="o">=</span><span class="n">_on_result</span><span class="p">,</span>
-</span><span id="line-268">    <span class="p">)</span>
-</span><span id="line-269">
-</span><span id="line-270">    <span class="n">ok</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"ok"</span><span class="p">)</span>
-</span><span id="line-271">    <span class="n">skipped</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"skipped"</span><span class="p">)</span>
-</span><span id="line-272">    <span class="n">failed</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"failed"</span><span class="p">)</span>
-</span><span id="line-273">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Done: </span><span class="si">{</span><span class="n">ok</span><span class="si">}</span><span class="s2"> fetched, </span><span class="si">{</span><span class="n">skipped</span><span class="si">}</span><span class="s2"> skipped, </span><span class="si">{</span><span class="n">failed</span><span class="si">}</span><span class="s2"> failed"</span><span class="p">)</span>
-</span><span id="line-274">
-</span><span id="line-275">    <span class="k">if</span> <span class="n">manifest</span><span class="p">:</span>
-</span><span id="line-276">        <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
-</span><span id="line-277">        <span class="n">manifest_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="line-278">        <span class="n">manifest_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
-</span><span id="line-279">            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
-</span><span id="line-280">                <span class="p">[</span>
-</span><span id="line-281">                    <span class="p">{</span>
-</span><span id="line-282">                        <span class="s2">"url"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
-</span><span id="line-283">                        <span class="s2">"status"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
-</span><span id="line-284">                        <span class="s2">"output_file"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">output_file</span><span class="p">)</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">output_file</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="line-285">                        <span class="s2">"format"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">format</span><span class="p">,</span>
-</span><span id="line-286">                        <span class="s2">"title"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
-</span><span id="line-287">                        <span class="s2">"ref"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span>
-</span><span id="line-288">                        <span class="s2">"error"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">,</span>
-</span><span id="line-289">                    <span class="p">}</span>
-</span><span id="line-290">                    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span>
-</span><span id="line-291">                <span class="p">],</span>
-</span><span id="line-292">                <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-</span><span id="line-293">            <span class="p">),</span>
-</span><span id="line-294">            <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span>
-</span><span id="line-295">        <span class="p">)</span>
-</span><span id="line-296">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Manifest: </span><span class="si">{</span><span class="n">manifest_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
+</span><span id="line-224">    <span class="n">content</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"main"</span><span class="p">,</span>
+</span><span id="line-225">    <span class="n">content_extractor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"readability-lite"</span><span class="p">,</span>
+</span><span id="line-226">    <span class="n">include_links</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span id="line-227"><span class="p">):</span>
+</span><span id="line-228"><span class="w">    </span><span class="sd">"""Fetch URLs and save them as Markdown (default), PDF, or original.</span>
+</span><span id="line-229">
+</span><span id="line-230"><span class="sd">    *source* may be a URL, a file path containing URLs, or a string with</span>
+</span><span id="line-231"><span class="sd">    prose / markdown / reference-style citations. Multiple URLs are extracted</span>
+</span><span id="line-232"><span class="sd">    automatically.</span>
+</span><span id="line-233">
+</span><span id="line-234"><span class="sd">    Args:</span>
+</span><span id="line-235"><span class="sd">        source: A URL, file path, or text containing URLs.</span>
+</span><span id="line-236"><span class="sd">        output_dir: Where to save files (default: ~/Downloads).</span>
+</span><span id="line-237"><span class="sd">        prefer: "md" (default), "pdf", "original", or "auto".</span>
+</span><span id="line-238"><span class="sd">            PDF requires the `[fetch]` extra (`pip install citeget[fetch]`)</span>
+</span><span id="line-239"><span class="sd">            and a `wkhtmltopdf` system binary for HTML→PDF conversion.</span>
+</span><span id="line-240"><span class="sd">        timeout: HTTP timeout per request, in seconds.</span>
+</span><span id="line-241"><span class="sd">        skip_existing: If true (default), skip URLs whose output exists.</span>
+</span><span id="line-242"><span class="sd">        manifest: Optional path to write a JSON manifest of results.</span>
+</span><span id="line-243"><span class="sd">        content: "main" (default) keeps only the main article in Markdown;</span>
+</span><span id="line-244"><span class="sd">            "full" keeps the whole page, site chrome included.</span>
+</span><span id="line-245"><span class="sd">        content_extractor: "readability-lite" (default, no extra dependency)</span>
+</span><span id="line-246"><span class="sd">            or "trafilatura" (needs `pip install trafilatura`).</span>
+</span><span id="line-247"><span class="sd">        include_links: If false, links are reduced to their text.</span>
+</span><span id="line-248"><span class="sd">    """</span>
+</span><span id="line-249">    <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+</span><span id="line-250">    <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span id="line-251">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">fetch</span> <span class="k">as</span> <span class="n">do_fetch</span>
+</span><span id="line-252">
+</span><span id="line-253">    <span class="k">def</span><span class="w"> </span><span class="nf">_on_result</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">total</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+</span><span id="line-254">        <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">" — </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">title</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">title</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span id="line-255">        <span class="n">ref</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">ref</span><span class="si">}</span><span class="s2">] "</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">ref</span> <span class="k">else</span> <span class="s2">""</span>
+</span><span id="line-256">        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"ok"</span><span class="p">:</span>
+</span><span id="line-257">            <span class="nb">print</span><span class="p">(</span>
+</span><span id="line-258">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total</span><span class="si">}</span><span class="s2">] OK   </span><span class="si">{</span><span class="n">ref</span><span class="si">}{</span><span class="n">result</span><span class="o">.</span><span class="n">url</span><span class="si">}{</span><span class="n">title</span><span class="si">}</span><span class="se">\n</span><span class="s2">"</span>
+</span><span id="line-259">                <span class="sa">f</span><span class="s2">"           -&gt; </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">output_file</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">format</span><span class="si">}</span><span class="s2">)"</span>
+</span><span id="line-260">            <span class="p">)</span>
+</span><span id="line-261">        <span class="k">elif</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"skipped"</span><span class="p">:</span>
+</span><span id="line-262">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total</span><span class="si">}</span><span class="s2">] SKIP </span><span class="si">{</span><span class="n">ref</span><span class="si">}{</span><span class="n">result</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2"> (exists)"</span><span class="p">)</span>
+</span><span id="line-263">        <span class="k">else</span><span class="p">:</span>
+</span><span id="line-264">            <span class="nb">print</span><span class="p">(</span>
+</span><span id="line-265">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total</span><span class="si">}</span><span class="s2">] FAIL </span><span class="si">{</span><span class="n">ref</span><span class="si">}{</span><span class="n">result</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">: "</span>
+</span><span id="line-266">                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">error</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'unknown'</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="line-267">            <span class="p">)</span>
+</span><span id="line-268">
+</span><span id="line-269">    <span class="n">results</span> <span class="o">=</span> <span class="n">do_fetch</span><span class="p">(</span>
+</span><span id="line-270">        <span class="n">source</span><span class="p">,</span>
+</span><span id="line-271">        <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
+</span><span id="line-272">        <span class="n">prefer</span><span class="o">=</span><span class="n">prefer</span><span class="p">,</span>
+</span><span id="line-273">        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+</span><span id="line-274">        <span class="n">skip_existing</span><span class="o">=</span><span class="n">skip_existing</span><span class="p">,</span>
+</span><span id="line-275">        <span class="n">on_result</span><span class="o">=</span><span class="n">_on_result</span><span class="p">,</span>
+</span><span id="line-276">        <span class="n">content</span><span class="o">=</span><span class="n">content</span><span class="p">,</span>
+</span><span id="line-277">        <span class="n">content_extractor</span><span class="o">=</span><span class="n">content_extractor</span><span class="p">,</span>
+</span><span id="line-278">        <span class="n">include_links</span><span class="o">=</span><span class="n">include_links</span><span class="p">,</span>
+</span><span id="line-279">    <span class="p">)</span>
+</span><span id="line-280">
+</span><span id="line-281">    <span class="n">ok</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"ok"</span><span class="p">)</span>
+</span><span id="line-282">    <span class="n">skipped</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"skipped"</span><span class="p">)</span>
+</span><span id="line-283">    <span class="n">failed</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">"failed"</span><span class="p">)</span>
+</span><span id="line-284">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Done: </span><span class="si">{</span><span class="n">ok</span><span class="si">}</span><span class="s2"> fetched, </span><span class="si">{</span><span class="n">skipped</span><span class="si">}</span><span class="s2"> skipped, </span><span class="si">{</span><span class="n">failed</span><span class="si">}</span><span class="s2"> failed"</span><span class="p">)</span>
+</span><span id="line-285">
+</span><span id="line-286">    <span class="k">if</span> <span class="n">manifest</span><span class="p">:</span>
+</span><span id="line-287">        <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">manifest</span><span class="p">)</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+</span><span id="line-288">        <span class="n">manifest_path</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-289">        <span class="n">manifest_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span>
+</span><span id="line-290">            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span>
+</span><span id="line-291">                <span class="p">[</span>
+</span><span id="line-292">                    <span class="p">{</span>
+</span><span id="line-293">                        <span class="s2">"url"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+</span><span id="line-294">                        <span class="s2">"status"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+</span><span id="line-295">                        <span class="s2">"output_file"</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">output_file</span><span class="p">)</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">output_file</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-296">                        <span class="s2">"format"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">format</span><span class="p">,</span>
+</span><span id="line-297">                        <span class="s2">"title"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+</span><span id="line-298">                        <span class="s2">"ref"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span>
+</span><span id="line-299">                        <span class="s2">"error"</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">error</span><span class="p">,</span>
+</span><span id="line-300">                    <span class="p">}</span>
+</span><span id="line-301">                    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span>
+</span><span id="line-302">                <span class="p">],</span>
+</span><span id="line-303">                <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span id="line-304">            <span class="p">),</span>
+</span><span id="line-305">            <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf-8"</span><span class="p">,</span>
+</span><span id="line-306">        <span class="p">)</span>
+</span><span id="line-307">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Manifest: </span><span class="si">{</span><span class="n">manifest_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
 
-</span><span id="line-297">
-</span><span id="line-298">
+</span><span id="line-308">
+</span><span id="line-309">
 <div class="viewcode-block" id="get_book">
 <a class="viewcode-back" href="../../_autosummary/citeget.cli.html#citeget.cli.get_book">[docs]</a>
-</span><span id="line-299"><span class="k">def</span><span class="w"> </span><span class="nf">get_book</span><span class="p">(</span>
-</span><span id="line-300">    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-</span><span id="line-301">    <span class="o">*</span><span class="p">,</span>
-</span><span id="line-302">    <span class="n">authors</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span id="line-303">    <span class="n">download_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">,</span>
-</span><span id="line-304">    <span class="n">query</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span id="line-305">    <span class="n">topic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"books"</span><span class="p">,</span>
-</span><span id="line-306">    <span class="n">max_candidates</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-</span><span id="line-307">    <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span id="line-308">    <span class="n">mirrors</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
-</span><span id="line-309"><span class="p">):</span>
-</span><span id="line-310"><span class="w">    </span><span class="sd">"""Acquire one copy of a specific book, ranked against title and author.</span>
-</span><span id="line-311">
-</span><span id="line-312"><span class="sd">    Unlike ``download``, which takes libgen's own top results (usually the same</span>
-</span><span id="line-313"><span class="sd">    book in several formats), this ranks every result against what you asked</span>
-</span><span id="line-314"><span class="sd">    for and downloads the best candidate that validates as a complete book,</span>
-</span><span id="line-315"><span class="sd">    falling through to the next one if it turns out to be an excerpt or a stub.</span>
-</span><span id="line-316">
-</span><span id="line-317"><span class="sd">    Args:</span>
-</span><span id="line-318"><span class="sd">        title: The book's title.</span>
-</span><span id="line-319"><span class="sd">        authors: The author(s), if known — strongly improves matching.</span>
-</span><span id="line-320"><span class="sd">        download_dir: Directory to save the file into.</span>
-</span><span id="line-321"><span class="sd">        query: Override the libgen search string (defaults to title + surname).</span>
-</span><span id="line-322"><span class="sd">        topic: "books", "fiction", "articles", etc.</span>
-</span><span id="line-323"><span class="sd">        max_candidates: How many ranked candidates to try before giving up.</span>
-</span><span id="line-324"><span class="sd">        base_url: Force a single mirror (e.g. https://libgen.vg).</span>
-</span><span id="line-325"><span class="sd">        mirrors: Comma-separated ordered list of mirror base URLs to try.</span>
-</span><span id="line-326"><span class="sd">    """</span>
-</span><span id="line-327">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_book</span> <span class="k">as</span> <span class="n">do_get_book</span><span class="p">,</span> <span class="n">MirrorUnreachableError</span>
-</span><span id="line-328">
-</span><span id="line-329">    <span class="n">mirror_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mirrors</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="ow">or</span> <span class="kc">None</span>
-</span><span id="line-330">
-</span><span id="line-331">    <span class="k">try</span><span class="p">:</span>
-</span><span id="line-332">        <span class="n">path</span> <span class="o">=</span> <span class="n">do_get_book</span><span class="p">(</span>
-</span><span id="line-333">            <span class="n">title</span><span class="p">,</span>
-</span><span id="line-334">            <span class="n">authors</span><span class="o">=</span><span class="n">authors</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="line-335">            <span class="n">download_dir</span><span class="o">=</span><span class="n">download_dir</span><span class="p">,</span>
-</span><span id="line-336">            <span class="n">query</span><span class="o">=</span><span class="n">query</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="line-337">            <span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span>
-</span><span id="line-338">            <span class="n">max_candidates</span><span class="o">=</span><span class="n">max_candidates</span><span class="p">,</span>
-</span><span id="line-339">            <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="line-340">            <span class="n">mirrors</span><span class="o">=</span><span class="n">mirror_list</span><span class="p">,</span>
-</span><span id="line-341">            <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span id="line-342">        <span class="p">)</span>
-</span><span id="line-343">    <span class="k">except</span> <span class="n">MirrorUnreachableError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-</span><span id="line-344">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ERROR: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-345">        <span class="k">return</span>
-</span><span id="line-346">
-</span><span id="line-347">    <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
-</span><span id="line-348">        <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span> <span class="k">as</span> <span class="n">_Path</span>
-</span><span id="line-349">
-</span><span id="line-350">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Saved: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">_Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> bytes)"</span><span class="p">)</span>
-</span><span id="line-351">    <span class="k">else</span><span class="p">:</span>
-</span><span id="line-352">        <span class="nb">print</span><span class="p">(</span>
-</span><span id="line-353">            <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> No usable copy found for </span><span class="si">{</span><span class="n">title</span><span class="si">!r}</span><span class="s2">. "</span>
-</span><span id="line-354">            <span class="s2">"Try a different --query, or raise --max-candidates."</span>
-</span><span id="line-355">        <span class="p">)</span></div>
-
-</span><span id="line-356">
+</span><span id="line-310"><span class="k">def</span><span class="w"> </span><span class="nf">get_book</span><span class="p">(</span>
+</span><span id="line-311">    <span class="n">title</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span id="line-312">    <span class="o">*</span><span class="p">,</span>
+</span><span id="line-313">    <span class="n">authors</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span id="line-314">    <span class="n">download_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"."</span><span class="p">,</span>
+</span><span id="line-315">    <span class="n">query</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span id="line-316">    <span class="n">topic</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"books"</span><span class="p">,</span>
+</span><span id="line-317">    <span class="n">max_candidates</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+</span><span id="line-318">    <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span id="line-319">    <span class="n">mirrors</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span>
+</span><span id="line-320"><span class="p">):</span>
+</span><span id="line-321"><span class="w">    </span><span class="sd">"""Acquire one copy of a specific book, ranked against title and author.</span>
+</span><span id="line-322">
+</span><span id="line-323"><span class="sd">    Unlike ``download``, which takes libgen's own top results (usually the same</span>
+</span><span id="line-324"><span class="sd">    book in several formats), this ranks every result against what you asked</span>
+</span><span id="line-325"><span class="sd">    for and downloads the best candidate that validates as a complete book,</span>
+</span><span id="line-326"><span class="sd">    falling through to the next one if it turns out to be an excerpt or a stub.</span>
+</span><span id="line-327">
+</span><span id="line-328"><span class="sd">    Args:</span>
+</span><span id="line-329"><span class="sd">        title: The book's title.</span>
+</span><span id="line-330"><span class="sd">        authors: The author(s), if known — strongly improves matching.</span>
+</span><span id="line-331"><span class="sd">        download_dir: Directory to save the file into.</span>
+</span><span id="line-332"><span class="sd">        query: Override the libgen search string (defaults to title + surname).</span>
+</span><span id="line-333"><span class="sd">        topic: "books", "fiction", "articles", etc.</span>
+</span><span id="line-334"><span class="sd">        max_candidates: How many ranked candidates to try before giving up.</span>
+</span><span id="line-335"><span class="sd">        base_url: Force a single mirror (e.g. https://libgen.vg).</span>
+</span><span id="line-336"><span class="sd">        mirrors: Comma-separated ordered list of mirror base URLs to try.</span>
+</span><span id="line-337"><span class="sd">    """</span>
+</span><span id="line-338">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_book</span> <span class="k">as</span> <span class="n">do_get_book</span><span class="p">,</span> <span class="n">MirrorUnreachableError</span>
+</span><span id="line-339">
+</span><span id="line-340">    <span class="n">mirror_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mirrors</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="ow">or</span> <span class="kc">None</span>
+</span><span id="line-341">
+</span><span id="line-342">    <span class="k">try</span><span class="p">:</span>
+</span><span id="line-343">        <span class="n">path</span> <span class="o">=</span> <span class="n">do_get_book</span><span class="p">(</span>
+</span><span id="line-344">            <span class="n">title</span><span class="p">,</span>
+</span><span id="line-345">            <span class="n">authors</span><span class="o">=</span><span class="n">authors</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-346">            <span class="n">download_dir</span><span class="o">=</span><span class="n">download_dir</span><span class="p">,</span>
+</span><span id="line-347">            <span class="n">query</span><span class="o">=</span><span class="n">query</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-348">            <span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span>
+</span><span id="line-349">            <span class="n">max_candidates</span><span class="o">=</span><span class="n">max_candidates</span><span class="p">,</span>
+</span><span id="line-350">            <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="line-351">            <span class="n">mirrors</span><span class="o">=</span><span class="n">mirror_list</span><span class="p">,</span>
+</span><span id="line-352">            <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span id="line-353">        <span class="p">)</span>
+</span><span id="line-354">    <span class="k">except</span> <span class="n">MirrorUnreachableError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+</span><span id="line-355">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ERROR: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-356">        <span class="k">return</span>
 </span><span id="line-357">
+</span><span id="line-358">    <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+</span><span id="line-359">        <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span> <span class="k">as</span> <span class="n">_Path</span>
+</span><span id="line-360">
+</span><span id="line-361">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> Saved: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">_Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="si">:</span><span class="s2">,</span><span class="si">}</span><span class="s2"> bytes)"</span><span class="p">)</span>
+</span><span id="line-362">    <span class="k">else</span><span class="p">:</span>
+</span><span id="line-363">        <span class="nb">print</span><span class="p">(</span>
+</span><span id="line-364">            <span class="sa">f</span><span class="s2">"</span><span class="se">\n</span><span class="si">{</span><span class="n">_ts</span><span class="p">()</span><span class="si">}</span><span class="s2"> No usable copy found for </span><span class="si">{</span><span class="n">title</span><span class="si">!r}</span><span class="s2">. "</span>
+</span><span id="line-365">            <span class="s2">"Try a different --query, or raise --max-candidates."</span>
+</span><span id="line-366">        <span class="p">)</span></div>
+
+</span><span id="line-367">
+</span><span id="line-368">
 <div class="viewcode-block" id="check_mirrors">
 <a class="viewcode-back" href="../../_autosummary/citeget.cli.html#citeget.cli.check_mirrors">[docs]</a>
-</span><span id="line-358"><span class="k">def</span><span class="w"> </span><span class="nf">check_mirrors</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">mirrors</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"design of everyday things"</span><span class="p">):</span>
-</span><span id="line-359"><span class="w">    </span><span class="sd">"""Probe the configured libgen mirrors and report which are healthy.</span>
-</span><span id="line-360">
-</span><span id="line-361"><span class="sd">    Mirror domains rotate, so the shipped default list goes stale on its own</span>
-</span><span id="line-362"><span class="sd">    schedule. Run this when searches start failing: it tells you whether the</span>
-</span><span id="line-363"><span class="sd">    problem is your network or the mirror list, and prints a ready-to-use</span>
-</span><span id="line-364"><span class="sd">    CITEGET_LIBGEN_MIRRORS value for the ones that work.</span>
-</span><span id="line-365">
-</span><span id="line-366"><span class="sd">    Args:</span>
-</span><span id="line-367"><span class="sd">        mirrors: Comma-separated mirrors to probe (defaults to the configured list).</span>
-</span><span id="line-368"><span class="sd">        query: Search terms to probe with (should be something with results).</span>
-</span><span id="line-369"><span class="sd">    """</span>
-</span><span id="line-370">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_mirrors</span> <span class="k">as</span> <span class="n">do_check</span>
+</span><span id="line-369"><span class="k">def</span><span class="w"> </span><span class="nf">check_mirrors</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">mirrors</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"design of everyday things"</span><span class="p">):</span>
+</span><span id="line-370"><span class="w">    </span><span class="sd">"""Probe the configured libgen mirrors and report which are healthy.</span>
 </span><span id="line-371">
-</span><span id="line-372">    <span class="n">mirror_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mirrors</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="ow">or</span> <span class="kc">None</span>
-</span><span id="line-373">    <span class="n">reports</span> <span class="o">=</span> <span class="n">do_check</span><span class="p">(</span><span class="n">mirrors</span><span class="o">=</span><span class="n">mirror_list</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
-</span><span id="line-374">
-</span><span id="line-375">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Probing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">reports</span><span class="p">)</span><span class="si">}</span><span class="s2"> mirror(s) with query </span><span class="si">{</span><span class="n">query</span><span class="si">!r}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="line-376">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="s1">'status'</span><span class="si">:</span><span class="s2">7s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'mirror'</span><span class="si">:</span><span class="s2">28s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'hits'</span><span class="si">:</span><span class="s2">&gt;5s</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="s1">'time'</span><span class="si">:</span><span class="s2">&gt;7s</span><span class="si">}</span><span class="s2">  detail"</span><span class="p">)</span>
-</span><span id="line-377">    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reports</span><span class="p">:</span>
-</span><span id="line-378">        <span class="n">status</span> <span class="o">=</span> <span class="s2">"OK"</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"ok"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">"FAIL"</span>
-</span><span id="line-379">        <span class="nb">print</span><span class="p">(</span>
-</span><span id="line-380">            <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">status</span><span class="si">:</span><span class="s2">7s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'mirror'</span><span class="p">]</span><span class="si">:</span><span class="s2">28s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'results'</span><span class="p">]</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="s2">  "</span>
-</span><span id="line-381">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'elapsed_ms'</span><span class="p">]</span><span class="si">:</span><span class="s2">6d</span><span class="si">}</span><span class="s2">ms  </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'error'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
-</span><span id="line-382">        <span class="p">)</span>
-</span><span id="line-383">
-</span><span id="line-384">    <span class="n">healthy</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s2">"mirror"</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reports</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"ok"</span><span class="p">]</span> <span class="ow">and</span> <span class="n">r</span><span class="p">[</span><span class="s2">"results"</span><span class="p">]]</span>
-</span><span id="line-385">    <span class="nb">print</span><span class="p">()</span>
-</span><span id="line-386">    <span class="k">if</span> <span class="n">healthy</span><span class="p">:</span>
-</span><span id="line-387">        <span class="nb">print</span><span class="p">(</span><span class="s2">"Working mirrors — use them without editing code:"</span><span class="p">)</span>
-</span><span id="line-388">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  export CITEGET_LIBGEN_MIRRORS='</span><span class="si">{</span><span class="s1">','</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">healthy</span><span class="p">)</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
-</span><span id="line-389">    <span class="k">else</span><span class="p">:</span>
+</span><span id="line-372"><span class="sd">    Mirror domains rotate, so the shipped default list goes stale on its own</span>
+</span><span id="line-373"><span class="sd">    schedule. Run this when searches start failing: it tells you whether the</span>
+</span><span id="line-374"><span class="sd">    problem is your network or the mirror list, and prints a ready-to-use</span>
+</span><span id="line-375"><span class="sd">    CITEGET_LIBGEN_MIRRORS value for the ones that work.</span>
+</span><span id="line-376">
+</span><span id="line-377"><span class="sd">    Args:</span>
+</span><span id="line-378"><span class="sd">        mirrors: Comma-separated mirrors to probe (defaults to the configured list).</span>
+</span><span id="line-379"><span class="sd">        query: Search terms to probe with (should be something with results).</span>
+</span><span id="line-380"><span class="sd">    """</span>
+</span><span id="line-381">    <span class="kn">from</span><span class="w"> </span><span class="nn">citeget</span><span class="w"> </span><span class="kn">import</span> <span class="n">check_mirrors</span> <span class="k">as</span> <span class="n">do_check</span>
+</span><span id="line-382">
+</span><span id="line-383">    <span class="n">mirror_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mirrors</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">strip</span><span class="p">()]</span> <span class="ow">or</span> <span class="kc">None</span>
+</span><span id="line-384">    <span class="n">reports</span> <span class="o">=</span> <span class="n">do_check</span><span class="p">(</span><span class="n">mirrors</span><span class="o">=</span><span class="n">mirror_list</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+</span><span id="line-385">
+</span><span id="line-386">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Probing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">reports</span><span class="p">)</span><span class="si">}</span><span class="s2"> mirror(s) with query </span><span class="si">{</span><span class="n">query</span><span class="si">!r}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="line-387">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="s1">'status'</span><span class="si">:</span><span class="s2">7s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'mirror'</span><span class="si">:</span><span class="s2">28s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">'hits'</span><span class="si">:</span><span class="s2">&gt;5s</span><span class="si">}</span><span class="s2">  </span><span class="si">{</span><span class="s1">'time'</span><span class="si">:</span><span class="s2">&gt;7s</span><span class="si">}</span><span class="s2">  detail"</span><span class="p">)</span>
+</span><span id="line-388">    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reports</span><span class="p">:</span>
+</span><span id="line-389">        <span class="n">status</span> <span class="o">=</span> <span class="s2">"OK"</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"ok"</span><span class="p">]</span> <span class="k">else</span> <span class="s2">"FAIL"</span>
 </span><span id="line-390">        <span class="nb">print</span><span class="p">(</span>
-</span><span id="line-391">            <span class="s2">"No mirror returned results. Either every listed domain has moved "</span>
-</span><span id="line-392">            <span class="s2">"(check for current libgen mirrors and pass --mirrors), or your "</span>
-</span><span id="line-393">            <span class="s2">"network/DNS is blocking them."</span>
-</span><span id="line-394">        <span class="p">)</span></div>
+</span><span id="line-391">            <span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">status</span><span class="si">:</span><span class="s2">7s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'mirror'</span><span class="p">]</span><span class="si">:</span><span class="s2">28s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'results'</span><span class="p">]</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="s2">  "</span>
+</span><span id="line-392">            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'elapsed_ms'</span><span class="p">]</span><span class="si">:</span><span class="s2">6d</span><span class="si">}</span><span class="s2">ms  </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="s1">'error'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+</span><span id="line-393">        <span class="p">)</span>
+</span><span id="line-394">
+</span><span id="line-395">    <span class="n">healthy</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="s2">"mirror"</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">reports</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s2">"ok"</span><span class="p">]</span> <span class="ow">and</span> <span class="n">r</span><span class="p">[</span><span class="s2">"results"</span><span class="p">]]</span>
+</span><span id="line-396">    <span class="nb">print</span><span class="p">()</span>
+</span><span id="line-397">    <span class="k">if</span> <span class="n">healthy</span><span class="p">:</span>
+</span><span id="line-398">        <span class="nb">print</span><span class="p">(</span><span class="s2">"Working mirrors — use them without editing code:"</span><span class="p">)</span>
+</span><span id="line-399">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  export CITEGET_LIBGEN_MIRRORS='</span><span class="si">{</span><span class="s1">','</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">healthy</span><span class="p">)</span><span class="si">}</span><span class="s2">'"</span><span class="p">)</span>
+</span><span id="line-400">    <span class="k">else</span><span class="p">:</span>
+</span><span id="line-401">        <span class="nb">print</span><span class="p">(</span>
+</span><span id="line-402">            <span class="s2">"No mirror returned results. Either every listed domain has moved "</span>
+</span><span id="line-403">            <span class="s2">"(check for current libgen mirrors and pass --mirrors), or your "</span>
+</span><span id="line-404">            <span class="s2">"network/DNS is blocking them."</span>
+</span><span id="line-405">        <span class="p">)</span></div>
 
-</span><span id="line-395">
-</span><span id="line-396">
-</span><span id="line-397"><span class="c1"># The commands the CLI dispatches. Named so a test can assert on the list</span>
-</span><span id="line-398"><span class="c1"># itself rather than re-deriving it from the parser.</span>
-</span><span id="line-399"><span class="n">COMMANDS</span> <span class="o">=</span> <span class="p">[</span><span class="n">search</span><span class="p">,</span> <span class="n">download</span><span class="p">,</span> <span class="n">get_book</span><span class="p">,</span> <span class="n">acquire</span><span class="p">,</span> <span class="n">fetch</span><span class="p">,</span> <span class="n">check_mirrors</span><span class="p">]</span>
-</span><span id="line-400">
-</span><span id="line-401">
+</span><span id="line-406">
+</span><span id="line-407">
+</span><span id="line-408"><span class="c1"># The commands the CLI dispatches. Named so a test can assert on the list</span>
+</span><span id="line-409"><span class="c1"># itself rather than re-deriving it from the parser.</span>
+</span><span id="line-410"><span class="n">COMMANDS</span> <span class="o">=</span> <span class="p">[</span><span class="n">search</span><span class="p">,</span> <span class="n">download</span><span class="p">,</span> <span class="n">get_book</span><span class="p">,</span> <span class="n">acquire</span><span class="p">,</span> <span class="n">fetch</span><span class="p">,</span> <span class="n">check_mirrors</span><span class="p">]</span>
+</span><span id="line-411">
+</span><span id="line-412">
 <div class="viewcode-block" id="main">
 <a class="viewcode-back" href="../../_autosummary/citeget.cli.html#citeget.cli.main">[docs]</a>
-</span><span id="line-402"><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-</span><span id="line-403"><span class="w">    </span><span class="sd">"""CLI dispatcher. Returns the exit code.</span>
-</span><span id="line-404">
-</span><span id="line-405"><span class="sd">    ``cw.dispatch`` returns the exit code rather than exiting, so the caller</span>
-</span><span id="line-406"><span class="sd">    turns it into a process status: the console script does ``sys.exit(main())``</span>
-</span><span id="line-407"><span class="sd">    and ``citeget/__main__.py`` does ``raise SystemExit(main())``.</span>
-</span><span id="line-408"><span class="sd">    """</span>
-</span><span id="line-409">    <span class="k">return</span> <span class="n">cw</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">COMMANDS</span><span class="p">)</span></div>
+</span><span id="line-413"><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+</span><span id="line-414"><span class="w">    </span><span class="sd">"""CLI dispatcher. Returns the exit code.</span>
+</span><span id="line-415">
+</span><span id="line-416"><span class="sd">    ``cw.dispatch`` returns the exit code rather than exiting, so the caller</span>
+</span><span id="line-417"><span class="sd">    turns it into a process status: the console script does ``sys.exit(main())``</span>
+</span><span id="line-418"><span class="sd">    and ``citeget/__main__.py`` does ``raise SystemExit(main())``.</span>
+</span><span id="line-419"><span class="sd">    """</span>
+</span><span id="line-420">    <span class="k">return</span> <span class="n">cw</span><span class="o">.</span><span class="n">dispatch</span><span class="p">(</span><span class="n">COMMANDS</span><span class="p">)</span></div>
 
-</span><span id="line-410">
-</span><span id="line-411">
-</span><span id="line-412"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
-</span><span id="line-413">    <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</span><span id="line-421">
+</span><span id="line-422">
+</span><span id="line-423"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+</span><span id="line-424">    <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </span></code></pre></div>
     </div></div>
           </main>
@@ -619,7 +631,7 @@
 </footer>
     </div>
     
-    <script src="../../_static/documentation_options.js?v=ae23a911"></script>
+    <script src="../../_static/documentation_options.js?v=0a5b2d08"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>

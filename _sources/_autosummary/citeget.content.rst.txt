@@ -1,0 +1,30 @@
+citeget.content
+===============
+
+.. automodule:: citeget.content
+
+   
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      DROP_TAGS
+      DROP_CLASS_RE
+      CANDIDATE_TAGS
+      LINK_PENALTY
+      NO_PARAGRAPH_FACTOR
+      DESCENT_RATIO
+      MAX_CHROME_TEXT_SHARE
+      MIN_MAIN_CHARS
+      EXTRACTORS
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      clean_wayback
+      drop_junk_lines
+      is_wayback_url
+      main_content
+      trafilatura_extractor
+   

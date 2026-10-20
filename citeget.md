@@ -1,4 +1,4 @@
-> built 2026-10-20 06:50 UTC from e347e92 (main) · citeget 0.2.18. Details: build_info.json
+> built 2026-10-20 07:12 UTC from 369fa3a (main) · citeget 0.2.19. Details: build_info.json
 
 # index.html.md
 
@@ -292,6 +292,13 @@ for r in results:
 URL parsing recognizes markdown links `[anchor](url)`, reference-style
 `[1] ... https://url` citations, and bare URLs in prose. Filenames are
 inferred from anchor text → URL path → domain hash.
+
+Markdown output keeps only the **main article** by default (site menus,
+sidebars and footers are dropped; Wayback Machine banners and link prefixes
+are cleaned). Use `--content full` (`content="full"`) for the whole page,
+`--no-include-links` to drop link targets, and `--content-extractor trafilatura`
+(`pip install 'citeget[extract]'`) for a stronger extractor. Any callable
+`html -> html` works as `content_extractor=` in Python.
 
 PDF rendering is opt-in (HTML→PDF needs `wkhtmltopdf`):
 
@@ -716,7 +723,7 @@ edition once per format. To acquire one copy of a specific book, use
   * **base_url** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Force a single mirror (e.g. [https://libgen.vg](https://libgen.vg)).
   * **mirrors** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Comma-separated ordered list of mirror base URLs to try.
 
-### citeget.cli.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, manifest='')
+### citeget.cli.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, manifest='', content='main', content_extractor='readability-lite', include_links=True)
 
 Fetch URLs and save them as Markdown (default), PDF, or original.
 
@@ -733,6 +740,11 @@ automatically.
   * **timeout** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – HTTP timeout per request, in seconds.
   * **skip_existing** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If true (default), skip URLs whose output exists.
   * **manifest** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Optional path to write a JSON manifest of results.
+  * **content** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – “main” (default) keeps only the main article in Markdown;
+    “full” keeps the whole page, site chrome included.
+  * **content_extractor** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – “readability-lite” (default, no extra dependency)
+    or “trafilatura” (needs `pip install trafilatura`).
+  * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If false, links are reduced to their text.
 
 ### citeget.cli.get_book(title, , authors='', download_dir='.', query='', topic='books', max_candidates=5, base_url='', mirrors='')
 
@@ -771,6 +783,131 @@ Search libgen and print results as a numbered table.
   * **results_per_page** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Results per page (25, 50, or 100).
   * **base_url** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Force a single mirror (e.g. [https://libgen.vg](https://libgen.vg)).
   * **mirrors** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Comma-separated ordered list of mirror base URLs to try.
+
+
+# _autosummary/citeget.content.html.md
+
+# citeget.content
+
+Main-article extraction: strip site chrome from HTML before it becomes Markdown.
+
+The default extractor, [`main_content()`](_autosummary/citeget.content.html.md#citeget.content.main_content), is a “readability-lite” scorer built
+on `beautifulsoup4` (already a dependency): it drops navigation-like elements,
+then picks the block with the most paragraph text. Any callable `html -> html`
+can replace it (the *extractor* seam); [`trafilatura_extractor()`](_autosummary/citeget.content.html.md#citeget.content.trafilatura_extractor) is an
+optional, stronger one (Apache-2.0, `pip install trafilatura`).
+
+Web Archive copies are cleaned by [`clean_wayback()`](_autosummary/citeget.content.html.md#citeget.content.clean_wayback): the toolbar/banner is
+dropped and `web.archive.org/web/<ts>/` link prefixes are rewritten back to
+the original URLs.
+
+```pycon
+>>> html = "<body><nav>Menu</nav><div><p>" + "Real text. " * 20 + "</p></div></body>"
+>>> "Menu" in main_content(html), "Real text." in main_content(html)
+(False, True)
+```
+
+### Module Attributes
+
+| [`DROP_TAGS`](_autosummary/citeget.content.html.md#citeget.content.DROP_TAGS)             | Elements that are never article content.                                                                                                        |
+|------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`DROP_CLASS_RE`](_autosummary/citeget.content.html.md#citeget.content.DROP_CLASS_RE)         | Class/id fragments that mark chrome.                                                                                                            |
+| [`CANDIDATE_TAGS`](_autosummary/citeget.content.html.md#citeget.content.CANDIDATE_TAGS)        | Tags considered as candidate containers for the article.                                                                                        |
+| [`LINK_PENALTY`](_autosummary/citeget.content.html.md#citeget.content.LINK_PENALTY)          | Weight of link text subtracted from a candidate's score (menus are all links).                                                                  |
+| [`NO_PARAGRAPH_FACTOR`](_autosummary/citeget.content.html.md#citeget.content.NO_PARAGRAPH_FACTOR)   | Pages without `<p>` (e.g. `<br><br>` separated) score by raw text times this.                                                                   |
+| [`DESCENT_RATIO`](_autosummary/citeget.content.html.md#citeget.content.DESCENT_RATIO)         | A descendant of the current best wins if it keeps this share of its score (the tighter container, with less surrounding chrome).                |
+| [`MAX_CHROME_TEXT_SHARE`](_autosummary/citeget.content.html.md#citeget.content.MAX_CHROME_TEXT_SHARE) | A chrome-looking node holding more than this share of the page's text is a layout wrapper (`no-sidebar`, `content-share`), not chrome: keep it. |
+| [`MIN_MAIN_CHARS`](_autosummary/citeget.content.html.md#citeget.content.MIN_MAIN_CHARS)        | Main-mode Markdown shorter than this (characters) is distrusted and the full page is converted instead (see `html_to_markdown`).                |
+| [`EXTRACTORS`](_autosummary/citeget.content.html.md#citeget.content.EXTRACTORS)            | Named extractors, for the CLI and for `content_extractor="name"`.                                                                               |
+
+### Functions
+
+| [`clean_wayback`](_autosummary/citeget.content.html.md#citeget.content.clean_wayback)(html)         | Drop the Wayback Machine toolbar/banner and un-prefix archived links.   |
+|------------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| [`drop_junk_lines`](_autosummary/citeget.content.html.md#citeget.content.drop_junk_lines)(markdown)   | Remove rule-only / empty-bullet lines and unwrap one-cell table rows.   |
+| `is_wayback_url`(url)                                                        |                                                                         |
+| [`main_content`](_autosummary/citeget.content.html.md#citeget.content.main_content)(html)          | The HTML of the block that most likely holds the article body.          |
+| [`trafilatura_extractor`](_autosummary/citeget.content.html.md#citeget.content.trafilatura_extractor)(html) | Extractor backed by `trafilatura` (optional dependency, Apache-2.0).    |
+
+### citeget.content.CANDIDATE_TAGS *= ('article', 'main', 'div', 'td', 'section', 'font', 'body')*
+
+Tags considered as candidate containers for the article.
+
+### citeget.content.DESCENT_RATIO *= 0.9*
+
+A descendant of the current best wins if it keeps this share of its score
+(the tighter container, with less surrounding chrome).
+
+### citeget.content.DROP_CLASS_RE *= re.compile('(^|[-_ ])(comments?|share|sharing|related|sidebar|newsletter|subscribe|subscription|footer|nav|navbar|menu|author-bio|byline|cookie|breadcrumbs?|skip-link|post-navigation)([-_ ]|$)', re.IGNORECASE)*
+
+Class/id fragments that mark chrome. Matched against single class/id tokens.
+
+### citeget.content.DROP_TAGS *= ('script', 'style', 'nav', 'header', 'footer', 'aside', 'form', 'noscript', 'iframe')*
+
+Elements that are never article content.
+
+### citeget.content.EXTRACTORS *: [Mapping](https://docs.python.org/3/library/typing.html#typing.Mapping)[[str](https://docs.python.org/3/builtins/stdtypes.html#str), [Callable](https://docs.python.org/3/library/typing.html#typing.Callable)[[[str](https://docs.python.org/3/builtins/stdtypes.html#str)], [str](https://docs.python.org/3/builtins/stdtypes.html#str)]]* *= {'readability-lite': <function main_content>, 'trafilatura': <function trafilatura_extractor>}*
+
+Named extractors, for the CLI and for `content_extractor="name"`.
+
+### citeget.content.LINK_PENALTY *= 0.3*
+
+Weight of link text subtracted from a candidate’s score (menus are all links).
+
+### citeget.content.MAX_CHROME_TEXT_SHARE *= 0.5*
+
+A chrome-looking node holding more than this share of the page’s text is a
+layout wrapper (`no-sidebar`, `content-share`), not chrome: keep it.
+
+### citeget.content.MIN_MAIN_CHARS *= 200*
+
+Main-mode Markdown shorter than this (characters) is distrusted and the
+full page is converted instead (see `html_to_markdown`).
+
+### citeget.content.NO_PARAGRAPH_FACTOR *= 0.9*
+
+Pages without `<p>` (e.g. `<br><br>` separated) score by raw text times this.
+
+### citeget.content.clean_wayback(html)
+
+Drop the Wayback Machine toolbar/banner and un-prefix archived links.
+
+```pycon
+>>> h = '<a href="https://web.archive.org/web/2020/http://x.org/a">a</a>'
+>>> clean_wayback(h)
+'<a href="http://x.org/a">a</a>'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### citeget.content.drop_junk_lines(markdown)
+
+Remove rule-only / empty-bullet lines and unwrap one-cell table rows.
+
+Fenced code blocks are left alone. Blank lines are kept (they separate paragraphs).
+
+```pycon
+>>> drop_junk_lines("| hello |\n| --- |\n* \n\ntext")
+'hello\n\ntext'
+```
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### citeget.content.main_content(html)
+
+The HTML of the block that most likely holds the article body.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### citeget.content.trafilatura_extractor(html)
+
+Extractor backed by `trafilatura` (optional dependency, Apache-2.0).
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 
 # _autosummary/citeget.core.html.md
@@ -1374,9 +1511,10 @@ Topics (for libgen search):
 | [`write_missed_references_md`](_autosummary/citeget.html.md#citeget.write_missed_references_md)(failures, output_file)  | Write a markdown file listing references that could not be acquired.                                         |
 | [`fetch`](_autosummary/citeget.html.md#citeget.fetch)(source, \*[, output_dir, prefer, ...])       | Fetch one or many URLs from a flexible *source*.                                                             |
 | [`fetch_one`](_autosummary/citeget.html.md#citeget.fetch_one)(source, \*, output_dir[, prefer, ...])   | Fetch a single URL and save it under *output_dir*.                                                           |
+| [`main_content`](_autosummary/citeget.html.md#citeget.main_content)(html)                                 | The HTML of the block that most likely holds the article body.                                               |
 | [`extract_urls_from_text`](_autosummary/citeget.html.md#citeget.extract_urls_from_text)(text)                       | Parse URLs from prose / markdown / reference-style citations.                                                |
 | [`infer_filename`](_autosummary/citeget.html.md#citeget.infer_filename)(entry, ext)                         | Infer a filename for *entry*, ending in `.{ext}`.                                                            |
-| [`html_to_markdown`](_autosummary/citeget.html.md#citeget.html_to_markdown)(html, \*[, source_url])           | Convert *html* to clean Markdown.                                                                            |
+| [`html_to_markdown`](_autosummary/citeget.html.md#citeget.html_to_markdown)(html, \*[, source_url, ...])      | Convert *html* to clean Markdown.                                                                            |
 | [`html_to_pdf`](_autosummary/citeget.html.md#citeget.html_to_pdf)(url, \*[, html, policy])               | Render *url* to PDF bytes via pdfkit/wkhtmltopdf.                                                            |
 | [`job_slot`](_autosummary/citeget.html.md#citeget.job_slot)(key, \*[, max_concurrent, lock_dir])      | Hold one of *key*'s concurrency slots for the duration of the block.                                         |
 
@@ -1921,7 +2059,7 @@ Recognized forms (each URL deduped, first match wins):
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`UrlEntry`](_autosummary/citeget.html.md#citeget.UrlEntry)]
 
-### citeget.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, on_result=None)
+### citeget.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, on_result=None, content='main', content_extractor='readability-lite', include_links=True)
 
 Fetch one or many URLs from a flexible *source*.
 
@@ -1935,12 +2073,15 @@ Fetch one or many URLs from a flexible *source*.
   * **skip_existing** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip URLs whose inferred output file exists.
   * **on_result** – Optional callback `(index, total, FetchResult) -> None`
     invoked after each fetch (for progress reporting).
+  * **content** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'main'`, `'full'`]) – See [`fetch_one()`](_autosummary/citeget.html.md#citeget.fetch_one).
+  * **content_extractor** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – See [`fetch_one()`](_autosummary/citeget.html.md#citeget.fetch_one).
+  * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – See [`fetch_one()`](_autosummary/citeget.html.md#citeget.fetch_one).
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`FetchResult`](_autosummary/citeget.html.md#citeget.FetchResult)]
 * **Returns:**
   A list of [`FetchResult`](_autosummary/citeget.html.md#citeget.FetchResult), one per unique URL.
 
-### citeget.fetch_one(source, , output_dir, prefer='md', timeout=30, skip_existing=True)
+### citeget.fetch_one(source, , output_dir, prefer='md', timeout=30, skip_existing=True, content='main', content_extractor='readability-lite', include_links=True)
 
 Fetch a single URL and save it under *output_dir*.
 
@@ -1955,6 +2096,10 @@ Fetch a single URL and save it under *output_dir*.
   * **timeout** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – HTTP timeout in seconds.
   * **skip_existing** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If True (default), skip when the inferred output
     file already exists.
+  * **content** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'main'`, `'full'`]) – `"main"` (default) keeps only the main article in Markdown
+    output; `"full"` keeps the whole page (the previous behaviour).
+  * **content_extractor** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – Extractor name or callable `html -> html`.
+  * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If False, Markdown links are reduced to their text.
 * **Return type:**
   [`FetchResult`](_autosummary/citeget.html.md#citeget.FetchResult)
 * **Returns:**
@@ -2016,7 +2161,7 @@ path = get_book("Crossing the Chasm", authors="Geoffrey A. Moore",
 * **Raises:**
   [**MirrorUnreachableError**](_autosummary/citeget.html.md#citeget.MirrorUnreachableError) – if no candidate mirror could be reached.
 
-### citeget.html_to_markdown(html, , source_url='', \*\*markdownify_options)
+### citeget.html_to_markdown(html, , source_url='', content='full', content_extractor='readability-lite', include_links=True, \*\*markdownify_options)
 
 Convert *html* to clean Markdown.
 
@@ -2026,6 +2171,14 @@ blocks become fenced blocks and tables become GitHub-flavoured tables.
 * **Parameters:**
   * **html** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – The HTML source to convert.
   * **source_url** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – If given, prepended as an HTML comment provenance line.
+    A `web.archive.org` URL also triggers Wayback cleanup (any
+    *content* mode). Main mode falls back to the full page when the
+    extracted article is shorter than `MIN_MAIN_CHARS`.
+  * **content** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'main'`, `'full'`]) – `"full"` (default here) converts the whole page; `"main"`
+    first extracts the main article (see [`citeget.content`](_autosummary/citeget.content.html.md#module-citeget.content)).
+  * **content_extractor** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – With `content="main"`, a name from
+    [`citeget.content.EXTRACTORS`](_autosummary/citeget.content.html.md#citeget.content.EXTRACTORS) or any callable `html -> html`.
+  * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If False, links are reduced to their text.
   * **markdownify_options** – Overrides for `HTML_TO_MARKDOWN_DEFAULTS`,
     passed to `markdownify`’s `MarkdownConverter`. Unknown option
     names raise `TypeError`. Passing `convert=` drops the default
@@ -2118,6 +2271,13 @@ Return names of all registered strategies.
 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]
+
+### citeget.main_content(html)
+
+The HTML of the block that most likely holds the article body.
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
 
 ### citeget.merge_extractors(\*extractors)
 
@@ -2423,6 +2583,7 @@ Write a references.md with hyperlinks to local downloaded files.
 |---------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
 | [`article_pub`](_autosummary/citeget.article_pub.html.md#module-citeget.article_pub)                 | Article publication toolkit — journal profiling, checking, and formatting.        |
 | [`cli`](_autosummary/citeget.cli.html.md#module-citeget.cli)                                 | CLI entry points for citeget.                                                     |
+| [`content`](_autosummary/citeget.content.html.md#module-citeget.content)                         | Main-article extraction: strip site chrome from HTML before it becomes Markdown.  |
 | [`core`](_autosummary/citeget.core.html.md#module-citeget.core)                               | Core search and download logic for libgen (libgen.vg-family mirrors).             |
 | [`extract`](_autosummary/citeget.extract.html.md#module-citeget.extract)                         | Composable reference extraction from documents.                                   |
 | [`joblimit`](_autosummary/citeget.joblimit.html.md#module-citeget.joblimit)                       | Cap how many acquisitions one owner runs at the same time.                        |
@@ -3893,7 +4054,7 @@ Validate a file on disk. Extension defaults to the file’s own suffix.
 
 # About this build
 
-This documentation was built on **2026-10-20 06:50 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/e347e926faabf08316d614d5048568aa27356ba0"><code>e347e92</code></a> on branch <code>main</code>, for **citeget 0.2.18** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-20 07:12 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/369fa3a875ae3fc0ca75b352567b034160106bb7"><code>369fa3a</code></a> on branch <code>main</code>, for **citeget 0.2.19** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -3902,9 +4063,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/e347e926faabf08316d614d5048568aa27356ba0"><code>e347e926faabf08316d614d5048568aa27356ba0</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/369fa3a875ae3fc0ca75b352567b034160106bb7"><code>369fa3a875ae3fc0ca75b352567b034160106bb7</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.2.18</code>                                                                                                                                       |
+| Tags at this commit | <code>0.2.19</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/citeget</code>                                                                                                        |
 
@@ -3913,9 +4074,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/citeget</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/39382510959">39382510959</a>   |
+| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/39384772796">39384772796</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>1e7a234fe326993084a643a25659160bfd5d48f9</code> (in the history of the built commit) |
+| Event commit | <code>6f7dcca23a386b001949253716e70df3ba2d90e7</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -3940,13 +4101,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/citeget/0.2.18/">0.2.18</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/citeget/0.2.19/">0.2.19</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/citeget && cd citeget
-git checkout e347e926faabf08316d614d5048568aa27356ba0
+git checkout 369fa3a875ae3fc0ca75b352567b034160106bb7
 pip install "epythet==0.2.18"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

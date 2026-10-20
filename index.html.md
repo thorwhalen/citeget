@@ -289,6 +289,13 @@ URL parsing recognizes markdown links `[anchor](url)`, reference-style
 `[1] ... https://url` citations, and bare URLs in prose. Filenames are
 inferred from anchor text → URL path → domain hash.
 
+Markdown output keeps only the **main article** by default (site menus,
+sidebars and footers are dropped; Wayback Machine banners and link prefixes
+are cleaned). Use `--content full` (`content="full"`) for the whole page,
+`--no-include-links` to drop link targets, and `--content-extractor trafilatura`
+(`pip install 'citeget[extract]'`) for a stronger extractor. Any callable
+`html -> html` works as `content_extractor=` in Python.
+
 PDF rendering is opt-in (HTML→PDF needs `wkhtmltopdf`):
 
 ```bash
