@@ -115,7 +115,9 @@ def main_content(html: str) -> str:
     best, best_score = soup.body or soup, 0.0  # document order: ancestors first
     for el in soup.find_all(CANDIDATE_TAGS):
         score = _score(el)
-        tighter = best in el.parents and score >= max(DESCENT_RATIO * best_score, best_score - MAX_DESCENT_LOSS)
+        tighter = best in el.parents and score >= max(
+            DESCENT_RATIO * best_score, best_score - MAX_DESCENT_LOSS
+        )
         if score > best_score or tighter:
             best, best_score = el, score
     body = (
