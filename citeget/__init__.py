@@ -145,10 +145,15 @@ from citeget.fetch import (
     UrlEntry,
 )
 
+from citeget.merge_keyed import merge_keyed, merge_keyed_report, MergedDocument
 from citeget.netguard import NetPolicy, UnsafeURLError
 from citeget.joblimit import JobLimitExceeded, job_slot
 
 __all__ = [
+    # Merge keyed-citation parts into one Vancouver-numbered document
+    "merge_keyed",
+    "merge_keyed_report",
+    "MergedDocument",
     # Core search/download
     "search",
     "download_results",
