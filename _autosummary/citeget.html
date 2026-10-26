@@ -29,7 +29,7 @@
 <meta content="citeget" property="og:title"/>
 <meta content="citeget" name="twitter:title"/>
 <link href="../_static/pygments.css?v=d75fae25" rel="stylesheet" type="text/css"/>
-<link href="../_static/theme.css?v=d6d7c91b" rel="stylesheet" type="text/css"/>
+<link href="../_static/theme.css?v=009055c6" rel="stylesheet" type="text/css"/>
 <link href="../_static/sphinx_autodoc_typehints.css?v=057ac668" rel="stylesheet" type="text/css"/>
 <link href="../_static/copybutton.css?v=76b2166b" rel="stylesheet" type="text/css"/>
 <link href="../_static/epythet.css?v=d5d61ea0" rel="stylesheet" type="text/css"/>
@@ -168,6 +168,12 @@ Code skills) and by humans (via CLI and Python API).</p>
 <p class="rubric">Functions</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.merge_keyed" title="citeget.merge_keyed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_keyed</span></code></a>(parts, **kwargs)</p></td>
+<td><p>The merged Markdown only; keyword arguments as <a class="reference internal" href="#citeget.merge_keyed_report" title="citeget.merge_keyed_report"><code class="xref py py-func docutils literal notranslate"><span class="pre">merge_keyed_report()</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.merge_keyed_report" title="citeget.merge_keyed_report"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge_keyed_report</span></code></a>(parts, *[, head, tail, ...])</p></td>
+<td><p>Merge <em>parts</em> (Markdown strings); see the module docstring.</p></td>
+</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#citeget.search" title="citeget.search"><code class="xref py py-obj docutils literal notranslate"><span class="pre">search</span></code></a>(query, *[, topic, topics, ...])</p></td>
 <td><p>Search a libgen mirror and return a list of result dicts.</p></td>
 </tr>
@@ -320,37 +326,40 @@ Code skills) and by humans (via CLI and Python API).</p>
 <p class="rubric">Classes</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.ScoredResult" title="citeget.ScoredResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ScoredResult</span></code></a>(result, score, title_match, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.MergedDocument" title="citeget.MergedDocument"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MergedDocument</span></code></a>(text[, order, missing, ...])</p></td>
+<td><p>The merged text plus what a caller needs to check it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.ScoredResult" title="citeget.ScoredResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ScoredResult</span></code></a>(result, score, title_match, ...)</p></td>
 <td><p>A search result with its score and the signal breakdown behind it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.ScoreWeights" title="citeget.ScoreWeights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ScoreWeights</span></code></a>([title, author, format, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.ScoreWeights" title="citeget.ScoreWeights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ScoreWeights</span></code></a>([title, author, format, ...])</p></td>
 <td><p>Relative contribution of each signal to the total score.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.SizeBounds" title="citeget.SizeBounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SizeBounds</span></code></a>([min_bytes, min_pdf_bytes, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.SizeBounds" title="citeget.SizeBounds"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SizeBounds</span></code></a>([min_bytes, min_pdf_bytes, ...])</p></td>
 <td><p>Plausibility bounds for a real book file.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.ValidationPolicy" title="citeget.ValidationPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidationPolicy</span></code></a>([min_bytes, min_pdf_bytes, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.ValidationPolicy" title="citeget.ValidationPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidationPolicy</span></code></a>([min_bytes, min_pdf_bytes, ...])</p></td>
 <td><p>What counts as an acceptable download.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.ValidationResult" title="citeget.ValidationResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidationResult</span></code></a>(ok[, reason, detail])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.ValidationResult" title="citeget.ValidationResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ValidationResult</span></code></a>(ok[, reason, detail])</p></td>
 <td><p>Verdict on a download, plus the measurements behind it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.ExtractionResult" title="citeget.ExtractionResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExtractionResult</span></code></a>(references[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.ExtractionResult" title="citeget.ExtractionResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ExtractionResult</span></code></a>(references[, ...])</p></td>
 <td><p>Result of extracting references from text.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.Reference" title="citeget.Reference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Reference</span></code></a>(number, raw[, title, authors, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.Reference" title="citeget.Reference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Reference</span></code></a>(number, raw[, title, authors, ...])</p></td>
 <td><p>A parsed academic reference.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.AcquisitionResult" title="citeget.AcquisitionResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AcquisitionResult</span></code></a>(reference[, success, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.AcquisitionResult" title="citeget.AcquisitionResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AcquisitionResult</span></code></a>(reference[, success, ...])</p></td>
 <td><p>Result of trying to acquire a reference.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.FetchResult" title="citeget.FetchResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FetchResult</span></code></a>(url, status[, output_file, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.FetchResult" title="citeget.FetchResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FetchResult</span></code></a>(url, status[, output_file, ...])</p></td>
 <td><p>Outcome of a single URL fetch.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.UrlEntry" title="citeget.UrlEntry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UrlEntry</span></code></a>(url[, title, ref])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.UrlEntry" title="citeget.UrlEntry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UrlEntry</span></code></a>(url[, title, ref])</p></td>
 <td><p>A URL with optional context preserved for filename inference.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.NetPolicy" title="citeget.NetPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NetPolicy</span></code></a>([allow_private, allowed_schemes, ...])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.NetPolicy" title="citeget.NetPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NetPolicy</span></code></a>([allow_private, allowed_schemes, ...])</p></td>
 <td><p>What outbound requests are allowed to reach.</p></td>
 </tr>
 </tbody>
@@ -412,6 +421,14 @@ Code skills) and by humans (via CLI and Python API).</p>
 <span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">JobLimitExceeded</span></span><a class="reference internal" href="../_modules/citeget/joblimit.html#JobLimitExceeded"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.JobLimitExceeded" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.JobLimitExceeded'">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p>
 <p>The owner already has as many acquisitions running as allowed.</p>
+</dd></dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="citeget.MergedDocument">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">MergedDocument</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">list()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conflicts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">glossary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">dict()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/merge_keyed.html#MergedDocument"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.MergedDocument" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.MergedDocument'">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#object" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p>
+<p>The merged text plus what a caller needs to check it.</p>
+<dl class="field-list simple">
+</dl>
 </dd></dl>
 <dl class="py exception">
 <dt class="sig sig-object py" id="citeget.MirrorUnreachableError">
@@ -1284,6 +1301,37 @@ refused or fails, or rendering fails.</p>
 </dl>
 </dd></dl>
 <dl class="py function">
+<dt class="sig sig-object py" id="citeget.merge_keyed">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">merge_keyed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parts</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/merge_keyed.html#merge_keyed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.merge_keyed" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.merge_keyed'">¶</a></dt>
+<dd><p>The merged Markdown only; keyword arguments as <a class="reference internal" href="#citeget.merge_keyed_report" title="citeget.merge_keyed_report"><code class="xref py py-func docutils literal notranslate"><span class="pre">merge_keyed_report()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="citeget.merge_keyed_report">
+<span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">merge_keyed_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parts</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">head</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cite_pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'\\{ref:([^}]+)\\}'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_entry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'MISSING</span> <span class="pre">{key}'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/merge_keyed.html#merge_keyed_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.merge_keyed_report" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.merge_keyed_report'">¶</a></dt>
+<dd><p>Merge <em>parts</em> (Markdown strings); see the module docstring.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parts</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Iterable" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a>]</span>) – Part texts, in document order.</p></li>
+<li><p><strong>head</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a>]</span>) – Text placed before the first part.</p></li>
+<li><p><strong>tail</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a>]</span>) – Text placed after the last part; may contain <code class="docutils literal notranslate"><span class="pre">{{REFERENCES}}</span></code>
+and <code class="docutils literal notranslate"><span class="pre">{{GLOSSARY}}</span></code>. Default: a <code class="docutils literal notranslate"><span class="pre">##</span> <span class="pre">References</span></code> section and, if
+any term was defined, a <code class="docutils literal notranslate"><span class="pre">##</span> <span class="pre">Glossary</span></code> section.</p></li>
+<li><p><strong>cite_pattern</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></span>) – Regex with one group capturing the key.</p></li>
+<li><p><strong>missing_entry</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></span>) – Template for a cited key with no entry (<code class="docutils literal notranslate"><span class="pre">{key}</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#citeget.MergedDocument" title="citeget.merge_keyed.MergedDocument"><code class="xref py py-class docutils literal notranslate"><span class="pre">MergedDocument</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
 <dt class="sig sig-object py" id="citeget.parse_reference">
 <span class="sig-prename descclassname"><span class="pre">citeget.</span></span><span class="sig-name descname"><span class="pre">parse_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/acquire_references.html#parse_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.parse_reference" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.parse_reference'">¶</a></dt>
 <dd><p>Parse a reference string into a Reference object.</p>
@@ -1716,6 +1764,7 @@ check. None skips it.</p></li>
 </li>
 <li><a :data-current="activeSection === '#citeget.InvalidDownloadError'" class="reference internal" href="#citeget.InvalidDownloadError"><code class="docutils literal notranslate"><span class="pre">InvalidDownloadError</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.JobLimitExceeded'" class="reference internal" href="#citeget.JobLimitExceeded"><code class="docutils literal notranslate"><span class="pre">JobLimitExceeded</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.MergedDocument'" class="reference internal" href="#citeget.MergedDocument"><code class="docutils literal notranslate"><span class="pre">MergedDocument</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.MirrorUnreachableError'" class="reference internal" href="#citeget.MirrorUnreachableError"><code class="docutils literal notranslate"><span class="pre">MirrorUnreachableError</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.NetPolicy'" class="reference internal" href="#citeget.NetPolicy"><code class="docutils literal notranslate"><span class="pre">NetPolicy</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.Reference'" class="reference internal" href="#citeget.Reference"><code class="docutils literal notranslate"><span class="pre">Reference</span></code></a></li>
@@ -1767,6 +1816,8 @@ check. None skips it.</p></li>
 <li><a :data-current="activeSection === '#citeget.list_strategies'" class="reference internal" href="#citeget.list_strategies"><code class="docutils literal notranslate"><span class="pre">list_strategies()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.main_content'" class="reference internal" href="#citeget.main_content"><code class="docutils literal notranslate"><span class="pre">main_content()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.merge_extractors'" class="reference internal" href="#citeget.merge_extractors"><code class="docutils literal notranslate"><span class="pre">merge_extractors()</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.merge_keyed'" class="reference internal" href="#citeget.merge_keyed"><code class="docutils literal notranslate"><span class="pre">merge_keyed()</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.merge_keyed_report'" class="reference internal" href="#citeget.merge_keyed_report"><code class="docutils literal notranslate"><span class="pre">merge_keyed_report()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.parse_reference'" class="reference internal" href="#citeget.parse_reference"><code class="docutils literal notranslate"><span class="pre">parse_reference()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.parse_references_section'" class="reference internal" href="#citeget.parse_references_section"><code class="docutils literal notranslate"><span class="pre">parse_references_section()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.rank_results'" class="reference internal" href="#citeget.rank_results"><code class="docutils literal notranslate"><span class="pre">rank_results()</span></code></a></li>
@@ -1800,11 +1851,11 @@ check. None skips it.</p></li>
 </div>
 </footer>
 </div>
-<script src="../_static/documentation_options.js?v=171860b8"></script>
+<script src="../_static/documentation_options.js?v=dc91f075"></script>
 <script src="../_static/doctools.js?v=fd6eb6e6"></script>
 <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
 <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
 <script src="../_static/copybutton.js?v=fd10adb8"></script>
-<script defer="defer" src="../_static/theme.js?v=5db23cf8"></script>
+<script defer="defer" src="../_static/theme.js?v=49cc6205"></script>
 </body>
 </html>

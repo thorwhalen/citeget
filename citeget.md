@@ -1,4 +1,4 @@
-> built 2026-10-20 12:32 UTC from 1645f23 (main) · citeget 0.2.23. Details: build_info.json
+> built 2026-10-26 07:58 UTC from 8fd591d (main) · citeget 0.2.24. Details: build_info.json
 
 # index.html.md
 
@@ -1486,71 +1486,74 @@ Topics (for libgen search):
 
 ### Functions
 
-| [`search`](_autosummary/citeget.html.md#citeget.search)(query, \*[, topic, topics, ...])            | Search a libgen mirror and return a list of result dicts.                                                    |
-|-----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
-| [`download_results`](_autosummary/citeget.html.md#citeget.download_results)(results, \*[, download_dir, ...]) | Download multiple results.                                                                                   |
-| [`download_one`](_autosummary/citeget.html.md#citeget.download_one)(result, \*[, download_dir, ...])      | Download a single result.                                                                                    |
-| [`download_best`](_autosummary/citeget.html.md#citeget.download_best)(results, \*, title[, authors, ...])  | Download the best match for a specific title, falling through on failure.                                    |
-| [`get_book`](_autosummary/citeget.html.md#citeget.get_book)(title, \*[, authors, download_dir, ...])  | Acquire one copy of a specific book.                                                                         |
-| [`search_and_download`](_autosummary/citeget.html.md#citeget.search_and_download)(query, \*[, topic, ...])       | Search libgen and download matching results in one shot.                                                     |
-| [`check_mirrors`](_autosummary/citeget.html.md#citeget.check_mirrors)(\*[, mirrors, query, topic, ...])    | Probe each configured mirror and report which ones are healthy.                                              |
-| [`rank_results`](_autosummary/citeget.html.md#citeget.rank_results)(results, \*, title[, authors])        | Return `results` as [`ScoredResult`](_autosummary/citeget.html.md#citeget.ScoredResult) objects, best match first. |
-| [`score_result`](_autosummary/citeget.html.md#citeget.score_result)(result, \*, title[, authors, ...])    | Score one `search()` result against a requested title and author.                                            |
-| [`dedupe_results`](_autosummary/citeget.html.md#citeget.dedupe_results)(results, \*[, key])                 | Keep only the first result for each distinct work, preserving order.                                         |
-| [`validate_download`](_autosummary/citeget.html.md#citeget.validate_download)(path, \*[, extension, ...])      | Validate a file on disk.                                                                                     |
-| [`validate_bytes`](_autosummary/citeget.html.md#citeget.validate_bytes)(body, \*[, extension, ...])         | Validate an in-memory response body without writing it to disk.                                              |
-| [`apa7_authors`](_autosummary/citeget.html.md#citeget.apa7_authors)(authors)                              | Format *authors* APA 7 style, surnames only.                                                                 |
-| [`candidate_surnames`](_autosummary/citeget.html.md#citeget.candidate_surnames)(authors)                        | Normalized surnames usable for matching, in either name ordering.                                            |
-| [`surnames`](_autosummary/citeget.html.md#citeget.surnames)(authors)                                  | Surnames of every author in *authors*, in order, casing preserved.                                           |
-| [`parse_reference`](_autosummary/citeget.html.md#citeget.parse_reference)(text[, number])                    | Parse a reference string into a Reference object.                                                            |
-| [`parse_references_section`](_autosummary/citeget.html.md#citeget.parse_references_section)(text)                     | Parse a references section into a list of Reference objects.                                                 |
-| [`extract_references`](_autosummary/citeget.html.md#citeget.extract_references)(text, \*[, extractor])          | Extract references from document text.                                                                       |
-| [`regex_extractor`](_autosummary/citeget.html.md#citeget.regex_extractor)(\*[, section_patterns, ...])       | Create an extractor from regex patterns.                                                                     |
-| [`chain_extractors`](_autosummary/citeget.html.md#citeget.chain_extractors)(\*extractors)                     | Try *extractors* in order, return the first non-empty result.                                                |
-| [`merge_extractors`](_autosummary/citeget.html.md#citeget.merge_extractors)(\*extractors)                     | Run all *extractors*, deduplicate by reference number.                                                       |
-| [`register_extractor`](_autosummary/citeget.html.md#citeget.register_extractor)(name, extractor)                | Register a named extractor.                                                                                  |
-| [`list_extractors`](_autosummary/citeget.html.md#citeget.list_extractors)()                                  | Return names of all registered extractors.                                                                   |
-| [`resolve_reference`](_autosummary/citeget.html.md#citeget.resolve_reference)(ref, filepath, \*[, strategy])   | Resolve and download a single reference.                                                                     |
-| [`url_rewriter`](_autosummary/citeget.html.md#citeget.url_rewriter)(\*[, rules])                          | Create a resolver that rewrites known repository URLs to direct PDFs.                                        |
-| [`resolve_and_download`](_autosummary/citeget.html.md#citeget.resolve_and_download)(resolver, \*[, downloader])   | Create a strategy that resolves URLs then tries to download each.                                            |
-| [`chain_strategies`](_autosummary/citeget.html.md#citeget.chain_strategies)(\*strategies)                     | Try *strategies* in order, return the first success.                                                         |
-| [`chain_resolvers`](_autosummary/citeget.html.md#citeget.chain_resolvers)(\*resolvers)                       | Concatenate URL lists from multiple resolvers (deduped, order-preserving).                                   |
-| [`register_resolver`](_autosummary/citeget.html.md#citeget.register_resolver)(name, resolver)                  | Register a named URL resolver.                                                                               |
-| [`register_downloader`](_autosummary/citeget.html.md#citeget.register_downloader)(name, downloader)              | Register a named downloader.                                                                                 |
-| [`register_strategy`](_autosummary/citeget.html.md#citeget.register_strategy)(name, strategy)                  | Register a named acquisition strategy.                                                                       |
-| [`list_resolvers`](_autosummary/citeget.html.md#citeget.list_resolvers)()                                   | Return names of all registered resolvers.                                                                    |
-| [`list_downloaders`](_autosummary/citeget.html.md#citeget.list_downloaders)()                                 | Return names of all registered downloaders.                                                                  |
-| [`list_strategies`](_autosummary/citeget.html.md#citeget.list_strategies)()                                  | Return names of all registered strategies.                                                                   |
-| [`acquire_reference`](_autosummary/citeget.html.md#citeget.acquire_reference)(ref, download_dir, \*, ...)      | Try to acquire a single reference.                                                                           |
-| [`acquire_all_references`](_autosummary/citeget.html.md#citeget.acquire_all_references)(references, ...[, ...])     | Acquire files for a list of references.                                                                      |
-| [`generate_search_queries`](_autosummary/citeget.html.md#citeget.generate_search_queries)(ref)                       | Generate a sequence of search queries from most to least specific.                                           |
-| [`resolve_work_dir`](_autosummary/citeget.html.md#citeget.resolve_work_dir)([reference_file, work_dir])       | Resolve the working directory for an acquisition session.                                                    |
-| [`check_existing_downloads`](_autosummary/citeget.html.md#citeget.check_existing_downloads)(references, ...)          | Check which references already have downloaded files.                                                        |
-| [`write_references_md`](_autosummary/citeget.html.md#citeget.write_references_md)(successes, download_dir, ...)  | Write a references.md with hyperlinks to local downloaded files.                                             |
-| [`write_missed_references_md`](_autosummary/citeget.html.md#citeget.write_missed_references_md)(failures, output_file)  | Write a markdown file listing references that could not be acquired.                                         |
-| [`fetch`](_autosummary/citeget.html.md#citeget.fetch)(source, \*[, output_dir, prefer, ...])       | Fetch one or many URLs from a flexible *source*.                                                             |
-| [`fetch_one`](_autosummary/citeget.html.md#citeget.fetch_one)(source, \*, output_dir[, prefer, ...])   | Fetch a single URL and save it under *output_dir*.                                                           |
-| [`main_content`](_autosummary/citeget.html.md#citeget.main_content)(html)                                 | The HTML of the block that most likely holds the article body.                                               |
-| [`extract_urls_from_text`](_autosummary/citeget.html.md#citeget.extract_urls_from_text)(text)                       | Parse URLs from prose / markdown / reference-style citations.                                                |
-| [`infer_filename`](_autosummary/citeget.html.md#citeget.infer_filename)(entry, ext)                         | Infer a filename for *entry*, ending in `.{ext}`.                                                            |
-| [`html_to_markdown`](_autosummary/citeget.html.md#citeget.html_to_markdown)(html, \*[, source_url, ...])      | Convert *html* to clean Markdown.                                                                            |
-| [`html_to_pdf`](_autosummary/citeget.html.md#citeget.html_to_pdf)(url, \*[, html, policy])               | Render *url* to PDF bytes via pdfkit/wkhtmltopdf.                                                            |
-| [`job_slot`](_autosummary/citeget.html.md#citeget.job_slot)(key, \*[, max_concurrent, lock_dir])      | Hold one of *key*'s concurrency slots for the duration of the block.                                         |
+| [`merge_keyed`](_autosummary/citeget.html.md#citeget.merge_keyed)(parts, \*\*kwargs)                     | The merged Markdown only; keyword arguments as [`merge_keyed_report()`](_autosummary/citeget.html.md#citeget.merge_keyed_report).   |
+|-----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| [`merge_keyed_report`](_autosummary/citeget.html.md#citeget.merge_keyed_report)(parts, \*[, head, tail, ...])   | Merge *parts* (Markdown strings); see the module docstring.                                                             |
+| [`search`](_autosummary/citeget.html.md#citeget.search)(query, \*[, topic, topics, ...])            | Search a libgen mirror and return a list of result dicts.                                                               |
+| [`download_results`](_autosummary/citeget.html.md#citeget.download_results)(results, \*[, download_dir, ...]) | Download multiple results.                                                                                              |
+| [`download_one`](_autosummary/citeget.html.md#citeget.download_one)(result, \*[, download_dir, ...])      | Download a single result.                                                                                               |
+| [`download_best`](_autosummary/citeget.html.md#citeget.download_best)(results, \*, title[, authors, ...])  | Download the best match for a specific title, falling through on failure.                                               |
+| [`get_book`](_autosummary/citeget.html.md#citeget.get_book)(title, \*[, authors, download_dir, ...])  | Acquire one copy of a specific book.                                                                                    |
+| [`search_and_download`](_autosummary/citeget.html.md#citeget.search_and_download)(query, \*[, topic, ...])       | Search libgen and download matching results in one shot.                                                                |
+| [`check_mirrors`](_autosummary/citeget.html.md#citeget.check_mirrors)(\*[, mirrors, query, topic, ...])    | Probe each configured mirror and report which ones are healthy.                                                         |
+| [`rank_results`](_autosummary/citeget.html.md#citeget.rank_results)(results, \*, title[, authors])        | Return `results` as [`ScoredResult`](_autosummary/citeget.html.md#citeget.ScoredResult) objects, best match first.            |
+| [`score_result`](_autosummary/citeget.html.md#citeget.score_result)(result, \*, title[, authors, ...])    | Score one `search()` result against a requested title and author.                                                       |
+| [`dedupe_results`](_autosummary/citeget.html.md#citeget.dedupe_results)(results, \*[, key])                 | Keep only the first result for each distinct work, preserving order.                                                    |
+| [`validate_download`](_autosummary/citeget.html.md#citeget.validate_download)(path, \*[, extension, ...])      | Validate a file on disk.                                                                                                |
+| [`validate_bytes`](_autosummary/citeget.html.md#citeget.validate_bytes)(body, \*[, extension, ...])         | Validate an in-memory response body without writing it to disk.                                                         |
+| [`apa7_authors`](_autosummary/citeget.html.md#citeget.apa7_authors)(authors)                              | Format *authors* APA 7 style, surnames only.                                                                            |
+| [`candidate_surnames`](_autosummary/citeget.html.md#citeget.candidate_surnames)(authors)                        | Normalized surnames usable for matching, in either name ordering.                                                       |
+| [`surnames`](_autosummary/citeget.html.md#citeget.surnames)(authors)                                  | Surnames of every author in *authors*, in order, casing preserved.                                                      |
+| [`parse_reference`](_autosummary/citeget.html.md#citeget.parse_reference)(text[, number])                    | Parse a reference string into a Reference object.                                                                       |
+| [`parse_references_section`](_autosummary/citeget.html.md#citeget.parse_references_section)(text)                     | Parse a references section into a list of Reference objects.                                                            |
+| [`extract_references`](_autosummary/citeget.html.md#citeget.extract_references)(text, \*[, extractor])          | Extract references from document text.                                                                                  |
+| [`regex_extractor`](_autosummary/citeget.html.md#citeget.regex_extractor)(\*[, section_patterns, ...])       | Create an extractor from regex patterns.                                                                                |
+| [`chain_extractors`](_autosummary/citeget.html.md#citeget.chain_extractors)(\*extractors)                     | Try *extractors* in order, return the first non-empty result.                                                           |
+| [`merge_extractors`](_autosummary/citeget.html.md#citeget.merge_extractors)(\*extractors)                     | Run all *extractors*, deduplicate by reference number.                                                                  |
+| [`register_extractor`](_autosummary/citeget.html.md#citeget.register_extractor)(name, extractor)                | Register a named extractor.                                                                                             |
+| [`list_extractors`](_autosummary/citeget.html.md#citeget.list_extractors)()                                  | Return names of all registered extractors.                                                                              |
+| [`resolve_reference`](_autosummary/citeget.html.md#citeget.resolve_reference)(ref, filepath, \*[, strategy])   | Resolve and download a single reference.                                                                                |
+| [`url_rewriter`](_autosummary/citeget.html.md#citeget.url_rewriter)(\*[, rules])                          | Create a resolver that rewrites known repository URLs to direct PDFs.                                                   |
+| [`resolve_and_download`](_autosummary/citeget.html.md#citeget.resolve_and_download)(resolver, \*[, downloader])   | Create a strategy that resolves URLs then tries to download each.                                                       |
+| [`chain_strategies`](_autosummary/citeget.html.md#citeget.chain_strategies)(\*strategies)                     | Try *strategies* in order, return the first success.                                                                    |
+| [`chain_resolvers`](_autosummary/citeget.html.md#citeget.chain_resolvers)(\*resolvers)                       | Concatenate URL lists from multiple resolvers (deduped, order-preserving).                                              |
+| [`register_resolver`](_autosummary/citeget.html.md#citeget.register_resolver)(name, resolver)                  | Register a named URL resolver.                                                                                          |
+| [`register_downloader`](_autosummary/citeget.html.md#citeget.register_downloader)(name, downloader)              | Register a named downloader.                                                                                            |
+| [`register_strategy`](_autosummary/citeget.html.md#citeget.register_strategy)(name, strategy)                  | Register a named acquisition strategy.                                                                                  |
+| [`list_resolvers`](_autosummary/citeget.html.md#citeget.list_resolvers)()                                   | Return names of all registered resolvers.                                                                               |
+| [`list_downloaders`](_autosummary/citeget.html.md#citeget.list_downloaders)()                                 | Return names of all registered downloaders.                                                                             |
+| [`list_strategies`](_autosummary/citeget.html.md#citeget.list_strategies)()                                  | Return names of all registered strategies.                                                                              |
+| [`acquire_reference`](_autosummary/citeget.html.md#citeget.acquire_reference)(ref, download_dir, \*, ...)      | Try to acquire a single reference.                                                                                      |
+| [`acquire_all_references`](_autosummary/citeget.html.md#citeget.acquire_all_references)(references, ...[, ...])     | Acquire files for a list of references.                                                                                 |
+| [`generate_search_queries`](_autosummary/citeget.html.md#citeget.generate_search_queries)(ref)                       | Generate a sequence of search queries from most to least specific.                                                      |
+| [`resolve_work_dir`](_autosummary/citeget.html.md#citeget.resolve_work_dir)([reference_file, work_dir])       | Resolve the working directory for an acquisition session.                                                               |
+| [`check_existing_downloads`](_autosummary/citeget.html.md#citeget.check_existing_downloads)(references, ...)          | Check which references already have downloaded files.                                                                   |
+| [`write_references_md`](_autosummary/citeget.html.md#citeget.write_references_md)(successes, download_dir, ...)  | Write a references.md with hyperlinks to local downloaded files.                                                        |
+| [`write_missed_references_md`](_autosummary/citeget.html.md#citeget.write_missed_references_md)(failures, output_file)  | Write a markdown file listing references that could not be acquired.                                                    |
+| [`fetch`](_autosummary/citeget.html.md#citeget.fetch)(source, \*[, output_dir, prefer, ...])       | Fetch one or many URLs from a flexible *source*.                                                                        |
+| [`fetch_one`](_autosummary/citeget.html.md#citeget.fetch_one)(source, \*, output_dir[, prefer, ...])   | Fetch a single URL and save it under *output_dir*.                                                                      |
+| [`main_content`](_autosummary/citeget.html.md#citeget.main_content)(html)                                 | The HTML of the block that most likely holds the article body.                                                          |
+| [`extract_urls_from_text`](_autosummary/citeget.html.md#citeget.extract_urls_from_text)(text)                       | Parse URLs from prose / markdown / reference-style citations.                                                           |
+| [`infer_filename`](_autosummary/citeget.html.md#citeget.infer_filename)(entry, ext)                         | Infer a filename for *entry*, ending in `.{ext}`.                                                                       |
+| [`html_to_markdown`](_autosummary/citeget.html.md#citeget.html_to_markdown)(html, \*[, source_url, ...])      | Convert *html* to clean Markdown.                                                                                       |
+| [`html_to_pdf`](_autosummary/citeget.html.md#citeget.html_to_pdf)(url, \*[, html, policy])               | Render *url* to PDF bytes via pdfkit/wkhtmltopdf.                                                                       |
+| [`job_slot`](_autosummary/citeget.html.md#citeget.job_slot)(key, \*[, max_concurrent, lock_dir])      | Hold one of *key*'s concurrency slots for the duration of the block.                                                    |
 
 ### Classes
 
-| [`ScoredResult`](_autosummary/citeget.html.md#citeget.ScoredResult)(result, score, title_match, ...)     | A search result with its score and the signal breakdown behind it.   |
-|----------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
-| [`ScoreWeights`](_autosummary/citeget.html.md#citeget.ScoreWeights)([title, author, format, ...])        | Relative contribution of each signal to the total score.             |
-| [`SizeBounds`](_autosummary/citeget.html.md#citeget.SizeBounds)([min_bytes, min_pdf_bytes, ...])       | Plausibility bounds for a real book file.                            |
-| [`ValidationPolicy`](_autosummary/citeget.html.md#citeget.ValidationPolicy)([min_bytes, min_pdf_bytes, ...]) | What counts as an acceptable download.                               |
-| [`ValidationResult`](_autosummary/citeget.html.md#citeget.ValidationResult)(ok[, reason, detail])            | Verdict on a download, plus the measurements behind it.              |
-| [`ExtractionResult`](_autosummary/citeget.html.md#citeget.ExtractionResult)(references[, ...])               | Result of extracting references from text.                           |
-| [`Reference`](_autosummary/citeget.html.md#citeget.Reference)(number, raw[, title, authors, ...])     | A parsed academic reference.                                         |
-| [`AcquisitionResult`](_autosummary/citeget.html.md#citeget.AcquisitionResult)(reference[, success, ...])      | Result of trying to acquire a reference.                             |
-| [`FetchResult`](_autosummary/citeget.html.md#citeget.FetchResult)(url, status[, output_file, ...])      | Outcome of a single URL fetch.                                       |
-| [`UrlEntry`](_autosummary/citeget.html.md#citeget.UrlEntry)(url[, title, ref])                       | A URL with optional context preserved for filename inference.        |
-| [`NetPolicy`](_autosummary/citeget.html.md#citeget.NetPolicy)([allow_private, allowed_schemes, ...])  | What outbound requests are allowed to reach.                         |
+| [`MergedDocument`](_autosummary/citeget.html.md#citeget.MergedDocument)(text[, order, missing, ...])       | The merged text plus what a caller needs to check it.              |
+|----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|
+| [`ScoredResult`](_autosummary/citeget.html.md#citeget.ScoredResult)(result, score, title_match, ...)     | A search result with its score and the signal breakdown behind it. |
+| [`ScoreWeights`](_autosummary/citeget.html.md#citeget.ScoreWeights)([title, author, format, ...])        | Relative contribution of each signal to the total score.           |
+| [`SizeBounds`](_autosummary/citeget.html.md#citeget.SizeBounds)([min_bytes, min_pdf_bytes, ...])       | Plausibility bounds for a real book file.                          |
+| [`ValidationPolicy`](_autosummary/citeget.html.md#citeget.ValidationPolicy)([min_bytes, min_pdf_bytes, ...]) | What counts as an acceptable download.                             |
+| [`ValidationResult`](_autosummary/citeget.html.md#citeget.ValidationResult)(ok[, reason, detail])            | Verdict on a download, plus the measurements behind it.            |
+| [`ExtractionResult`](_autosummary/citeget.html.md#citeget.ExtractionResult)(references[, ...])               | Result of extracting references from text.                         |
+| [`Reference`](_autosummary/citeget.html.md#citeget.Reference)(number, raw[, title, authors, ...])     | A parsed academic reference.                                       |
+| [`AcquisitionResult`](_autosummary/citeget.html.md#citeget.AcquisitionResult)(reference[, success, ...])      | Result of trying to acquire a reference.                           |
+| [`FetchResult`](_autosummary/citeget.html.md#citeget.FetchResult)(url, status[, output_file, ...])      | Outcome of a single URL fetch.                                     |
+| [`UrlEntry`](_autosummary/citeget.html.md#citeget.UrlEntry)(url[, title, ref])                       | A URL with optional context preserved for filename inference.      |
+| [`NetPolicy`](_autosummary/citeget.html.md#citeget.NetPolicy)([allow_private, allowed_schemes, ...])  | What outbound requests are allowed to reach.                       |
 
 ### Exceptions
 
@@ -1593,6 +1596,12 @@ Raised when downloaded bytes are not a usable copy of the requested file.
 Bases: [`RuntimeError`](https://docs.python.org/3/builtins/exceptions.html#RuntimeError)
 
 The owner already has as many acquisitions running as allowed.
+
+### *class* citeget.MergedDocument(text, order=dict(), missing=list(), conflicts=dict(), glossary=dict())
+
+Bases: [`object`](https://docs.python.org/3/builtins/functions.html#object)
+
+The merged text plus what a caller needs to check it.
 
 ### *exception* citeget.MirrorUnreachableError
 
@@ -2318,6 +2327,28 @@ Fields from earlier extractors take priority; later ones fill blanks.
 
 * **Return type:**
   [`Extractor`](_autosummary/citeget.extract.html.md#citeget.extract.Extractor)
+
+### citeget.merge_keyed(parts, \*\*kwargs)
+
+The merged Markdown only; keyword arguments as [`merge_keyed_report()`](_autosummary/citeget.html.md#citeget.merge_keyed_report).
+
+* **Return type:**
+  [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
+
+### citeget.merge_keyed_report(parts, , head=None, tail=None, cite_pattern='\\\\{ref:([^}]+)\\\\}', missing_entry='MISSING {key}')
+
+Merge *parts* (Markdown strings); see the module docstring.
+
+* **Parameters:**
+  * **parts** ([`Iterable`](https://docs.python.org/3/library/typing.html#typing.Iterable)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Part texts, in document order.
+  * **head** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Text placed before the first part.
+  * **tail** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]) – Text placed after the last part; may contain `{{REFERENCES}}`
+    and `{{GLOSSARY}}`. Default: a `## References` section and, if
+    any term was defined, a `## Glossary` section.
+  * **cite_pattern** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Regex with one group capturing the key.
+  * **missing_entry** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Template for a cited key with no entry (`{key}`).
+* **Return type:**
+  [`MergedDocument`](_autosummary/citeget.html.md#citeget.MergedDocument)
 
 ### citeget.parse_reference(text, number=0)
 
@@ -4095,7 +4126,7 @@ Validate a file on disk. Extension defaults to the file’s own suffix.
 
 # About this build
 
-This documentation was built on **2026-10-20 12:32 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/1645f23b357e8ade79a6971c237a35beba4d7e3e"><code>1645f23</code></a> on branch <code>main</code>, for **citeget 0.2.23** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-26 07:58 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/8fd591dd827d2c2c3a0f1a39ebd184ecf9e779c8"><code>8fd591d</code></a> on branch <code>main</code>, for **citeget 0.2.24** (from <code>pyproject.toml</code>).
 
 #### NOTE
 Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
@@ -4104,9 +4135,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/1645f23b357e8ade79a6971c237a35beba4d7e3e"><code>1645f23b357e8ade79a6971c237a35beba4d7e3e</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/8fd591dd827d2c2c3a0f1a39ebd184ecf9e779c8"><code>8fd591dd827d2c2c3a0f1a39ebd184ecf9e779c8</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.2.23</code>                                                                                                                                       |
+| Tags at this commit | <code>0.2.24</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/citeget</code>                                                                                                        |
 
@@ -4115,15 +4146,15 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/citeget</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/39422717885">39422717885</a>   |
+| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/40288922013">40288922013</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>47fcf275eeff130270d04f2f96efe06927db4a1b</code> (in the history of the built commit) |
+| Event commit | <code>6ed2c61de396ebe3474abc1729cc0165966cb2ee</code> (in the history of the built commit) |
 
 ## Tools
 
 |          |         |
 |----------|---------|
-| epythet  | 0.2.20  |
+| epythet  | 0.2.22  |
 | Sphinx   | 9.1.1   |
 | docutils | 0.22.4  |
 | Python   | 3.12.15 |
@@ -4142,14 +4173,14 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/citeget/0.2.23/">0.2.23</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/citeget/0.2.24/">0.2.24</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/citeget && cd citeget
-git checkout 1645f23b357e8ade79a6971c237a35beba4d7e3e
-pip install "epythet==0.2.20"
+git checkout 8fd591dd827d2c2c3a0f1a39ebd184ecf9e779c8
+pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```
 

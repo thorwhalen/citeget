@@ -8,6 +8,8 @@
 
    .. autosummary::
    
+      merge_keyed
+      merge_keyed_report
       search
       download_results
       download_one
@@ -62,6 +64,7 @@
 
    .. autosummary::
    
+      MergedDocument
       ScoredResult
       ScoreWeights
       SizeBounds
