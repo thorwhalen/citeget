@@ -180,7 +180,7 @@ def _extract_entries(text: str, entry_pattern: str) -> list[Reference]:
 def regex_extractor(
     *,
     section_patterns: tuple[str, ...] = DEFAULT_SECTION_PATTERNS,
-    entry_pattern: str = r"^\s*\[(\d+)\]",
+    entry_pattern: str = r"^\s*\[(\d+)\.?\]",
     stop_pattern: str | None = r"(?m)^#{1,3}\s+\S",
     whole_document_fallback: bool = True,
 ) -> Extractor:
@@ -332,6 +332,47 @@ def markdown_link_extractor(
     return _extract  # type: ignore[return-value]
 
 
+#: Longest line (characters) that can be a one-line citation, not a paragraph.
+MAX_CITATION_LINE_CHARS = 300
+
+
+#: An unquoted author: two to four capitalised words, nothing else.
+_NAME_LIKE = re.compile(r"^[A-Z][\w.'\u2019-]*(?:\s+[A-Z][\w.'\u2019-]*){1,3}$")
+
+
+def plain_lines_extractor(
+    *,
+    max_line_chars: int = MAX_CITATION_LINE_CHARS,
+) -> Extractor:
+    """Create an extractor that reads each line as one short citation.
+
+    For input with no ``[N]`` numbering: ``Author, 'Title'`` or
+    ``author "Title" , 2019``. A line counts only if it names a title, either
+    in quotes or as the text after a name-like ``Author Name,`` head; longer lines (prose)
+    are skipped. Numbers are assigned in order.
+    """
+
+    def _extract(text: str) -> list[Reference]:
+        refs: list[Reference] = []
+        for line in text.split("\n"):
+            raw = _strip_markdown(line).strip(" \t-*>")
+            raw = re.sub(r"^\d+[.)]\s+", "", raw)
+            if not raw or len(raw) > max_line_chars or raw.startswith("#"):
+                continue
+            ref = parse_reference(raw, len(refs) + 1)
+            if not ref.title:
+                head, sep, tail = raw.partition(",")
+                if not (sep and tail.strip() and _NAME_LIKE.match(head.strip())):
+                    continue
+                ref.authors, ref.title = head.strip(), tail.strip()
+            ref.number = len(refs) + 1
+            ref.source_text = line.strip()
+            refs.append(ref)
+        return refs
+
+    return _extract  # type: ignore[return-value]
+
+
 def _build_default_extractor() -> Extractor:
     """Build the default extraction chain."""
     # 1. Standard: explicit References/Bibliography header + [N] entries
@@ -343,10 +384,13 @@ def _build_default_extractor() -> Extractor:
     # 3. Bold-numbered: **[N]** patterns (e.g. tiered reference lists)
     bold = regex_extractor(
         section_patterns=(),
-        entry_pattern=r"^\s*\*?\*?\[(\d+)\]",
+        entry_pattern=r"^\s*\*?\*?\[(\d+)\.?\]",
     )
 
-    return chain(standard, broad, bold)
+    # 4. Plain lines: unnumbered one-line citations (Author, 'Title')
+    plain = plain_lines_extractor()
+
+    return chain(standard, broad, bold, plain)
 
 
 # Register built-ins at import time
@@ -356,9 +400,10 @@ register(
     "bold",
     regex_extractor(
         section_patterns=(),
-        entry_pattern=r"^\s*\*?\*?\[(\d+)\]",
+        entry_pattern=r"^\s*\*?\*?\[(\d+)\.?\]",
     ),
 )
+register("plain_lines", plain_lines_extractor())
 register("markdown_links", markdown_link_extractor())
 register("default", _build_default_extractor())
 register("ai", ai_extractor)

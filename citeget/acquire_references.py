@@ -162,6 +162,12 @@ class AcquisitionResult:
     notes: str = ""
 
 
+#: A single-quoted title: the quote opens a word and closes one (no apostrophes).
+_SINGLE_QUOTED_TITLE = re.compile(r"(?<!\w)['\u2018](.+?)['\u2019](?!\w)")
+#: The author after a title, in ``"Title," by Author, 2019``.
+_BY_AUTHOR = re.compile(r"[\s,.]*\bby\s+(.+?)\s*(?:,\s*(?:19|20)\d{2})?\s*\.?\s*$")
+
+
 def parse_reference(text: str, number: int = 0) -> Reference:
     """Parse a reference string into a Reference object.
 
@@ -172,7 +178,7 @@ def parse_reference(text: str, number: int = 0) -> Reference:
     raw = text.strip()
 
     # Extract number if present
-    num_match = re.match(r"\[(\d+)\]\s*", raw)
+    num_match = re.match(r"\[(\d+)\.?\]\s*", raw)
     if num_match:
         number = int(num_match.group(1))
         raw_body = raw[num_match.end() :]
@@ -189,6 +195,10 @@ def parse_reference(text: str, number: int = 0) -> Reference:
     title = ""
     # Try quoted title first: "Title" or "Title,"
     title_match = re.search(r'["\u201c](.+?)["\u201d]', raw_body)
+    if title_match is None:
+        # Short citations often single-quote the title: ron chernow 'hamilton'.
+        # The quote must open a word and close one, so apostrophes don't match.
+        title_match = _SINGLE_QUOTED_TITLE.search(raw_body)
     if title_match:
         title = title_match.group(1).rstrip(",").strip()
 
@@ -202,6 +212,11 @@ def parse_reference(text: str, number: int = 0) -> Reference:
     authors = ""
     if title_match:
         authors = raw_body[: title_match.start()].strip().rstrip(",").strip()
+        if not authors:
+            # "Title," by Author, 2019
+            by_match = _BY_AUTHOR.match(raw_body[title_match.end() :])
+            if by_match:
+                authors = by_match.group(1).strip()
     else:
         # Fallback: take everything before first comma-separated chunk with year
         parts = raw_body.split(",")

@@ -129,3 +129,61 @@ def test_source_text_preserved():
     result = extract_references(SAMPLE_WITH_HEADER)
     for ref in result.references:
         assert ref.source_text  # Should not be empty
+
+
+# ---------------------------------------------------------------------------
+# Short, unnumbered one-line citations (paraphrased shapes of real failures)
+# ---------------------------------------------------------------------------
+
+
+def test_author_comma_single_quoted_title():
+    (ref,) = extract_references("Jane Doe, 'Oak'").references
+    assert (ref.authors, ref.title) == ("Jane Doe", "Oak")
+
+
+def test_numbered_with_dot_by_author_and_year():
+    (ref,) = extract_references('[1.] "Pine Cones," by Sam Roe, 2018').references
+    assert (ref.number, ref.title, ref.authors, ref.year) == (
+        1,
+        "Pine Cones",
+        "Sam Roe",
+        "2018",
+    )
+
+
+def test_lowercase_author_then_quoted_title_no_comma():
+    (ref,) = extract_references("sam roe 'big river'").references
+    assert (ref.authors, ref.title) == ("sam roe", "big river")
+
+
+def test_several_plain_lines_numbered_in_order():
+    text = "Jane Doe, 'Oak'\n\nsam roe 'big river'\n"
+    refs = extract_references(text).references
+    assert [(r.number, r.title) for r in refs] == [(1, "Oak"), (2, "big river")]
+
+
+def test_apostrophe_is_not_a_title_quote():
+    (ref,) = extract_references("Jane Doe, Roe's guide to oaks").references
+    assert ref.title == "Roe's guide to oaks"
+
+
+def test_prose_is_not_a_reference():
+    assert extract_references("hello there\n" + "word " * 100).references == []
+
+
+def test_unquoted_author_comma_title():
+    (ref,) = extract_references("Jane Doe, Oak Trees").references
+    assert (ref.authors, ref.title) == ("Jane Doe", "Oak Trees")
+
+
+def test_prose_code_table_url_lines_with_commas_are_not_references():
+    junk = (
+        "This is a note, with a comma.\n- Buy milk, eggs\ndef f(a, b):\n"
+        "return a, b\n| x, y | z |\nhttps://example.com/a, b\n"
+    )
+    assert extract_references(junk).references == []
+
+
+def test_leading_list_number_is_not_part_of_authors():
+    (ref,) = extract_references("1. Jane Doe, Oak Trees").references
+    assert ref.authors == "Jane Doe"
