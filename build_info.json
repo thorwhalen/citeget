@@ -1,34 +1,34 @@
 {
   "schema_version": 1,
-  "built_at": "2026-10-26T07:58:40Z",
+  "built_at": "2026-10-30T18:16:12Z",
   "package": {
     "name": "citeget",
-    "version": "0.2.24",
+    "version": "0.2.25",
     "display_name": "citeget",
     "source": "pyproject.toml"
   },
   "git": {
     "available": true,
-    "commit": "8fd591dd827d2c2c3a0f1a39ebd184ecf9e779c8",
-    "short_commit": "8fd591d",
+    "commit": "350e6ea629812e465060613530cf19bdff3df831",
+    "short_commit": "350e6ea",
     "branch": "main",
     "tags": [
-      "0.2.24"
+      "0.2.25"
     ],
     "dirty": false,
     "remote_url": "https://github.com/thorwhalen/citeget",
-    "commit_url": "https://github.com/thorwhalen/citeget/commit/8fd591dd827d2c2c3a0f1a39ebd184ecf9e779c8",
+    "commit_url": "https://github.com/thorwhalen/citeget/commit/350e6ea629812e465060613530cf19bdff3df831",
     "error": null
   },
   "ci": {
     "provider": "github",
     "repository": "thorwhalen/citeget",
-    "sha": "6ed2c61de396ebe3474abc1729cc0165966cb2ee",
+    "sha": "17dac7a3cddd369ec16526b15b267572e6aee6c0",
     "sha_in_history": true,
     "ref": "refs/heads/main",
     "ref_name": "main",
-    "run_id": "40288922013",
-    "run_url": "https://github.com/thorwhalen/citeget/actions/runs/40288922013",
+    "run_id": "41104950268",
+    "run_url": "https://github.com/thorwhalen/citeget/actions/runs/41104950268",
     "server_url": "https://github.com"
   },
   "tools": {
@@ -58,18 +58,20 @@
   },
   "site": {
     "modules_documented": 13,
-    "objects_documented": 236
+    "objects_documented": 238
   },
   "pypi": {
     "checked": true,
     "latest": "0.2.24",
-    "relation": "same",
+    "relation": "ahead",
     "error": null
   },
-  "reproduce": "git clone https://github.com/thorwhalen/citeget && cd citeget\ngit checkout 8fd591dd827d2c2c3a0f1a39ebd184ecf9e779c8\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
+  "reproduce": "git clone https://github.com/thorwhalen/citeget && cd citeget\ngit checkout 350e6ea629812e465060613530cf19bdff3df831\npip install \"epythet==0.2.22\"\nepythet quickstart . --ignore tests/ scrap/ examples/",
   "warnings": [],
   "alignment": {
-    "aligned": true,
-    "notes": []
+    "aligned": false,
+    "notes": [
+      "The documented version (0.2.25) is ahead of the latest release on PyPI (0.2.24): these docs describe unreleased code."
+    ]
   }
 }

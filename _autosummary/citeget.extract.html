@@ -151,6 +151,14 @@ extraction chain (or a caller-specified extractor) and returns an
 </span><span id="line-14"><span class="n">combined</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">my_ext</span><span class="p">,</span> <span class="n">extract_references</span><span class="p">)</span>
 </span></code></pre></div>
 </div>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.extract.MAX_CITATION_LINE_CHARS" title="citeget.extract.MAX_CITATION_LINE_CHARS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MAX_CITATION_LINE_CHARS</span></code></a></p></td>
+<td><p>Longest line (characters) that can be a one-line citation, not a paragraph.</p></td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Functions</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
@@ -178,13 +186,16 @@ extraction chain (or a caller-specified extractor) and returns an
 <tr class="row-even"><td><p><a class="reference internal" href="#citeget.extract.merge" title="citeget.extract.merge"><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code></a>(*extractors)</p></td>
 <td><p>Run all <em>extractors</em>, deduplicate by reference number.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.extract.regex_extractor" title="citeget.extract.regex_extractor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">regex_extractor</span></code></a>(*[, section_patterns, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.extract.plain_lines_extractor" title="citeget.extract.plain_lines_extractor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plain_lines_extractor</span></code></a>(*[, max_line_chars])</p></td>
+<td><p>Create an extractor that reads each line as one short citation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.extract.regex_extractor" title="citeget.extract.regex_extractor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">regex_extractor</span></code></a>(*[, section_patterns, ...])</p></td>
 <td><p>Create an extractor from regex patterns.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#citeget.extract.register" title="citeget.extract.register"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register</span></code></a>(name, extractor)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.extract.register" title="citeget.extract.register"><code class="xref py py-obj docutils literal notranslate"><span class="pre">register</span></code></a>(name, extractor)</p></td>
 <td><p>Register a named extractor.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#citeget.extract.save_extractors" title="citeget.extract.save_extractors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_extractors</span></code></a>(path, *[, names])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#citeget.extract.save_extractors" title="citeget.extract.save_extractors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_extractors</span></code></a>(path, *[, names])</p></td>
 <td><p>Save regex-based extractors to a JSON file.</p></td>
 </tr>
 </tbody>
@@ -228,6 +239,11 @@ extraction chain (or a caller-specified extractor) and returns an
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">Extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/extract.html#Extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.extract.Extractor" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.extract.Extractor'">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Protocol" rel="nofollow noopener" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code><svg fill="currentColor" height="1em" stroke="none" viewbox="0 96 960 960" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M188 868q-11-11-11-28t11-28l436-436H400q-17 0-28.5-11.5T360 336q0-17 11.5-28.5T400 296h320q17 0 28.5 11.5T760 336v320q0 17-11.5 28.5T720 696q-17 0-28.5-11.5T680 656V432L244 868q-11 11-28 11t-28-11Z"></path></svg></a></p>
 <p>Any callable: <code class="docutils literal notranslate"><span class="pre">(str)</span> <span class="pre">-&gt;</span> <span class="pre">list[Reference]</span></code>.</p>
+</dd></dl>
+<dl class="py data">
+<dt class="sig sig-object py" id="citeget.extract.MAX_CITATION_LINE_CHARS">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">MAX_CITATION_LINE_CHARS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">300</span></span><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.extract.MAX_CITATION_LINE_CHARS" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.extract.MAX_CITATION_LINE_CHARS'">¶</a></dt>
+<dd><p>Longest line (characters) that can be a one-line citation, not a paragraph.</p>
 </dd></dl>
 <dl class="py function">
 <dt class="sig sig-object py" id="citeget.extract.ai_extractor">
@@ -347,8 +363,22 @@ on each side of the link.</p>
 </dl>
 </dd></dl>
 <dl class="py function">
+<dt class="sig sig-object py" id="citeget.extract.plain_lines_extractor">
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">plain_lines_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_line_chars</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/extract.html#plain_lines_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.extract.plain_lines_extractor" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.extract.plain_lines_extractor'">¶</a></dt>
+<dd><p>Create an extractor that reads each line as one short citation.</p>
+<p>For input with no <code class="docutils literal notranslate"><span class="pre">[N]</span></code> numbering: <code class="docutils literal notranslate"><span class="pre">Author,</span> <span class="pre">'Title'</span></code> or
+<code class="docutils literal notranslate"><span class="pre">author</span> <span class="pre">"Title"</span> <span class="pre">,</span> <span class="pre">2019</span></code>. A line counts only if it names a title, either
+in quotes or as the text after a name-like <code class="docutils literal notranslate"><span class="pre">Author</span> <span class="pre">Name,</span></code> head; longer lines (prose)
+are skipped. Numbers are assigned in order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#citeget.extract.Extractor" title="citeget.extract.Extractor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Extractor</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+<dl class="py function">
 <dt class="sig sig-object py" id="citeget.extract.regex_extractor">
-<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">regex_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('(?mi)^#{1,3}\\s*(references|bibliography|works\\s+cited|literature)\\s*$',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'^\\s*\\[(\\d+)\\]'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'(?m)^#{1,3}\\s+\\S'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">whole_document_fallback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/extract.html#regex_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.extract.regex_extractor" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.extract.regex_extractor'">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">citeget.extract.</span></span><span class="sig-name descname"><span class="pre">regex_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_patterns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('(?mi)^#{1,3}\\s*(references|bibliography|works\\s+cited|literature)\\s*$',)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entry_pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'^\\s*\\[(\\d+)\\.?\\]'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop_pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'(?m)^#{1,3}\\s+\\S'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">whole_document_fallback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/citeget/extract.html#regex_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a @click.prevent="window.navigator.clipboard.writeText($el.href); $el.setAttribute('data-tooltip', 'Copied!'); setTimeout(() =&gt; $el.setAttribute('data-tooltip', 'Copy link to this element'), 2000)" aria-label="Copy link to this element" class="headerlink" data-tooltip="Copy link to this element" href="#citeget.extract.regex_extractor" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#citeget.extract.regex_extractor'">¶</a></dt>
 <dd><p>Create an extractor from regex patterns.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -405,6 +435,7 @@ Built-in names (<code class="docutils literal notranslate"><span class="pre">def
 <li><a :data-current="activeSection === '#citeget.extract.AIExtractionRequested'" class="reference internal" href="#citeget.extract.AIExtractionRequested"><code class="docutils literal notranslate"><span class="pre">AIExtractionRequested</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.extract.ExtractionResult'" class="reference internal" href="#citeget.extract.ExtractionResult"><code class="docutils literal notranslate"><span class="pre">ExtractionResult</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.extract.Extractor'" class="reference internal" href="#citeget.extract.Extractor"><code class="docutils literal notranslate"><span class="pre">Extractor</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.extract.MAX_CITATION_LINE_CHARS'" class="reference internal" href="#citeget.extract.MAX_CITATION_LINE_CHARS"><code class="docutils literal notranslate"><span class="pre">MAX_CITATION_LINE_CHARS</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.extract.ai_extractor'" class="reference internal" href="#citeget.extract.ai_extractor"><code class="docutils literal notranslate"><span class="pre">ai_extractor()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.extract.chain'" class="reference internal" href="#citeget.extract.chain"><code class="docutils literal notranslate"><span class="pre">chain()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.extract.extract_references'" class="reference internal" href="#citeget.extract.extract_references"><code class="docutils literal notranslate"><span class="pre">extract_references()</span></code></a></li>
@@ -413,6 +444,7 @@ Built-in names (<code class="docutils literal notranslate"><span class="pre">def
 <li><a :data-current="activeSection === '#citeget.extract.load_extractors'" class="reference internal" href="#citeget.extract.load_extractors"><code class="docutils literal notranslate"><span class="pre">load_extractors()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.extract.markdown_link_extractor'" class="reference internal" href="#citeget.extract.markdown_link_extractor"><code class="docutils literal notranslate"><span class="pre">markdown_link_extractor()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.extract.merge'" class="reference internal" href="#citeget.extract.merge"><code class="docutils literal notranslate"><span class="pre">merge()</span></code></a></li>
+<li><a :data-current="activeSection === '#citeget.extract.plain_lines_extractor'" class="reference internal" href="#citeget.extract.plain_lines_extractor"><code class="docutils literal notranslate"><span class="pre">plain_lines_extractor()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.extract.regex_extractor'" class="reference internal" href="#citeget.extract.regex_extractor"><code class="docutils literal notranslate"><span class="pre">regex_extractor()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.extract.register'" class="reference internal" href="#citeget.extract.register"><code class="docutils literal notranslate"><span class="pre">register()</span></code></a></li>
 <li><a :data-current="activeSection === '#citeget.extract.save_extractors'" class="reference internal" href="#citeget.extract.save_extractors"><code class="docutils literal notranslate"><span class="pre">save_extractors()</span></code></a></li>
@@ -429,7 +461,7 @@ Built-in names (<code class="docutils literal notranslate"><span class="pre">def
 </div>
 </footer>
 </div>
-<script src="../_static/documentation_options.js?v=dc91f075"></script>
+<script src="../_static/documentation_options.js?v=78e9746c"></script>
 <script src="../_static/doctools.js?v=fd6eb6e6"></script>
 <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
 <script src="../_static/clipboard.min.js?v=a7894cd8"></script>

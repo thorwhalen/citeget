@@ -1,4 +1,4 @@
-> built 2026-10-26 07:58 UTC from 8fd591d (main) · citeget 0.2.24. Details: build_info.json
+> built 2026-10-30 18:16 UTC from 350e6ea (main) · citeget 0.2.25. Details: build_info.json
 
 # index.html.md
 
@@ -1270,6 +1270,11 @@ from citeget.extract import chain
 combined = chain(my_ext, extract_references)
 ```
 
+### Module Attributes
+
+| [`MAX_CITATION_LINE_CHARS`](_autosummary/citeget.extract.html.md#citeget.extract.MAX_CITATION_LINE_CHARS)   | Longest line (characters) that can be a one-line citation, not a paragraph.   |
+|----------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+
 ### Functions
 
 | [`ai_extractor`](_autosummary/citeget.extract.html.md#citeget.extract.ai_extractor)(text)                           | Placeholder extractor that signals AI extraction is needed.         |
@@ -1281,6 +1286,7 @@ combined = chain(my_ext, extract_references)
 | [`load_extractors`](_autosummary/citeget.extract.html.md#citeget.extract.load_extractors)(path)                        | Load extractors from a JSON file and register them.                 |
 | [`markdown_link_extractor`](_autosummary/citeget.extract.html.md#citeget.extract.markdown_link_extractor)(\*[, context_chars]) | Create an extractor that treats every `[name](url)` as a reference. |
 | [`merge`](_autosummary/citeget.extract.html.md#citeget.extract.merge)(\*extractors)                          | Run all *extractors*, deduplicate by reference number.              |
+| [`plain_lines_extractor`](_autosummary/citeget.extract.html.md#citeget.extract.plain_lines_extractor)(\*[, max_line_chars])  | Create an extractor that reads each line as one short citation.     |
 | [`regex_extractor`](_autosummary/citeget.extract.html.md#citeget.extract.regex_extractor)(\*[, section_patterns, ...]) | Create an extractor from regex patterns.                            |
 | [`register`](_autosummary/citeget.extract.html.md#citeget.extract.register)(name, extractor)                    | Register a named extractor.                                         |
 | [`save_extractors`](_autosummary/citeget.extract.html.md#citeget.extract.save_extractors)(path, \*[, names])           | Save regex-based extractors to a JSON file.                         |
@@ -1315,6 +1321,10 @@ Result of extracting references from text.
 Bases: [`Protocol`](https://docs.python.org/3/library/typing.html#typing.Protocol)
 
 Any callable: `(str) -> list[Reference]`.
+
+### citeget.extract.MAX_CITATION_LINE_CHARS *= 300*
+
+Longest line (characters) that can be a one-line citation, not a paragraph.
 
 ### citeget.extract.ai_extractor(text)
 
@@ -1400,7 +1410,19 @@ Fields from earlier extractors take priority; later ones fill blanks.
 * **Return type:**
   [`Extractor`](_autosummary/citeget.extract.html.md#citeget.extract.Extractor)
 
-### citeget.extract.regex_extractor(, section_patterns=('(?mi)^#{1,3}\\\\s\*(references|bibliography|works\\\\s+cited|literature)\\\\s\*$',), entry_pattern='^\\\\s\*\\\\[(\\\\d+)\\\\]', stop_pattern='(?m)^#{1,3}\\\\s+\\\\S', whole_document_fallback=True)
+### citeget.extract.plain_lines_extractor(, max_line_chars=300)
+
+Create an extractor that reads each line as one short citation.
+
+For input with no `[N]` numbering: `Author, 'Title'` or
+`author "Title" , 2019`. A line counts only if it names a title, either
+in quotes or as the text after a name-like `Author Name,` head; longer lines (prose)
+are skipped. Numbers are assigned in order.
+
+* **Return type:**
+  [`Extractor`](_autosummary/citeget.extract.html.md#citeget.extract.Extractor)
+
+### citeget.extract.regex_extractor(, section_patterns=('(?mi)^#{1,3}\\\\s\*(references|bibliography|works\\\\s+cited|literature)\\\\s\*$',), entry_pattern='^\\\\s\*\\\\[(\\\\d+)\\\\.?\\\\]', stop_pattern='(?m)^#{1,3}\\\\s+\\\\S', whole_document_fallback=True)
 
 Create an extractor from regex patterns.
 
@@ -2380,7 +2402,7 @@ Return `results` as [`ScoredResult`](_autosummary/citeget.html.md#citeget.Scored
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
-### citeget.regex_extractor(, section_patterns=('(?mi)^#{1,3}\\\\s\*(references|bibliography|works\\\\s+cited|literature)\\\\s\*$',), entry_pattern='^\\\\s\*\\\\[(\\\\d+)\\\\]', stop_pattern='(?m)^#{1,3}\\\\s+\\\\S', whole_document_fallback=True)
+### citeget.regex_extractor(, section_patterns=('(?mi)^#{1,3}\\\\s\*(references|bibliography|works\\\\s+cited|literature)\\\\s\*$',), entry_pattern='^\\\\s\*\\\\[(\\\\d+)\\\\.?\\\\]', stop_pattern='(?m)^#{1,3}\\\\s+\\\\S', whole_document_fallback=True)
 
 Create an extractor from regex patterns.
 
@@ -4126,18 +4148,20 @@ Validate a file on disk. Extension defaults to the file’s own suffix.
 
 # About this build
 
-This documentation was built on **2026-10-26 07:58 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/8fd591dd827d2c2c3a0f1a39ebd184ecf9e779c8"><code>8fd591d</code></a> on branch <code>main</code>, for **citeget 0.2.24** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-10-30 18:16 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/350e6ea629812e465060613530cf19bdff3df831"><code>350e6ea</code></a> on branch <code>main</code>, for **citeget 0.2.25** (from <code>pyproject.toml</code>).
 
-#### NOTE
-Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
+#### WARNING
+The documentation and the package may be misaligned:
+
+- The documented version (0.2.25) is ahead of the latest release on PyPI (0.2.24): these docs describe unreleased code.
 
 ## Source
 
 |                     |                                                                                                                                                           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/8fd591dd827d2c2c3a0f1a39ebd184ecf9e779c8"><code>8fd591dd827d2c2c3a0f1a39ebd184ecf9e779c8</code></a> |
+| Commit              | <a href="https://github.com/thorwhalen/citeget/commit/350e6ea629812e465060613530cf19bdff3df831"><code>350e6ea629812e465060613530cf19bdff3df831</code></a> |
 | Branch              | <code>main</code>                                                                                                                                         |
-| Tags at this commit | <code>0.2.24</code>                                                                                                                                       |
+| Tags at this commit | <code>0.2.25</code>                                                                                                                                       |
 | Working tree        | clean                                                                                                                                                     |
 | Remote              | <code>https://github.com/thorwhalen/citeget</code>                                                                                                        |
 
@@ -4146,9 +4170,9 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 |              |                                                                                            |
 |--------------|--------------------------------------------------------------------------------------------|
 | Repository   | <code>thorwhalen/citeget</code>                                                            |
-| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/40288922013">40288922013</a>   |
+| Run          | <a href="https://github.com/thorwhalen/citeget/actions/runs/41104950268">41104950268</a>   |
 | Ref          | <code>refs/heads/main</code>                                                               |
-| Event commit | <code>6ed2c61de396ebe3474abc1729cc0165966cb2ee</code> (in the history of the built commit) |
+| Event commit | <code>17dac7a3cddd369ec16526b15b267572e6aee6c0</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -4173,13 +4197,13 @@ Nothing suggests a mismatch: the tree was clean at the commit above, and the doc
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/citeget/0.2.24/">0.2.24</a>, the same as the documented version.
+Latest release: <a href="https://pypi.org/project/citeget/0.2.24/">0.2.24</a>, older than the documented version (0.2.25).
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/citeget && cd citeget
-git checkout 8fd591dd827d2c2c3a0f1a39ebd184ecf9e779c8
+git checkout 350e6ea629812e465060613530cf19bdff3df831
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

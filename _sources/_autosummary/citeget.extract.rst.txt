@@ -4,6 +4,12 @@ citeget.extract
 .. automodule:: citeget.extract
 
    
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      MAX_CITATION_LINE_CHARS
+   
    .. rubric:: Functions
 
    .. autosummary::
@@ -16,6 +22,7 @@ citeget.extract
       load_extractors
       markdown_link_extractor
       merge
+      plain_lines_extractor
       regex_extractor
       register
       save_extractors

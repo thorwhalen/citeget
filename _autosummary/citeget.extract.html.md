@@ -29,6 +29,11 @@ from citeget.extract import chain
 combined = chain(my_ext, extract_references)
 ```
 
+### Module Attributes
+
+| [`MAX_CITATION_LINE_CHARS`](#citeget.extract.MAX_CITATION_LINE_CHARS)   | Longest line (characters) that can be a one-line citation, not a paragraph.   |
+|----------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+
 ### Functions
 
 | [`ai_extractor`](#citeget.extract.ai_extractor)(text)                           | Placeholder extractor that signals AI extraction is needed.         |
@@ -40,6 +45,7 @@ combined = chain(my_ext, extract_references)
 | [`load_extractors`](#citeget.extract.load_extractors)(path)                        | Load extractors from a JSON file and register them.                 |
 | [`markdown_link_extractor`](#citeget.extract.markdown_link_extractor)(\*[, context_chars]) | Create an extractor that treats every `[name](url)` as a reference. |
 | [`merge`](#citeget.extract.merge)(\*extractors)                          | Run all *extractors*, deduplicate by reference number.              |
+| [`plain_lines_extractor`](#citeget.extract.plain_lines_extractor)(\*[, max_line_chars])  | Create an extractor that reads each line as one short citation.     |
 | [`regex_extractor`](#citeget.extract.regex_extractor)(\*[, section_patterns, ...]) | Create an extractor from regex patterns.                            |
 | [`register`](#citeget.extract.register)(name, extractor)                    | Register a named extractor.                                         |
 | [`save_extractors`](#citeget.extract.save_extractors)(path, \*[, names])           | Save regex-based extractors to a JSON file.                         |
@@ -74,6 +80,10 @@ Result of extracting references from text.
 Bases: [`Protocol`](https://docs.python.org/3/library/typing.html#typing.Protocol)
 
 Any callable: `(str) -> list[Reference]`.
+
+### citeget.extract.MAX_CITATION_LINE_CHARS *= 300*
+
+Longest line (characters) that can be a one-line citation, not a paragraph.
 
 ### citeget.extract.ai_extractor(text)
 
@@ -159,7 +169,19 @@ Fields from earlier extractors take priority; later ones fill blanks.
 * **Return type:**
   [`Extractor`](#citeget.extract.Extractor)
 
-### citeget.extract.regex_extractor(, section_patterns=('(?mi)^#{1,3}\\\\s\*(references|bibliography|works\\\\s+cited|literature)\\\\s\*$',), entry_pattern='^\\\\s\*\\\\[(\\\\d+)\\\\]', stop_pattern='(?m)^#{1,3}\\\\s+\\\\S', whole_document_fallback=True)
+### citeget.extract.plain_lines_extractor(, max_line_chars=300)
+
+Create an extractor that reads each line as one short citation.
+
+For input with no `[N]` numbering: `Author, 'Title'` or
+`author "Title" , 2019`. A line counts only if it names a title, either
+in quotes or as the text after a name-like `Author Name,` head; longer lines (prose)
+are skipped. Numbers are assigned in order.
+
+* **Return type:**
+  [`Extractor`](#citeget.extract.Extractor)
+
+### citeget.extract.regex_extractor(, section_patterns=('(?mi)^#{1,3}\\\\s\*(references|bibliography|works\\\\s+cited|literature)\\\\s\*$',), entry_pattern='^\\\\s\*\\\\[(\\\\d+)\\\\.?\\\\]', stop_pattern='(?m)^#{1,3}\\\\s+\\\\S', whole_document_fallback=True)
 
 Create an extractor from regex patterns.
 

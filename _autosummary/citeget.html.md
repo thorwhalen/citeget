@@ -937,7 +937,7 @@ Return `results` as [`ScoredResult`](#citeget.ScoredResult) objects, best match 
 * **Return type:**
   [`list`](https://docs.python.org/3/builtins/stdtypes.html#list)
 
-### citeget.regex_extractor(, section_patterns=('(?mi)^#{1,3}\\\\s\*(references|bibliography|works\\\\s+cited|literature)\\\\s\*$',), entry_pattern='^\\\\s\*\\\\[(\\\\d+)\\\\]', stop_pattern='(?m)^#{1,3}\\\\s+\\\\S', whole_document_fallback=True)
+### citeget.regex_extractor(, section_patterns=('(?mi)^#{1,3}\\\\s\*(references|bibliography|works\\\\s+cited|literature)\\\\s\*$',), entry_pattern='^\\\\s\*\\\\[(\\\\d+)\\\\.?\\\\]', stop_pattern='(?m)^#{1,3}\\\\s+\\\\S', whole_document_fallback=True)
 
 Create an extractor from regex patterns.
 
