@@ -169,3 +169,21 @@ def test_apostrophe_is_not_a_title_quote():
 
 def test_prose_is_not_a_reference():
     assert extract_references("hello there\n" + "word " * 100).references == []
+
+
+def test_unquoted_author_comma_title():
+    (ref,) = extract_references("Jane Doe, Oak Trees").references
+    assert (ref.authors, ref.title) == ("Jane Doe", "Oak Trees")
+
+
+def test_prose_code_table_url_lines_with_commas_are_not_references():
+    junk = (
+        "This is a note, with a comma.\n- Buy milk, eggs\ndef f(a, b):\n"
+        "return a, b\n| x, y | z |\nhttps://example.com/a, b\n"
+    )
+    assert extract_references(junk).references == []
+
+
+def test_leading_list_number_is_not_part_of_authors():
+    (ref,) = extract_references("1. Jane Doe, Oak Trees").references
+    assert ref.authors == "Jane Doe"

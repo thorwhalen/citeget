@@ -336,6 +336,10 @@ def markdown_link_extractor(
 MAX_CITATION_LINE_CHARS = 300
 
 
+#: An unquoted author: two to four capitalised words, nothing else.
+_NAME_LIKE = re.compile(r"^[A-Z][\w.'\u2019-]*(?:\s+[A-Z][\w.'\u2019-]*){1,3}$")
+
+
 def plain_lines_extractor(
     *,
     max_line_chars: int = MAX_CITATION_LINE_CHARS,
@@ -344,7 +348,7 @@ def plain_lines_extractor(
 
     For input with no ``[N]`` numbering: ``Author, 'Title'`` or
     ``author "Title" , 2019``. A line counts only if it names a title, either
-    in quotes or as the text after an ``Author,`` comma; longer lines (prose)
+    in quotes or as the text after a name-like ``Author Name,`` head; longer lines (prose)
     are skipped. Numbers are assigned in order.
     """
 
@@ -352,12 +356,13 @@ def plain_lines_extractor(
         refs: list[Reference] = []
         for line in text.split("\n"):
             raw = _strip_markdown(line).strip(" \t-*>")
+            raw = re.sub(r"^\d+[.)]\s+", "", raw)
             if not raw or len(raw) > max_line_chars or raw.startswith("#"):
                 continue
             ref = parse_reference(raw, len(refs) + 1)
             if not ref.title:
                 head, sep, tail = raw.partition(",")
-                if not (sep and head.strip() and tail.strip()):
+                if not (sep and tail.strip() and _NAME_LIKE.match(head.strip())):
                     continue
                 ref.authors, ref.title = head.strip(), tail.strip()
             ref.number = len(refs) + 1
