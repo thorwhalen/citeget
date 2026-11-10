@@ -10,6 +10,9 @@ citeget.content
    
       DROP_TAGS
       DROP_CLASS_RE
+      CHROME_NAME_RE
+      STATE_CLASS_RE
+      CODE_TAGS
       CHROME_IF_SMALL_TAGS
       CANDIDATE_TAGS
       LINK_PENALTY
@@ -18,7 +21,13 @@ citeget.content
       MAX_DESCENT_LOSS
       MAX_CHROME_TEXT_SHARE
       MIN_MAIN_CHARS
+      EDGE_BLOCK_MAX_CHARS
+      EDGE_TRIM_DEPTH
+      PROSE_MIN_CHARS
+      LAYOUT_CELL_MIN_CHARS
+      WAYBACK_PREFIX_RE
       EXTRACTORS
+      TITLE_SEPARATORS
    
    .. rubric:: Functions
 
@@ -26,7 +35,12 @@ citeget.content
    
       clean_wayback
       drop_junk_lines
+      is_wayback_html
       is_wayback_url
       main_content
+      page_title
+      strip_site_name
       trafilatura_extractor
+      unwayback_url
+      unwrap_layout_tables
    

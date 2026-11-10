@@ -5,21 +5,19 @@ orphan: true
 
 # About this build
 
-This documentation was built on **2026-10-30 18:16 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/350e6ea629812e465060613530cf19bdff3df831"><code>350e6ea</code></a> on branch <code>main</code>, for **citeget 0.2.25** (from <code>pyproject.toml</code>).
+This documentation was built on **2026-11-10 08:21 UTC** from commit <a href="https://github.com/thorwhalen/citeget/commit/3ecc9c870375fcdf029fe19b31b6df3026e06d80"><code>3ecc9c8</code></a> on branch <code>main</code>, for **citeget 0.2.26** (from <code>pyproject.toml</code>).
 
-:::{warning}
-The documentation and the package may be misaligned:
-
-- The documented version (0.2.25) is ahead of the latest release on PyPI (0.2.24): these docs describe unreleased code.
+:::{note}
+Nothing suggests a mismatch: the tree was clean at the commit above, and the documented version is the one on PyPI.
 :::
 
 ## Source
 
 | | |
 |---|---|
-| Commit | <a href="https://github.com/thorwhalen/citeget/commit/350e6ea629812e465060613530cf19bdff3df831"><code>350e6ea629812e465060613530cf19bdff3df831</code></a> |
+| Commit | <a href="https://github.com/thorwhalen/citeget/commit/3ecc9c870375fcdf029fe19b31b6df3026e06d80"><code>3ecc9c870375fcdf029fe19b31b6df3026e06d80</code></a> |
 | Branch | <code>main</code> |
-| Tags at this commit | <code>0.2.25</code> |
+| Tags at this commit | <code>0.2.26</code> |
 | Working tree | clean |
 | Remote | <code>https://github.com/thorwhalen/citeget</code> |
 
@@ -28,9 +26,9 @@ The documentation and the package may be misaligned:
 | | |
 |---|---|
 | Repository | <code>thorwhalen/citeget</code> |
-| Run | <a href="https://github.com/thorwhalen/citeget/actions/runs/41104950268">41104950268</a> |
+| Run | <a href="https://github.com/thorwhalen/citeget/actions/runs/42781723232">42781723232</a> |
 | Ref | <code>refs/heads/main</code> |
-| Event commit | <code>17dac7a3cddd369ec16526b15b267572e6aee6c0</code> (in the history of the built commit) |
+| Event commit | <code>73e9a93bbfebcacd30447aa1f74e8e00e6f02cd7</code> (in the history of the built commit) |
 
 ## Tools
 
@@ -39,7 +37,7 @@ The documentation and the package may be misaligned:
 | epythet | 0.2.22 |
 | Sphinx | 9.1.1 |
 | docutils | 0.22.4 |
-| Python | 3.12.15 |
+| Python | 3.12.16 |
 
 ## Configuration as resolved
 
@@ -55,13 +53,13 @@ The documentation and the package may be misaligned:
 
 ## Package on PyPI
 
-Latest release: <a href="https://pypi.org/project/citeget/0.2.24/">0.2.24</a>, older than the documented version (0.2.25).
+Latest release: <a href="https://pypi.org/project/citeget/0.2.26/">0.2.26</a>, the same as the documented version.
 
 ## Reproduce
 
 ```bash
 git clone https://github.com/thorwhalen/citeget && cd citeget
-git checkout 350e6ea629812e465060613530cf19bdff3df831
+git checkout 3ecc9c870375fcdf029fe19b31b6df3026e06d80
 pip install "epythet==0.2.22"
 epythet quickstart . --ignore tests/ scrap/ examples/
 ```

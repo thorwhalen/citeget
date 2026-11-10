@@ -66,7 +66,7 @@ edition once per format. To acquire one copy of a specific book, use
   * **base_url** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Force a single mirror (e.g. [https://libgen.vg](https://libgen.vg)).
   * **mirrors** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – Comma-separated ordered list of mirror base URLs to try.
 
-### citeget.cli.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, manifest='', content='main', content_extractor='readability-lite', include_links=True)
+### citeget.cli.fetch(source, , output_dir='~/Downloads', prefer='md', timeout=30, skip_existing=True, manifest='', content='main', content_extractor='readability-lite', include_links=True, retries=2)
 
 Fetch URLs and save them as Markdown (default), PDF, or original.
 
@@ -88,6 +88,8 @@ automatically.
   * **content_extractor** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – “readability-lite” (default, no extra dependency)
     or “trafilatura” (needs `pip install trafilatura`).
   * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If false, links are reduced to their text.
+  * **retries** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – Extra attempts on connection resets, 429 and 5xx (default 2;
+    0 for one attempt). A server’s Retry-After is honoured, up to 60s.
 
 ### citeget.cli.get_book(title, , authors='', download_dir='.', query='', topic='books', max_candidates=5, base_url='', mirrors='')
 

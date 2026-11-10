@@ -655,7 +655,7 @@ Fetch one or many URLs from a flexible *source*.
   * **prefer** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'md'`, `'pdf'`, `'original'`, `'auto'`]) – `"md"` (default), `"pdf"`, `"original"`, or `"auto"`.
     See [`fetch_one()`](#citeget.fetch_one) for details.
   * **timeout** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – HTTP timeout per request.
-  * **skip_existing** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip URLs whose inferred output file exists.
+  * **skip_existing** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – Skip URLs whose output file exists (see [`fetch_one()`](#citeget.fetch_one)).
   * **on_result** – Optional callback `(index, total, FetchResult) -> None`
     invoked after each fetch (for progress reporting).
   * **content** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'main'`, `'full'`]) – See [`fetch_one()`](#citeget.fetch_one).
@@ -668,7 +668,7 @@ Fetch one or many URLs from a flexible *source*.
 * **Returns:**
   A list of [`FetchResult`](#citeget.FetchResult), one per unique URL.
 
-### citeget.fetch_one(source, , output_dir, prefer='md', timeout=30, skip_existing=True, content='main', content_extractor='readability-lite', include_links=True, retries=2, retry_backoff=1.0)
+### citeget.fetch_one(source, , output_dir, prefer='md', timeout=30, skip_existing=True, content='main', content_extractor='readability-lite', include_links=True, retries=2, retry_backoff=1.0, \_claims=None)
 
 Fetch a single URL and save it under *output_dir*.
 
@@ -681,8 +681,9 @@ Fetch a single URL and save it under *output_dir*.
     content-type the server returned. `"auto"` is like `"md"`
     for HTML and saves PDFs as PDFs.
   * **timeout** ([`int`](https://docs.python.org/3/builtins/functions.html#int)) – HTTP timeout in seconds.
-  * **skip_existing** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If True (default), skip when the inferred output
-    file already exists.
+  * **skip_existing** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If True (default), skip when this URL’s output file
+    already exists. A `.md` file is this URL’s when its
+    `<!-- Source: -->` header names the URL, whatever its name.
   * **content** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'main'`, `'full'`]) – `"main"` (default) keeps only the main article in Markdown
     output; `"full"` keeps the whole page (the previous behaviour).
   * **content_extractor** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – Extractor name or callable `html -> html`.
@@ -691,6 +692,8 @@ Fetch a single URL and save it under *output_dir*.
     5xx, and the first sleep between them (doubled each time).
   * **retry_backoff** ([`float`](https://docs.python.org/3/builtins/functions.html#float)) – Extra attempts on connection resets, 429 and
     5xx, and the first sleep between them (doubled each time).
+  * **\_claims** ([`Optional`](https://docs.python.org/3/library/typing.html#typing.Optional)[[`MutableMapping`](https://docs.python.org/3/library/typing.html#typing.MutableMapping)[[`Path`](https://docs.python.org/3/library/pathlib.html#pathlib.Path), [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – Internal. [`fetch()`](#citeget.fetch) shares one map of owned output
+    paths across a run, so two URLs never share a file.
 * **Return type:**
   [*FetchResult*](#citeget.FetchResult)
 
@@ -768,11 +771,14 @@ blocks become fenced blocks and tables become GitHub-flavoured tables.
 * **Parameters:**
   * **html** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – The HTML source to convert.
   * **source_url** ([`str`](https://docs.python.org/3/builtins/stdtypes.html#str)) – If given, prepended as an HTML comment provenance line.
-    A `web.archive.org` URL also triggers Wayback cleanup (any
-    *content* mode). Main mode falls back to the full page when the
-    extracted article is shorter than `MIN_MAIN_CHARS`.
+    A `web.archive.org` URL (or a page carrying the Wayback toolbar)
+    also triggers Wayback cleanup, in any *content* mode. Main mode
+    falls back to the full page when the extracted article is shorter
+    than `MIN_MAIN_CHARS`.
   * **content** ([`Literal`](https://docs.python.org/3/library/typing.html#typing.Literal)[`'main'`, `'full'`]) – `"full"` (default here) converts the whole page; `"main"`
-    first extracts the main article (see [`citeget.content`](citeget.content.html.md#module-citeget.content)).
+    first extracts the main article (see [`citeget.content`](citeget.content.html.md#module-citeget.content)),
+    unwraps layout tables, and leads with the page title as a heading
+    when the article has no heading saying it.
   * **content_extractor** ([`Union`](https://docs.python.org/3/library/typing.html#typing.Union)[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str), [`Callable`](https://docs.python.org/3/library/typing.html#typing.Callable)[[[`str`](https://docs.python.org/3/builtins/stdtypes.html#str)], [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)]]) – With `content="main"`, a name from
     [`citeget.content.EXTRACTORS`](citeget.content.html.md#citeget.content.EXTRACTORS) or any callable `html -> html`.
   * **include_links** ([`bool`](https://docs.python.org/3/builtins/functions.html#bool)) – If False, links are reduced to their text.
@@ -872,6 +878,11 @@ Return names of all registered strategies.
 ### citeget.main_content(html)
 
 The HTML of the block that most likely holds the article body.
+
+Drops chrome, picks the candidate block with the most paragraph text,
+adds same-kind sibling blocks holding prose (an article split into
+sections), trims breadcrumbs and promo boxes from their edges, and leads
+with the article’s headline when the block left it behind.
 
 * **Return type:**
   [`str`](https://docs.python.org/3/builtins/stdtypes.html#str)
