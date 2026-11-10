@@ -224,6 +224,7 @@ def fetch(
     content: str = "main",
     content_extractor: str = "readability-lite",
     include_links: bool = True,
+    retries: int = 2,
 ):
     """Fetch URLs and save them as Markdown (default), PDF, or original.
 
@@ -245,6 +246,8 @@ def fetch(
         content_extractor: "readability-lite" (default, no extra dependency)
             or "trafilatura" (needs `pip install trafilatura`).
         include_links: If false, links are reduced to their text.
+        retries: Extra attempts on connection resets, 429 and 5xx (default 2;
+            0 for one attempt). A server's Retry-After is honoured, up to 60s.
     """
     import json
     from pathlib import Path
@@ -276,6 +279,7 @@ def fetch(
         content=content,
         content_extractor=content_extractor,
         include_links=include_links,
+        retries=retries,
     )
 
     ok = sum(1 for r in results if r.status == "ok")

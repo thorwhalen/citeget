@@ -36,6 +36,8 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
+import math
 import re
 import time
 import unicodedata
@@ -47,6 +49,7 @@ from typing import (
     Iterator,
     Literal,
     Mapping,
+    MutableMapping,
     Optional,
     Tuple,
     Union,
@@ -60,7 +63,10 @@ from citeget.content import (
     MIN_MAIN_CHARS,
     clean_wayback,
     drop_junk_lines,
+    is_wayback_html,
     is_wayback_url,
+    page_title,
+    unwrap_layout_tables,
 )
 
 logger = logging.getLogger(__name__)
@@ -181,8 +187,34 @@ def infer_filename(entry: UrlEntry, ext: str) -> str:
             return f"{prefix}{slug}.{ext}"
 
     domain = parsed.netloc.replace("www.", "").split(".")[0]
-    url_hash = hashlib.md5(entry.url.encode()).hexdigest()[:8]
-    return f"{prefix}{slugify(domain)}-{url_hash}.{ext}"
+    return f"{prefix}{slugify(domain)}-{_url_hash(entry.url)}.{ext}"
+
+
+def _url_hash(url: str) -> str:
+    return hashlib.md5(url.encode()).hexdigest()[:8]
+
+
+def candidate_filenames(entry: UrlEntry, ext: str) -> Iterator[str]:
+    """Filenames for *entry*, most readable first, for resolving collisions.
+
+    The :func:`infer_filename` name, then that name with the URL's query folded
+    in (when the name does not already carry it), then with a short hash of the
+    full URL, which is unique to it.
+
+    >>> e = UrlEntry(url="http://a.com/post?page=2", title="A Post")
+    >>> names = list(candidate_filenames(e, "md"))
+    >>> names[:2]
+    ['a-post.md', 'a-post-page-2.md']
+    >>> names[2].startswith("a-post-") and len(names[2]) == len("a-post-12345678.md")
+    True
+    """
+    name = infer_filename(entry, ext)
+    stem = name[: -len(ext) - 1]
+    yield name
+    query = slugify(urlparse(entry.url).query, max_len=_MAX_QUERY_SLUG)
+    if query and not stem.endswith(f"-{query}"):
+        yield f"{stem}-{query}.{ext}"
+    yield f"{stem}-{_url_hash(entry.url)}.{ext}"
 
 
 # ---------------------------------------------------------------------------
@@ -205,6 +237,33 @@ DEFAULT_RETRY_BACKOFF = 1.0
 
 #: HTTP statuses worth another attempt: rate limiting and server-side hiccups.
 _RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+
+#: Ceiling (seconds) on any one wait between attempts, a server's
+#: ``Retry-After`` included: a run must not stall for an hour on one URL.
+MAX_RETRY_WAIT = 60.0
+
+
+def _retry_after(response) -> Optional[float]:
+    """The server's ``Retry-After``, in seconds, if it is a usable number.
+
+    Only the delay-seconds form is read; an HTTP-date, a negative, an infinite
+    or a NaN value (all seen in the wild) gives ``None``, and the caller's own
+    backoff applies.
+
+    >>> from types import SimpleNamespace as R
+    >>> _retry_after(R(headers={"retry-after": "5"}))
+    5.0
+    >>> [_retry_after(R(headers={"retry-after": v})) for v in ("-1", "nan", "inf", "soon")]
+    [None, None, None, None]
+    >>> _retry_after(R()) is None
+    True
+    """
+    headers = getattr(response, "headers", None) or {}
+    try:
+        seconds = float(headers.get("retry-after", ""))
+    except (TypeError, ValueError):
+        return None
+    return seconds if math.isfinite(seconds) and seconds >= 0 else None
 
 
 def _is_transient(exc: Exception) -> bool:
@@ -233,7 +292,9 @@ def _http_get(
     the caller should report, not a transient failure.
 
     Transient failures (connection resets, 429, 5xx) are retried up to
-    *retries* more times, sleeping *retry_backoff*, then twice that, and so on.
+    *retries* more times, sleeping *retry_backoff*, then twice that, and so on,
+    or the server's ``Retry-After`` when it gives a usable one; any wait is
+    capped at :data:`MAX_RETRY_WAIT`.
     """
     for attempt in range(retries + 1):
         try:
@@ -244,7 +305,10 @@ def _http_get(
             raise
         except Exception as e:
             if attempt < retries and _is_transient(e):
-                delay = retry_backoff * 2**attempt
+                delay = _retry_after(getattr(e, "response", None))
+                if delay is None:
+                    delay = retry_backoff * 2**attempt
+                delay = min(delay, MAX_RETRY_WAIT)
                 logger.info(
                     "Transient failure fetching %s (%s); retry %d/%d in %.1fs",
                     url,
@@ -258,24 +322,6 @@ def _http_get(
             logger.warning("Failed to fetch %s: %s", url, e)
             return None
     return None  # pragma: no cover
-
-
-def page_title(html: str) -> Optional[str]:
-    """The page's own title: ``og:title``, ``<title>``, else the first ``<h1>``."""
-    try:
-        from bs4 import BeautifulSoup
-    except ImportError:
-        return None
-    soup = BeautifulSoup(html, "html.parser")
-    og = soup.find("meta", attrs={"property": "og:title"})
-    candidates = [og.get("content") if og else None]
-    for tag in (soup.title, soup.find("h1")):
-        candidates.append(tag.get_text(" ") if tag else None)
-    for text in candidates:
-        text = " ".join((text or "").split())
-        if text:
-            return text
-    return None
 
 
 def _is_pdf_response(resp) -> bool:
@@ -424,11 +470,14 @@ def html_to_markdown(
     Args:
         html: The HTML source to convert.
         source_url: If given, prepended as an HTML comment provenance line.
-            A ``web.archive.org`` URL also triggers Wayback cleanup (any
-            *content* mode). Main mode falls back to the full page when the
-            extracted article is shorter than ``MIN_MAIN_CHARS``.
+            A ``web.archive.org`` URL (or a page carrying the Wayback toolbar)
+            also triggers Wayback cleanup, in any *content* mode. Main mode
+            falls back to the full page when the extracted article is shorter
+            than ``MIN_MAIN_CHARS``.
         content: ``"full"`` (default here) converts the whole page; ``"main"``
-            first extracts the main article (see :mod:`citeget.content`).
+            first extracts the main article (see :mod:`citeget.content`),
+            unwraps layout tables, and leads with the page title as a heading
+            when the article has no heading saying it.
         content_extractor: With ``content="main"``, a name from
             :data:`citeget.content.EXTRACTORS` or any callable ``html -> html``.
         include_links: If False, links are reduced to their text.
@@ -465,7 +514,7 @@ def html_to_markdown(
     options = _resolve_markdownify_options(markdownify_options)
     if not include_links and "convert" not in markdownify_options:
         options["strip"] = [*options.get("strip", []), "a"]
-    if is_wayback_url(source_url):
+    if is_wayback_url(source_url) or is_wayback_html(html):
         html = clean_wayback(html)
 
     def convert(fragment: str) -> str:
@@ -476,16 +525,49 @@ def html_to_markdown(
 
     md = convert(html)
     if content == "main":
-        main_md = drop_junk_lines(convert(extractor(html)))
+        main_md = drop_junk_lines(convert(unwrap_layout_tables(extractor(html))))
         # An extractor that finds (almost) nothing must not silently empty the
         # page: fall back to the whole thing.
         if len(main_md.strip()) >= MIN_MAIN_CHARS or len(main_md) >= len(md):
-            md = main_md
+            md = _with_title_heading(
+                _collapse_blank_runs(main_md).strip() + "\n",
+                page_title(html, url=source_url),
+            )
     md = _collapse_blank_runs(md).strip() + "\n"
 
     if source_url:
         md = f"<!-- Source: {source_url} -->\n\n{md}"
     return md
+
+
+_HEADING_RE = re.compile(r"^#{1,6}\s+(.*?)\s*#*\s*$")
+
+
+def _with_title_heading(markdown: str, title: Optional[str]) -> str:
+    """Lead with ``# title`` unless the document has a top-level heading already,
+    or names *title* in a heading of any level.
+
+    >>> _with_title_heading("Some prose.\\n", "On Things")
+    '# On Things\\n\\nSome prose.\\n'
+    >>> _with_title_heading("## On Things\\n\\nSome prose.\\n", "On Things")
+    '## On Things\\n\\nSome prose.\\n'
+    >>> _with_title_heading("Intro.\\n\\n# The Talk\\n", "Other")
+    'Intro.\\n\\n# The Talk\\n'
+    """
+    if not title:
+        return markdown
+    wanted = slugify(title)
+    for is_code, chunk in _outside_code_fences(markdown):
+        if is_code:
+            continue
+        for line in chunk.splitlines():
+            m = _HEADING_RE.match(line)
+            if m and (
+                line.startswith("# ")
+                or slugify(re.sub(r"\]\([^)]*\)", "]", m.group(1))) == wanted
+            ):
+                return markdown
+    return f"# {title}\n\n{markdown}"
 
 
 #: Elements that make wkhtmltopdf load something (a frame, an image, a style
@@ -700,6 +782,7 @@ def fetch_one(
     include_links: bool = True,
     retries: int = DEFAULT_RETRIES,
     retry_backoff: float = DEFAULT_RETRY_BACKOFF,
+    _claims: Optional[_Claims] = None,
 ) -> FetchResult:
     """Fetch a single URL and save it under *output_dir*.
 
@@ -712,14 +795,17 @@ def fetch_one(
             content-type the server returned. ``"auto"`` is like ``"md"``
             for HTML and saves PDFs as PDFs.
         timeout: HTTP timeout in seconds.
-        skip_existing: If True (default), skip when the inferred output
-            file already exists.
+        skip_existing: If True (default), skip when this URL's output file
+            already exists. A ``.md`` file is this URL's when its
+            ``<!-- Source: -->`` header names the URL, whatever its name.
         content: ``"main"`` (default) keeps only the main article in Markdown
             output; ``"full"`` keeps the whole page (the previous behaviour).
         content_extractor: Extractor name or callable ``html -> html``.
         include_links: If False, Markdown links are reduced to their text.
         retries, retry_backoff: Extra attempts on connection resets, 429 and
             5xx, and the first sleep between them (doubled each time).
+        _claims: Internal. :func:`fetch` shares one map of owned output
+            paths across a run, so two URLs never share a file.
 
     A URL given without a title takes the page's own (``og:title``, ``<title>``,
     first ``<h1>``): it names the file and fills ``FetchResult.title``.
@@ -730,6 +816,12 @@ def fetch_one(
     entry = source if isinstance(source, UrlEntry) else UrlEntry(url=source)
     output_dir = Path(output_dir).expanduser()
     output_dir.mkdir(parents=True, exist_ok=True)
+    target = _Target(
+        output_dir,
+        _existing_claims(output_dir) if _claims is None else _claims,
+        skip_existing,
+        adopt=not (entry.title or entry.ref),  # decided before the page names it
+    )
 
     result = FetchResult(
         url=entry.url, status="failed", title=entry.title, ref=entry.ref
@@ -752,12 +844,11 @@ def fetch_one(
         # for any other choice, save as pdf.
         return _save_bytes(
             entry,
-            output_dir,
             resp.content,
             ext="pdf",
             fmt="pdf",
-            skip_existing=skip_existing,
             result=result,
+            target=target,
         )
 
     try:
@@ -767,7 +858,7 @@ def fetch_one(
         return result
 
     if not entry.title:
-        title = page_title(html)
+        title = page_title(html, url=entry.url)
         if title:
             entry = replace(entry, title=title)
             result.title = title
@@ -790,24 +881,22 @@ def fetch_one(
             if pdf_resp is not None and _is_pdf_response(pdf_resp):
                 return _save_bytes(
                     entry,
-                    output_dir,
                     pdf_resp.content,
                     ext="pdf",
                     fmt="pdf",
-                    skip_existing=skip_existing,
                     result=result,
+                    target=target,
                 )
 
         pdf_bytes = html_to_pdf(entry.url, html=html)
         if pdf_bytes:
             return _save_bytes(
                 entry,
-                output_dir,
                 pdf_bytes,
                 ext="pdf",
                 fmt="pdf",
-                skip_existing=skip_existing,
                 result=result,
+                target=target,
             )
         logger.info("HTML→PDF unavailable; falling back to Markdown for %s", entry.url)
 
@@ -817,12 +906,11 @@ def fetch_one(
         ext = "html" if "html" in ct or "xml" in ct else "bin"
         return _save_bytes(
             entry,
-            output_dir,
             resp.content,
             ext=ext,
             fmt="original",
-            skip_existing=skip_existing,
             result=result,
+            target=target,
         )
 
     # --- Default: Markdown -------------------------------------------------
@@ -835,12 +923,11 @@ def fetch_one(
     )
     return _save_text(
         entry,
-        output_dir,
         md,
         ext="md",
         fmt="md",
-        skip_existing=skip_existing,
         result=result,
+        target=target,
     )
 
 
@@ -857,75 +944,141 @@ def _recorded_source(path: Path) -> Optional[str]:
     return m.group(1) if m else None
 
 
-def _resolve_out_path(
-    entry: UrlEntry, output_dir: Path, ext: str, *, skip_existing: bool
-) -> tuple[Path, bool]:
-    """Pick the output path for *entry* and whether it can be skipped.
+#: Which URL each output path belongs to: found on disk, or written this run.
+_Claims = MutableMapping[Path, str]
 
-    An existing file is skipped only if it came from this URL. When it
-    records a different source, the URL's hash is folded into the name so
-    the two never share a file. A file that records no source (PDF, raw
-    bytes, hand-made) is trusted, as before.
+#: Per folder: ``{name: ((mtime_ns, size), path, recorded source)}``, so a
+#: folder is re-read only for the files that changed since the last look (and
+#: each ``Path`` is built, and hashed, once).
+_SOURCE_INDEX: dict = {}
+_SOURCE_INDEX_MAX_DIRS = 64
+
+
+def _existing_claims(output_dir: Path) -> _Claims:
+    """The ``.md`` files already in *output_dir*, mapped to the URL each records.
+
+    Seeds a run's claims, so a page fetched before is found under whatever
+    name it was saved as, including a name from an older naming scheme (a
+    path stem where the page title is now used). Only new or changed files
+    are opened, so calling this once per URL stays cheap in a large folder.
     """
-    out_path = output_dir / infer_filename(entry, ext)
-    if not out_path.exists():
-        return out_path, False
-    source = _recorded_source(out_path)
-    if source is None or source == entry.url:
-        return out_path, skip_existing
-    url_hash = hashlib.md5(entry.url.encode()).hexdigest()[:8]
-    out_path = out_path.with_name(f"{out_path.stem}-{url_hash}{out_path.suffix}")
-    return out_path, skip_existing and out_path.exists()
+    if not output_dir.is_dir():
+        return {}
+    key = str(output_dir.resolve())
+    known = _SOURCE_INDEX.get(key, {})
+    fresh = {}
+    with os.scandir(output_dir) as entries:
+        for e in entries:
+            if not e.name.endswith(".md") or not e.is_file():
+                continue
+            st = e.stat()
+            stamp = (st.st_mtime_ns, st.st_size)
+            hit = known.get(e.name)
+            if hit is None or hit[0] != stamp:
+                path = output_dir / e.name
+                hit = (stamp, path, _recorded_source(path))
+            fresh[e.name] = hit
+    if key not in _SOURCE_INDEX and len(_SOURCE_INDEX) >= _SOURCE_INDEX_MAX_DIRS:
+        _SOURCE_INDEX.pop(next(iter(_SOURCE_INDEX)))
+    _SOURCE_INDEX[key] = fresh
+    return {path: src for _, path, src in fresh.values() if src}
+
+
+@dataclass
+class _Target:
+    """Where one URL's output goes, and which paths are already owned.
+
+    *adopt*: may this URL reuse a file it owns under another name (one saved
+    by an older naming scheme)? Not when the caller named the file, with a
+    title or a reference number: that name is asked for, so it is used.
+    """
+
+    output_dir: Path
+    claims: _Claims
+    skip_existing: bool
+    adopt: bool = True
+
+    def resolve(self, entry: UrlEntry, ext: str) -> tuple[Path, bool]:
+        """The output path for *entry*, and whether it can be skipped.
+
+        In order: a :func:`candidate_filenames` name this URL already owns; a
+        file of this format it owns under another name, if *adopt*; the first
+        candidate name that is free. An existing file that records no source
+        (a PDF, raw bytes, a hand-made file) is trusted to be this URL's, as
+        before, unless another URL wrote it in this run. Across runs that case
+        stays open: thorwhalen/citeget#32.
+        """
+        url, candidates = (
+            entry.url,
+            [self.output_dir / n for n in candidate_filenames(entry, ext)],
+        )
+
+        def owner(path):
+            found = self.claims.get(path)
+            if found is None and path.exists():
+                found = _recorded_source(path) or url
+            return found
+
+        owned = [path for path in candidates if path.exists() and owner(path) == url]
+        if not owned and self.adopt:
+            owned = sorted(
+                path
+                for path, claimant in self.claims.items()
+                if claimant == url
+                and path.suffix == f".{ext}"
+                and path.parent == self.output_dir
+            )
+        if owned:
+            return owned[0], self.skip_existing
+        for path in candidates:
+            if owner(path) is None:
+                return path, False
+        raise AssertionError("candidate_filenames ends with a name unique to the URL")
+
+    def save(
+        self, entry, result: FetchResult, *, ext: str, fmt: str, write
+    ) -> FetchResult:
+        """Resolve the path, then skip or ``write(path)``, and record the result."""
+        path, skip = self.resolve(entry, ext)
+        if not skip:
+            write(path)
+        self.claims[path] = entry.url  # only once the file is there
+        result.status = "skipped" if skip else "ok"
+        result.output_file = path
+        result.format = fmt
+        return result
 
 
 def _save_bytes(
     entry: UrlEntry,
-    output_dir: Path,
     data: bytes,
     *,
     ext: str,
     fmt: str,
-    skip_existing: bool,
     result: FetchResult,
+    target: _Target,
 ) -> FetchResult:
-    out_path, skip = _resolve_out_path(
-        entry, output_dir, ext, skip_existing=skip_existing
+    return target.save(
+        entry, result, ext=ext, fmt=fmt, write=lambda p: p.write_bytes(data)
     )
-    if skip:
-        result.status = "skipped"
-        result.output_file = out_path
-        result.format = fmt
-        return result
-    out_path.write_bytes(data)
-    result.status = "ok"
-    result.output_file = out_path
-    result.format = fmt
-    return result
 
 
 def _save_text(
     entry: UrlEntry,
-    output_dir: Path,
     text: str,
     *,
     ext: str,
     fmt: str,
-    skip_existing: bool,
     result: FetchResult,
+    target: _Target,
 ) -> FetchResult:
-    out_path, skip = _resolve_out_path(
-        entry, output_dir, ext, skip_existing=skip_existing
+    return target.save(
+        entry,
+        result,
+        ext=ext,
+        fmt=fmt,
+        write=lambda p: p.write_text(text, encoding="utf-8"),
     )
-    if skip:
-        result.status = "skipped"
-        result.output_file = out_path
-        result.format = fmt
-        return result
-    out_path.write_text(text, encoding="utf-8")
-    result.status = "ok"
-    result.output_file = out_path
-    result.format = fmt
-    return result
 
 
 # ---------------------------------------------------------------------------
@@ -990,7 +1143,7 @@ def fetch(
         prefer: ``"md"`` (default), ``"pdf"``, ``"original"``, or ``"auto"``.
             See :func:`fetch_one` for details.
         timeout: HTTP timeout per request.
-        skip_existing: Skip URLs whose inferred output file exists.
+        skip_existing: Skip URLs whose output file exists (see :func:`fetch_one`).
         on_result: Optional callback ``(index, total, FetchResult) -> None``
             invoked after each fetch (for progress reporting).
         content, content_extractor, include_links, retries, retry_backoff:
@@ -1001,6 +1154,7 @@ def fetch(
     """
     entries = _coerce_to_entries(source)
     output_dir = Path(output_dir).expanduser()
+    claims = _existing_claims(output_dir)
 
     results: list[FetchResult] = []
     total = len(entries)
@@ -1016,6 +1170,7 @@ def fetch(
             include_links=include_links,
             retries=retries,
             retry_backoff=retry_backoff,
+            _claims=claims,
         )
         results.append(result)
         if on_result is not None:
