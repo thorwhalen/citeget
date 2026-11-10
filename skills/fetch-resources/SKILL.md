@@ -92,17 +92,28 @@ URLs are extracted in three forms (deduped, first match wins):
    Otherwise try HTML→PDF via `pdfkit`/`wkhtmltopdf`. With the network
    guard on (the default) the page is rendered offline, as text: no images
    or styles in the PDF.
-4. Otherwise convert HTML→Markdown via `markdownify` (clean, link-preserving).
+4. Otherwise convert HTML→Markdown via `markdownify` (clean, link-preserving). By default only the **main article** is kept (`content="main"`): navigation, sidebars, comments, share bars, breadcrumbs, ad slots and layout tables are dropped, and the document leads with the page title. `--content full` keeps the whole page. `--content-extractor trafilatura` swaps in a stronger extractor (`pip install trafilatura`); any `html -> html` callable works from Python. Web Archive copies are cleaned in both modes (toolbar gone, links pointing back at the original site).
 5. If a PDF route fails, fall back to Markdown automatically.
+
+Connection resets, 429 and 5xx are retried (`--retries`, default 2), with doubling backoff or the server's `Retry-After`, capped at 60 s. A 404 or a refused URL is never retried.
 
 ### Filename inference
 
 Files are named in this priority order:
 1. Anchor / citation title → slug
-2. URL's last path segment
-3. `{domain}-{hash}`
+2. The page's own title (`og:title`, `<title>`, `<h1>`), with the site name removed: `Title – Site` and `Site – Title` are told apart using `og:site_name`, the `<h1>` and the URL's path; with no such evidence the first segment is kept
+3. URL's last path segment, with its query folded in (`?currentPage=2` → `-currentpage-2`)
+4. `{domain}-{hash}`
 
-Reference numbers become a prefix: `ref_03_some-title.md`.
+Reference numbers become a prefix: `ref_03_some-title.md`. The manifest's `title` is the anchor text if there was one, else the page title.
+
+### Skipping, and which file belongs to which URL
+
+Every Markdown file starts with a `<!-- Source: URL -->` line, and that line, not the filename, says which URL the file belongs to. So:
+
+- `skip_existing` (the default) skips a URL only when a file of the same format already belongs to it, so a `SKIP` really means "already have this page". A folder saved by an older citeget, under older names, is matched by those headers too: the page is skipped, not saved twice.
+- Two different URLs never share a file. When the preferred name is taken by another URL, the query is folded in, else a short hash of the URL.
+- PDFs and other non-Markdown files carry no source record. Within one run they are still kept apart. Across runs, an existing PDF of the same name is taken to be the same document and skipped: [thorwhalen/citeget#32](https://github.com/thorwhalen/citeget/issues/32) tracks that case.
 
 ## Format choice (`--prefer` / `prefer=`)
 
@@ -163,7 +174,10 @@ results = fetch(
 ## Failure handling
 
 - Network/HTTP errors are logged and the URL is marked `failed` in the
-  result; other URLs still proceed.
+  result; other URLs still proceed. Transient ones were already retried
+  (see above), so re-running at once rarely helps.
+- If main-content extraction cut something the user wanted (a comment
+  thread, a sidebar table), re-run that URL with `--content full`.
 - For JS-heavy pages where markdownify gives poor output, suggest re-running
   with `--prefer pdf` (renders the page) or use the `WebFetch` tool as a
   second opinion.

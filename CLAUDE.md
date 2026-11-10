@@ -79,6 +79,8 @@ Install playwright browsers: `python -m playwright install chromium`
   attempt (`page.goto` raising "Download is starting" is success, not failure)
 - Validation policy is injected, not hardcoded: `DEFAULT_POLICY` (integrity)
   vs `BOOK_POLICY` (adds page-count/markup depth checks — wrong for articles)
+- `fetch` keeps the **main content** by default (`content="full"` for the whole page); the extractor is a strategy (`"readability-lite"`, `"trafilatura"`, or any `html -> html` callable). Its real-page fixtures are pages with the prose replaced by same-length filler: regenerate with `tests/fixtures/pages/make_fixtures.py`, never commit whole articles.
+- `fetch` output files are owned by a URL: the `<!-- Source: -->` header (not the filename) is what `skip_existing` and collision handling check, so keep it the first line of every `.md`. Non-Markdown files carry no such record (#32).
 - **Libgen returns spurious empty result sets** (~1 run in 4 for a query with
   real matches). Defended in three layers — retry per mirror, require two
   mirrors to agree, then `get_book` re-runs the whole search. Never treat one
